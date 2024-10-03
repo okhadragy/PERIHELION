@@ -8,7 +8,7 @@
   "name": "orrery",
   "description": "3D Web app to simulate the solar system",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "start": "parcel index.html",
     "build": "parcel build index.html"
