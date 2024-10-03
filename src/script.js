@@ -1,7 +1,7 @@
 import * as THREE from "../node_modules/three";
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { TrackballControls } from '../node_modules/three/examples/jsm/controls/TrackballControls.js';
-import { gsap } from 'gsap';
+import { gsap } from '../node_modules/gsap';
 
 import { RenderPass } from "../node_modules/three/examples/jsm/postprocessing/RenderPass.js";
 import { EffectComposer } from "../node_modules/three/examples/jsm/postprocessing/EffectComposer.js";
