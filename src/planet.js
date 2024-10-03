@@ -1,4 +1,4 @@
-import * as THREE from "./node_modules/three";
+import * as THREE from "../node_modules/three";
 
 export default class Planet extends THREE.Group {
     constructor(x, y, scene, geometry, axisSpeed, sunSpeed = 0) {
