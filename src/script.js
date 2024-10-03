@@ -22,6 +22,7 @@ import earthcloud from "../assets/textures/earth/earthcloudmap.jpg";
 import earthcloudtrans from "../assets/textures/earth/earthcloudmaptrans.jpg";
 
 // JUPITER
+import planets from "./planets.json";
 import jupitermap from "../assets/textures/jupiter/jupiter.jpg";
 import jupiterNightmap from "../assets/textures/jupiter/jupiternight.jpg";
 
