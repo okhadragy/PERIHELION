@@ -1,13 +1,13 @@
-import * as THREE from "./node_modules/three";
-import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { TrackballControls } from './node_modules/three/examples/jsm/controls/TrackballControls.js';
+import * as THREE from "../node_modules/three";
+import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
+import { TrackballControls } from '../node_modules/three/examples/jsm/controls/TrackballControls.js';
 import { gsap } from 'gsap';
 
-import { RenderPass } from "./node_modules/three/examples/jsm/postprocessing/RenderPass.js";
-import { EffectComposer } from "./node_modules/three/examples/jsm/postprocessing/EffectComposer.js";
-import { UnrealBloomPass } from "./node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from './node_modules/three/examples/jsm/postprocessing/OutputPass.js';
-import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
+import { RenderPass } from "../node_modules/three/examples/jsm/postprocessing/RenderPass.js";
+import { EffectComposer } from "../node_modules/three/examples/jsm/postprocessing/EffectComposer.js";
+import { UnrealBloomPass } from "../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from '../node_modules/three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from '../node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
 import Planet from './planet.js';
 
 // STARS
@@ -22,7 +22,6 @@ import earthcloud from "../assets/textures/earth/earthcloudmap.jpg";
 import earthcloudtrans from "../assets/textures/earth/earthcloudmaptrans.jpg";
 
 // JUPITER
-import planets from "./planets.json"
 import jupitermap from "../assets/textures/jupiter/jupiter.jpg";
 import jupiterNightmap from "../assets/textures/jupiter/jupiternight.jpg";
 
