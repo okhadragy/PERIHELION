@@ -166,6 +166,7 @@ let currentSubtitles = [];
 let currentPlanetIndex = 0; // Index for selected planet
 let currentClipIndex = 0; // Index for selected audio clip
 let lowerFlag = false;
+let audioflag = true;
 
 function playAudio(planetIndex, clipIndex) {
 
@@ -286,15 +287,11 @@ const jupiterGeometry = [0.0093, detail];
 const jupiterMaterial = {map: loader.load(jupitermap)};
 const jupiterNightMat = {map: loader.load(jupiterNightmap),blending: THREE.AdditiveBlending};
 const jupiterFersenel = {rimHex: 0x274566, scalar: 1.005};
-console.log(0x274566);
-console.log(parseInt("274566",16));
 
 const jupiterAxisSpeed = 0.00017453293
 const jupiterGroup = new Planet(planets.jupiter.x, planets.jupiter.y, scene, planets.jupiter.geometry,planets.jupiter.axisSpeed);
 planets.jupiter.fersenel.rimHex = parseInt(planets.jupiter.fersenel.rimHex,16)
-console.log(planets.jupiter.fersenel);
-
-jupiterGroup.createShape(jupiterMaterial,jupiterNightMat,jupiterFersenel);
+jupiterGroup.createShape(jupiterMaterial,jupiterNightMat,planets.jupiter.fersenel);
 
 ////////////////////////// EARTH //////////////////////////
 const earthGeometry = [0.00085, detail];
