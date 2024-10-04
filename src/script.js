@@ -61,7 +61,6 @@ import neptuneclouds from "../assets/textures/neptune/neptuneclouds.png";
 import neptunelights from "../assets/textures/neptune/neptunelights.jpg";
 import neptunerings from "../assets/textures/neptune/neptunerings.png";
 
-
 // SUN
 import sunMap from "../assets/textures/sun/sunmap.jpg";
 import sunFluid from "../assets/textures/sun/sunfluids.png";
@@ -69,6 +68,10 @@ import sunFluid from "../assets/textures/sun/sunfluids.png";
 // SUBTITLES
 import { audioData } from "./subtitles.js";
 
+// ASTEROIDS
+import NEA from "../assets/asteroids/NEA.png";
+import NEC from "../assets/asteroids/NEC.png";
+import PHA from "../assets/asteroids/PHA.png";
 
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
 let speedFactor = 1;
@@ -240,6 +243,245 @@ document.getElementById("playfact").addEventListener("click", function () {
 
 //
 
+let firstSmallClicked = false; // suitable position
+
+const earthButton = document.getElementById("backToEarth");
+
+document.getElementById("neobutton").addEventListener("click", function(){
+
+  gsap.to(headertitle, { opacity: 0, duration: 1 }); // fade out
+  gsap.to(planetui, { opacity: 0, duration: 1 }); // fade out
+  gsap.to(prevbutton, { opacity: 0, duration: 1 }); // fade out
+  gsap.to(nextbutton, { opacity: 0, duration: 1 }); // fade out
+  prevbutton.style.cursor = 'default';
+  nextbutton.style.cursor = 'default';
+  returnbutton.style.cursor = 'default';
+  gsap.to(returnbutton, { opacity: 0, duration: 1, 
+    onComplete: function (){
+    planetui.style.display = 'none';
+    prevbutton.style.display = 'none';
+    nextbutton.style.display = 'none';
+    returnbutton.style.display = 'none';
+    prevbutton.style.cursor = 'pointer';
+    nextbutton.style.cursor = 'pointer';
+    returnbutton.style.cursor = 'pointer';
+  } }); // fade out
+
+  earthSprite.associatedNumber = 0.005;
+
+  gsap.to(camera.position, {
+          x: targetPosition.x+earthSprite.associatedNumber,
+          y: targetPosition.y, // adjustable?
+          z: targetPosition.z,
+          duration: 2, // adjustable duration
+          onUpdate: function () {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+
+            
+          },
+          onComplete: function () {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+            
+            
+            planetui.style.display = '';
+            document.getElementById("lm").style.display = 'none';
+            document.getElementById("rm").style.display = 'none';
+            document.getElementById("am").style.display = '';
+
+            earthButton.style.opacity = 0;
+            earthButton.style.display = 'block';
+            gsap.to(earthButton, { opacity: 1, duration: 1 })
+            gsap.to(planetui, { opacity: 1, duration: 1 });
+          },
+        })
+});
+
+earthButton.addEventListener("click", function(){
+  gsap.to(planetui, { opacity: 0, duration: 1 }); // fade out
+  gsap.to(earthButton, { opacity: 0, duration: 1, 
+    onComplete: function (){
+    planetui.style.display = 'none';
+    earthButton.style.display = 'none';
+    planetui.style.cursor = 'pointer';
+    earthButton.style.cursor = 'pointer';
+  }}); // fade out
+  
+  planetui.style.cursor = 'default';
+  earthButton.style.cursor = 'default';
+
+  earthSprite.associatedNumber = 0.002125;
+
+  gsap.to(camera.position, {
+          x: targetPosition.x+earthSprite.associatedNumber,
+          y: targetPosition.y, // adjustable?
+          z: targetPosition.z,
+          duration: 1, // adjustable duration
+          onUpdate: function () {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+            
+          },
+          onComplete: function () {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+            
+            planetui.style.display = '';
+            document.getElementById("lm").style.display = '';
+            document.getElementById("rm").style.display = '';
+            document.getElementById("am").style.display = 'none';
+            document.getElementById("secondlm").style.display = 'none';
+            firstSmallClicked = false;
+
+            gsap.to(planetui, { opacity: 1, duration: 1 });
+
+            returnbutton.style.opacity = 0;
+            returnbutton.style.display = 'block';
+            gsap.to(returnbutton, { opacity: 1, duration: 1 })
+
+            nextbutton.style.opacity = 0;
+            nextbutton.style.display = 'block';
+            gsap.to(nextbutton, { opacity: 1, duration: 1 });
+
+            prevbutton.style.opacity = 0;
+            prevbutton.style.display = 'block';
+            gsap.to(prevbutton, { opacity: 1, duration: 1 });
+          },
+        })
+  
+});
+
+const bigContainer = document.getElementById('am');
+
+const asteroidData = [
+  { title: "Midas (1973 EA)", a: 1.776, i: 39.82, e: 0.6505, peri: 267.84, M: 258.81, period: 865, q: 0.621, Q: 2.93, NEO: "Y", PHA: "Y" },
+  { title: "Florence (1981 ET3)", a: 1.769, i: 22.14, e: 0.4231, peri: 27.90, M: 0.67, period: 859, q: 1.021, Q: 2.52, NEO: "Y", PHA: "N" },
+  { title: "Aristaeus (1977 HA)", a: 1.6, i: 23.07, e: 0.5030, peri: 290.97, M: 202.31, period: 739, q: 0.795, Q: 2.40, NEO: "Y", PHA: "N" },
+  { title: "Adonis (1936 CA)", a: 1.874, i: 1.32, e: 0.7642, peri: 43.69, M: 230.82, period: 937, q: 0.442, Q: 3.31, NEO: "Y", PHA: "Y" },
+  { title: "Hathor (1976 UA)", a: 0.8438, i: 5.86, e: 0.4500, peri: 40.10, M: 53.40, period: 283, q: 0.464, Q: 1.22, NEO: "Y", PHA: "N" },
+].map(obj => {
+  let type = 5; // default type if PHA and NEO are both 'N'
+
+  if (obj.PHA === "Y") {
+    type = 4; // PHA is 'Y'
+  } else if (obj.NEO === "Y" && obj.PHA === "N") {
+    if (obj.a > 1) {
+      if (obj.q > 1.017 && obj.q < 1.3) {
+        type = 0;
+      } else if (obj.q < 1.017) {
+        type = 1;
+      }
+    } else {
+      if (obj.q > 0.983) {
+        type = 2;
+      } else {
+        type = 3;
+      }
+    }
+  }
+
+  return { ...obj, type }; // add type to obj
+});
+
+
+const types = [
+  { image: NEA, barColor: '#28a745', description: "Near-Earth Asteroid Amor" }, // Type 0 - NEA Amor - Green
+  { image: NEA, barColor: '#f1c40f', description: "Near-Earth Asteroid Apollo" }, // Type 1 - NEA Apollo - Yellow
+  { image: NEA, barColor: '#e67e22', description: "Near-Earth Asteroid Aten" }, // Type 2 - NEA Aten - Orange
+  { image: NEA, barColor: '#8e44ad', description: "Near-Earth Asteroid Atira" }, // Type 3 - NEA Atira - Purple
+
+  { image: PHA, barColor: '#e74c3c', description: "Potentially Hazardous Asteroid" }, // Type 4 - PHA - Red
+  { image: NEC, barColor: '#3498db', description: "Near-Earth Comet" }  // Type 5 - NEC - Blue
+];
+
+function createSmalls() {
+  asteroidData.forEach(small => {
+      const smallElement = document.createElement('div');
+      smallElement.className = 'small';
+      
+      const typeInfo = types[small.type];
+      
+      smallElement.innerHTML = `
+          <img src="${typeInfo.image}" />
+          <div class="smallinfo">
+              <h3>${small.title}</h3>
+              <p>${typeInfo.description}</p>
+          </div>
+      `;
+      
+      smallElement.style.setProperty('--bar-color', typeInfo.barColor);
+      
+      bigContainer.appendChild(smallElement);
+  });
+}
+
+createSmalls();
+const smalls = document.querySelectorAll('.small');
+smalls.forEach((small, index) => {
+  small.addEventListener('click', () => {
+
+    document.getElementById("astUItype").innerText = types[asteroidData[index].type].description;
+    document.getElementById("astUIsemimajor").innerText = asteroidData[index].a + " AU";
+    document.getElementById("astUIincline").innerText = asteroidData[index].i + " degrees";
+    document.getElementById("astUIecc").innerText = asteroidData[index].e;
+    document.getElementById("astUIma").innerText = asteroidData[index].M + " degrees";
+    document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
+    document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days"; 
+
+      if (!firstSmallClicked) {
+          firstSmallClicked = true;
+          document.getElementById('secondlm').style.display = '';
+          document.getElementById('secondlm').style.opacity = 0;
+          gsap.to(document.getElementById('secondlm'), { opacity: 1, duration: 1 });
+          // camera transition to first asteroid
+      }
+      else{
+        // camera transition from asteroid to asteroid
+      }
+  });
+});
+
+function filterAndSearchItems() {
+  const input = document.getElementById('search').value.toLowerCase();
+  const selectedValue = document.getElementById('astType').value;
+  const items = document.getElementsByClassName('small');
+
+  for (let i = 0; i < items.length; i++) {
+    const smallDataItem = asteroidData[i];
+    const itemType = smallDataItem.type;
+    
+    const h3Text = items[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
+    const pText = items[i].getElementsByTagName('p')[0].innerText.toLowerCase();
+    
+    // SEARCH LOGIC
+    const matchesSearch = h3Text.includes(input) || pText.includes(input);
+    
+    // DROPDOWN LOGIC
+    const matchesFilter = (
+      selectedValue === '' ||
+      (selectedValue === 'NEA' && itemType < 4) || // Types 0-3 are NEA
+      (selectedValue === 'PHA' && itemType === 4) || // Type 4 is PHA
+      (selectedValue === 'NEC' && itemType === 5)    // Type 5 is NEC
+    );
+
+    // COMBINE!
+    if (matchesSearch && matchesFilter) {
+      items[i].style.display = "";
+    } else {
+      items[i].style.display = "none";
+    }
+  }
+}
+
+document.getElementById('search').addEventListener('keyup', filterAndSearchItems);
+document.getElementById('astType').addEventListener('change', filterAndSearchItems);
+
+
 const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
@@ -284,124 +526,124 @@ scene.add(stars);
 
 ////////////////////////// JUPITER //////////////////////////
 const jupiterGeometry = [0.0093, detail];
-const jupiterMaterial = {map: loader.load(jupitermap)};
-const jupiterNightMat = {map: loader.load(jupiterNightmap),blending: THREE.AdditiveBlending};
-const jupiterFersenel = {rimHex: 0x274566, scalar: 1.005};
+const jupiterMaterial = { map: loader.load(jupitermap) };
+const jupiterNightMat = { map: loader.load(jupiterNightmap), blending: THREE.AdditiveBlending };
+const jupiterFersenel = { rimHex: 0x274566, scalar: 1.005 };
 
 const jupiterAxisSpeed = 0.00017453293
-const jupiterGroup = new Planet(planets.jupiter.x, planets.jupiter.y, scene, planets.jupiter.geometry,planets.jupiter.axisSpeed);
-planets.jupiter.fersenel.rimHex = parseInt(planets.jupiter.fersenel.rimHex,16)
-jupiterGroup.createShape(jupiterMaterial,jupiterNightMat,planets.jupiter.fersenel);
+const jupiterGroup = new Planet(planets.jupiter.x, planets.jupiter.y, scene, planets.jupiter.geometry, planets.jupiter.axisSpeed);
+planets.jupiter.fersenel.rimHex = parseInt(planets.jupiter.fersenel.rimHex, 16)
+jupiterGroup.createShape(jupiterMaterial, jupiterNightMat, planets.jupiter.fersenel);
 
 ////////////////////////// EARTH //////////////////////////
 const earthGeometry = [0.00085, detail];
-const earthMaterial = {map: loader.load(earthmap),specularMap: loader.load(earthspec),bumpMap: loader.load(earthbump),bumpScale: 0.04};
-const earthNightlightsMat = {map: loader.load(earthlights),blending: THREE.AdditiveBlending};
+const earthMaterial = { map: loader.load(earthmap), specularMap: loader.load(earthspec), bumpMap: loader.load(earthbump), bumpScale: 0.04 };
+const earthNightlightsMat = { map: loader.load(earthlights), blending: THREE.AdditiveBlending };
 const earthCloudsMat = {
-  material: {map: loader.load(earthcloud),transparent: true,opacity: 0.65,blending: THREE.AdditiveBlending},
-  scalar:1.003
+  material: { map: loader.load(earthcloud), transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending },
+  scalar: 1.003
 };
-const earthFersenel = {rimHex: 0x045fae, scalar: 1.005};
+const earthFersenel = { rimHex: 0x045fae, scalar: 1.005 };
 const earthAxisSpeed = 0.00007272205;
-const earthGroup = new Planet(-23.4,23.4,scene,earthGeometry,earthAxisSpeed);
-earthGroup.createShape(earthMaterial,earthNightlightsMat,earthFersenel,earthCloudsMat)
+const earthGroup = new Planet(-23.4, 23.4, scene, earthGeometry, earthAxisSpeed);
+earthGroup.createShape(earthMaterial, earthNightlightsMat, earthFersenel, earthCloudsMat)
 
 ////////////////////////// MERCURY //////////////////////////
 const mercuryGeometry = [0.00033, detail];
-const mercuryMaterial = {map: loader.load(mercurymap),bumpMap: loader.load(mercuryBumpmap),bumpScale: 0.8};
-const mercuryNightMat = {map: loader.load(mercuryNightmap),blending: THREE.AdditiveBlending};
-const mercuryFersenel = {rimHex: 0x5a5957, scalar: 1.005};
+const mercuryMaterial = { map: loader.load(mercurymap), bumpMap: loader.load(mercuryBumpmap), bumpScale: 0.8 };
+const mercuryNightMat = { map: loader.load(mercuryNightmap), blending: THREE.AdditiveBlending };
+const mercuryFersenel = { rimHex: 0x5a5957, scalar: 1.005 };
 const mercuryAxisSpeed = 0.00000125383;
-const mercuryGroup = new Planet(-0.01, 0.01, scene, mercuryGeometry,mercuryAxisSpeed);
-mercuryGroup.createShape(mercuryMaterial,mercuryNightMat,mercuryFersenel)
+const mercuryGroup = new Planet(-0.01, 0.01, scene, mercuryGeometry, mercuryAxisSpeed);
+mercuryGroup.createShape(mercuryMaterial, mercuryNightMat, mercuryFersenel)
 
 ////////////////////////// VENUS //////////////////////////
 const venusGeometry = [0.00081, detail];
-const venusMaterial = {map: loader.load(venussmap)};
-const venusNightlightsMat = {map: loader.load(venusNightmap),blending: THREE.AdditiveBlending};
+const venusMaterial = { map: loader.load(venussmap) };
+const venusNightlightsMat = { map: loader.load(venusNightmap), blending: THREE.AdditiveBlending };
 const venusCloudsMat = {
-  material: {map: loader.load(venusClouds), blending: THREE.AdditiveBlending},
-  scalar:1.005
+  material: { map: loader.load(venusClouds), blending: THREE.AdditiveBlending },
+  scalar: 1.005
 };
-const venusFersenel = {rimHex: 0x573110, scalar: 1.005};
+const venusFersenel = { rimHex: 0x573110, scalar: 1.005 };
 const venusAxisSpeed = 0.00000029927
-const venusGroup = new Planet(-177.4,177.4,scene,venusGeometry,venusAxisSpeed);
-venusGroup.createShape(venusMaterial,venusNightlightsMat,venusFersenel,venusCloudsMat)
+const venusGroup = new Planet(-177.4, 177.4, scene, venusGeometry, venusAxisSpeed);
+venusGroup.createShape(venusMaterial, venusNightlightsMat, venusFersenel, venusCloudsMat)
 venusGroup.position.set(-6, 0, 0);
 
 ////////////////////////// MARS //////////////////////////
 const marsGeometry = [0.00045, detail];
-const marsMaterial = {map: loader.load(marsmap),bumpMap: loader.load(marsbump),bumpScale: 2.5};
-const marsNightlightsMat = {map: loader.load(marslights),blending: THREE.AdditiveBlending};
+const marsMaterial = { map: loader.load(marsmap), bumpMap: loader.load(marsbump), bumpScale: 2.5 };
+const marsNightlightsMat = { map: loader.load(marslights), blending: THREE.AdditiveBlending };
 const marsCloudsMat = {
-  material: {map: loader.load(marsclouds), blending: THREE.AdditiveBlending},
-  scalar:1.003
+  material: { map: loader.load(marsclouds), blending: THREE.AdditiveBlending },
+  scalar: 1.003
 };
-const marsFersenel = {rimHex: 0x50342d, scalar: 1.005};
+const marsFersenel = { rimHex: 0x50342d, scalar: 1.005 };
 const marsAxisSpeed = 0.00007123793
-const marsGroup = new Planet(-25.19,25.19,scene,marsGeometry,marsAxisSpeed);
-marsGroup.createShape(marsMaterial,marsNightlightsMat,marsFersenel,marsCloudsMat)
+const marsGroup = new Planet(-25.19, 25.19, scene, marsGeometry, marsAxisSpeed);
+marsGroup.createShape(marsMaterial, marsNightlightsMat, marsFersenel, marsCloudsMat)
 marsGroup.position.set(6, 0, 0);
 
 ////////////////////////// SATURN //////////////////////////
 const saturnGeometry = [1, detail];
-const saturnMaterial = {map: loader.load(saturnmap),bumpMap: loader.load(saturnbump),bumpScale: 3};
-const saturnNightlightsMat = {map: loader.load(saturnlights),blending: THREE.AdditiveBlending};
+const saturnMaterial = { map: loader.load(saturnmap), bumpMap: loader.load(saturnbump), bumpScale: 3 };
+const saturnNightlightsMat = { map: loader.load(saturnlights), blending: THREE.AdditiveBlending };
 const saturnCloudsMat = {
-  material: {map: loader.load(saturnclouds),transparent: true,opacity: 0.4,blending: THREE.AdditiveBlending},
-  scalar:1.01
+  material: { map: loader.load(saturnclouds), transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending },
+  scalar: 1.01
 };
-const saturnFersenel = {rimHex: 0x7c7c7c, scalar: 1.011}
+const saturnFersenel = { rimHex: 0x7c7c7c, scalar: 1.011 }
 const saturnRing = {
   geometry: [1, 2.5, 64],
-  material: {map: loader.load(saturnrings),color: 0xffffff,side: THREE.DoubleSide,transparent: true,opacity: 0.5},
+  material: { map: loader.load(saturnrings), color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.5 },
   scale: [0.0078, 0.0078, 0.0078],
-  rotation: {x: -Math.PI / 2.25, y: null}
+  rotation: { x: -Math.PI / 2.25, y: null }
 }
 const saturnAxisSpeed = 0.00016622183
-const saturnGroup = new Planet(-26.73,26.73,scene,saturnGeometry,saturnAxisSpeed);
-saturnGroup.createShape(saturnMaterial,saturnNightlightsMat,saturnFersenel,saturnCloudsMat,saturnRing)
+const saturnGroup = new Planet(-26.73, 26.73, scene, saturnGeometry, saturnAxisSpeed);
+saturnGroup.createShape(saturnMaterial, saturnNightlightsMat, saturnFersenel, saturnCloudsMat, saturnRing)
 
 ////////////////////////// URANUS //////////////////////////
 const uranusGeometry = [1, detail];
-const uranusMaterial = {map: loader.load(uranusmap)};
-const uranusNightlightsMat = {map: loader.load(uranuslights),blending: THREE.AdditiveBlending};
-const uranusFersenel = {rimHex: 0x0089a6, scalar: 1.005}
+const uranusMaterial = { map: loader.load(uranusmap) };
+const uranusNightlightsMat = { map: loader.load(uranuslights), blending: THREE.AdditiveBlending };
+const uranusFersenel = { rimHex: 0x0089a6, scalar: 1.005 }
 const uranusRing = {
   geometry: [1, 2.5, 64],
-  material: {map: loader.load(uranusrings),color: 0xffffff,side: THREE.DoubleSide,transparent: true, opacity: 0.35},
+  material: { map: loader.load(uranusrings), color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.35 },
   scale: [0.0034, 0.0034, 0.0034],
-  rotation: {x: null, y: Math.PI / 2}
+  rotation: { x: null, y: Math.PI / 2 }
 }
 const uranusAxisSpeed = 0.00016622183
-const uranusGroup = new Planet(-97.77,97.77,scene,uranusGeometry,uranusAxisSpeed);
-uranusGroup.createShape(uranusMaterial,uranusNightlightsMat,uranusFersenel,{},uranusRing)
+const uranusGroup = new Planet(-97.77, 97.77, scene, uranusGeometry, uranusAxisSpeed);
+uranusGroup.createShape(uranusMaterial, uranusNightlightsMat, uranusFersenel, {}, uranusRing)
 
 ////////////////////////// NEPTUNE //////////////////////////
 const neptuneGeometry = [1, detail];
-const neptuneMaterial = {map: loader.load(neptunemap),bumpMap: loader.load(neptunebump),bumpScale: 1.5};
-const neptuneNightlightsMat = {map: loader.load(neptunelights),blending: THREE.AdditiveBlending};
+const neptuneMaterial = { map: loader.load(neptunemap), bumpMap: loader.load(neptunebump), bumpScale: 1.5 };
+const neptuneNightlightsMat = { map: loader.load(neptunelights), blending: THREE.AdditiveBlending };
 const neptuneCloudsMat = {
-  material: {map: loader.load(neptuneclouds),transparent: true, opacity: 1, blending: THREE.AdditiveBlending},
-  scalar:1.01
+  material: { map: loader.load(neptuneclouds), transparent: true, opacity: 1, blending: THREE.AdditiveBlending },
+  scalar: 1.01
 };
-const neptuneFersenel = {rimHex: 0x628bdb, scalar: 1.005}
+const neptuneFersenel = { rimHex: 0x628bdb, scalar: 1.005 }
 const neptuneRing = {
   geometry: [1, 2.5, 64],
-  material: {map: loader.load(neptunerings), color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.35},
+  material: { map: loader.load(neptunerings), color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.35 },
   scale: [0.0033, 0.0033, 0.0033],
-  rotation: {x: null, y: null}
+  rotation: { x: null, y: null }
 }
 const neptuneAxisSpeed = 0.00010908308;
-const neptuneGroup = new Planet(-28.32,28.32,scene,neptuneGeometry,neptuneAxisSpeed);
-neptuneGroup.createShape(neptuneMaterial,neptuneNightlightsMat,neptuneFersenel,neptuneCloudsMat,neptuneRing)
+const neptuneGroup = new Planet(-28.32, 28.32, scene, neptuneGeometry, neptuneAxisSpeed);
+neptuneGroup.createShape(neptuneMaterial, neptuneNightlightsMat, neptuneFersenel, neptuneCloudsMat, neptuneRing)
 
 ///////////////////////////// SUN ///////////////////////////
 const sunGeometry = [0.093, detail];
-const sunMaterial = {map: loader.load(sunMap)};
+const sunMaterial = { map: loader.load(sunMap) };
 const lightDetails = [0xffffff, 2.5, 500, 0, 0, 0];
 const sunAxisSpeed = 0.00000269341
-const sunGroup = new Planet(-7.25,7.25,scene,sunGeometry,sunAxisSpeed);
+const sunGroup = new Planet(-7.25, 7.25, scene, sunGeometry, sunAxisSpeed);
 sunGroup.shape = sunGroup.addMesh(sunMaterial)
 sunGroup.light = sunGroup.addLight(lightDetails)
 sunGroup.position.set(0, 0, 0);
@@ -949,6 +1191,13 @@ function onSpriteClick(event) {
       targetPosition = targetPlanet.position.clone().add(new THREE.Vector3(0, 0, 0)); // adjust zoom distance
       fadeOutFlag = true;
 
+      if (targetPlanet === earthGroup) {
+        document.getElementById("neobutton").style.display = 'block';
+      }
+      else {
+        document.getElementById("neobutton").style.display = 'none';
+      }
+
       document.getElementById("description-value").textContent = targetPlanet.description
       document.getElementById("mass-value").textContent = targetPlanet.mass
       document.getElementById("radius-value").textContent = targetPlanet.radius
@@ -1251,16 +1500,16 @@ function animate() {
   controls2.target.set(target.x, target.y, target.z);
   controls2.update();
 
-  
+
   // rotation around itself
   stars.rotation.y -= 0.0001;
   earthGroup.rotateAroundAxis(speedFactor)
   jupiterGroup.rotateAroundAxis(speedFactor)
   mercuryGroup.rotateAroundAxis(speedFactor);
-  venusGroup.rotateAroundAxis(speedFactor,"-");
+  venusGroup.rotateAroundAxis(speedFactor, "-");
   marsGroup.rotateAroundAxis(speedFactor);
   saturnGroup.rotateAroundAxis(speedFactor);
-  uranusGroup.rotateAroundAxis(speedFactor,"-");
+  uranusGroup.rotateAroundAxis(speedFactor, "-");
   neptuneGroup.rotateAroundAxis(speedFactor);
   sunGroup.rotateAroundAxis(speedFactor);
 

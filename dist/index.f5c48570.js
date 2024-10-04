@@ -678,6 +678,13 @@ var _sunfluidsPng = require("../assets/textures/sun/sunfluids.png");
 var _sunfluidsPngDefault = parcelHelpers.interopDefault(_sunfluidsPng);
 // SUBTITLES
 var _subtitlesJs = require("./subtitles.js");
+// ASTEROIDS
+var _neaPng = require("../assets/asteroids/NEA.png");
+var _neaPngDefault = parcelHelpers.interopDefault(_neaPng);
+var _necPng = require("../assets/asteroids/NEC.png");
+var _necPngDefault = parcelHelpers.interopDefault(_necPng);
+var _phaPng = require("../assets/asteroids/PHA.png");
+var _phaPngDefault = parcelHelpers.interopDefault(_phaPng);
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
 let speedFactor = 1;
 const planetGroupArr = [];
@@ -806,6 +813,312 @@ document.getElementById("playfact").addEventListener("click", function() {
     clickedLabel.factTracker++;
 });
 //
+let firstSmallClicked = false; // suitable position
+const earthButton = document.getElementById("backToEarth");
+document.getElementById("neobutton").addEventListener("click", function() {
+    (0, _gsap.gsap).to(headertitle, {
+        opacity: 0,
+        duration: 1
+    }); // fade out
+    (0, _gsap.gsap).to(planetui, {
+        opacity: 0,
+        duration: 1
+    }); // fade out
+    (0, _gsap.gsap).to(prevbutton, {
+        opacity: 0,
+        duration: 1
+    }); // fade out
+    (0, _gsap.gsap).to(nextbutton, {
+        opacity: 0,
+        duration: 1
+    }); // fade out
+    prevbutton.style.cursor = "default";
+    nextbutton.style.cursor = "default";
+    returnbutton.style.cursor = "default";
+    (0, _gsap.gsap).to(returnbutton, {
+        opacity: 0,
+        duration: 1,
+        onComplete: function() {
+            planetui.style.display = "none";
+            prevbutton.style.display = "none";
+            nextbutton.style.display = "none";
+            returnbutton.style.display = "none";
+            prevbutton.style.cursor = "pointer";
+            nextbutton.style.cursor = "pointer";
+            returnbutton.style.cursor = "pointer";
+        }
+    }); // fade out
+    earthSprite.associatedNumber = 0.005;
+    (0, _gsap.gsap).to(camera.position, {
+        x: targetPosition.x + earthSprite.associatedNumber,
+        y: targetPosition.y,
+        z: targetPosition.z,
+        duration: 2,
+        onUpdate: function() {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+        },
+        onComplete: function() {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+            planetui.style.display = "";
+            document.getElementById("lm").style.display = "none";
+            document.getElementById("rm").style.display = "none";
+            document.getElementById("am").style.display = "";
+            earthButton.style.opacity = 0;
+            earthButton.style.display = "block";
+            (0, _gsap.gsap).to(earthButton, {
+                opacity: 1,
+                duration: 1
+            });
+            (0, _gsap.gsap).to(planetui, {
+                opacity: 1,
+                duration: 1
+            });
+        }
+    });
+});
+earthButton.addEventListener("click", function() {
+    (0, _gsap.gsap).to(planetui, {
+        opacity: 0,
+        duration: 1
+    }); // fade out
+    (0, _gsap.gsap).to(earthButton, {
+        opacity: 0,
+        duration: 1,
+        onComplete: function() {
+            planetui.style.display = "none";
+            earthButton.style.display = "none";
+            planetui.style.cursor = "pointer";
+            earthButton.style.cursor = "pointer";
+        }
+    }); // fade out
+    planetui.style.cursor = "default";
+    earthButton.style.cursor = "default";
+    earthSprite.associatedNumber = 0.002125;
+    (0, _gsap.gsap).to(camera.position, {
+        x: targetPosition.x + earthSprite.associatedNumber,
+        y: targetPosition.y,
+        z: targetPosition.z,
+        duration: 1,
+        onUpdate: function() {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+        },
+        onComplete: function() {
+            controls.update();
+            controls2.update();
+            controls2.noZoom = true;
+            planetui.style.display = "";
+            document.getElementById("lm").style.display = "";
+            document.getElementById("rm").style.display = "";
+            document.getElementById("am").style.display = "none";
+            document.getElementById("secondlm").style.display = "none";
+            firstSmallClicked = false;
+            (0, _gsap.gsap).to(planetui, {
+                opacity: 1,
+                duration: 1
+            });
+            returnbutton.style.opacity = 0;
+            returnbutton.style.display = "block";
+            (0, _gsap.gsap).to(returnbutton, {
+                opacity: 1,
+                duration: 1
+            });
+            nextbutton.style.opacity = 0;
+            nextbutton.style.display = "block";
+            (0, _gsap.gsap).to(nextbutton, {
+                opacity: 1,
+                duration: 1
+            });
+            prevbutton.style.opacity = 0;
+            prevbutton.style.display = "block";
+            (0, _gsap.gsap).to(prevbutton, {
+                opacity: 1,
+                duration: 1
+            });
+        }
+    });
+});
+const bigContainer = document.getElementById("am");
+const asteroidData = [
+    {
+        title: "Midas (1973 EA)",
+        a: 1.776,
+        i: 39.82,
+        e: 0.6505,
+        peri: 267.84,
+        M: 258.81,
+        period: 865,
+        q: 0.621,
+        Q: 2.93,
+        NEO: "Y",
+        PHA: "Y"
+    },
+    {
+        title: "Florence (1981 ET3)",
+        a: 1.769,
+        i: 22.14,
+        e: 0.4231,
+        peri: 27.90,
+        M: 0.67,
+        period: 859,
+        q: 1.021,
+        Q: 2.52,
+        NEO: "Y",
+        PHA: "N"
+    },
+    {
+        title: "Aristaeus (1977 HA)",
+        a: 1.6,
+        i: 23.07,
+        e: 0.5030,
+        peri: 290.97,
+        M: 202.31,
+        period: 739,
+        q: 0.795,
+        Q: 2.40,
+        NEO: "Y",
+        PHA: "N"
+    },
+    {
+        title: "Adonis (1936 CA)",
+        a: 1.874,
+        i: 1.32,
+        e: 0.7642,
+        peri: 43.69,
+        M: 230.82,
+        period: 937,
+        q: 0.442,
+        Q: 3.31,
+        NEO: "Y",
+        PHA: "Y"
+    },
+    {
+        title: "Hathor (1976 UA)",
+        a: 0.8438,
+        i: 5.86,
+        e: 0.4500,
+        peri: 40.10,
+        M: 53.40,
+        period: 283,
+        q: 0.464,
+        Q: 1.22,
+        NEO: "Y",
+        PHA: "N"
+    }
+].map((obj)=>{
+    let type = 5; // default type if PHA and NEO are both 'N'
+    if (obj.PHA === "Y") type = 4; // PHA is 'Y'
+    else if (obj.NEO === "Y" && obj.PHA === "N") {
+        if (obj.a > 1) {
+            if (obj.q > 1.017 && obj.q < 1.3) type = 0;
+            else if (obj.q < 1.017) type = 1;
+        } else if (obj.q > 0.983) type = 2;
+        else type = 3;
+    }
+    return {
+        ...obj,
+        type
+    }; // add type to obj
+});
+const types = [
+    {
+        image: (0, _neaPngDefault.default),
+        barColor: "#28a745",
+        description: "Near-Earth Asteroid Amor"
+    },
+    {
+        image: (0, _neaPngDefault.default),
+        barColor: "#f1c40f",
+        description: "Near-Earth Asteroid Apollo"
+    },
+    {
+        image: (0, _neaPngDefault.default),
+        barColor: "#e67e22",
+        description: "Near-Earth Asteroid Aten"
+    },
+    {
+        image: (0, _neaPngDefault.default),
+        barColor: "#8e44ad",
+        description: "Near-Earth Asteroid Atira"
+    },
+    {
+        image: (0, _phaPngDefault.default),
+        barColor: "#e74c3c",
+        description: "Potentially Hazardous Asteroid"
+    },
+    {
+        image: (0, _necPngDefault.default),
+        barColor: "#3498db",
+        description: "Near-Earth Comet"
+    } // Type 5 - NEC - Blue
+];
+function createSmalls() {
+    asteroidData.forEach((small)=>{
+        const smallElement = document.createElement("div");
+        smallElement.className = "small";
+        const typeInfo = types[small.type];
+        smallElement.innerHTML = `
+          <img src="${typeInfo.image}" />
+          <div class="smallinfo">
+              <h3>${small.title}</h3>
+              <p>${typeInfo.description}</p>
+          </div>
+      `;
+        smallElement.style.setProperty("--bar-color", typeInfo.barColor);
+        bigContainer.appendChild(smallElement);
+    });
+}
+createSmalls();
+const smalls = document.querySelectorAll(".small");
+smalls.forEach((small, index)=>{
+    small.addEventListener("click", ()=>{
+        document.getElementById("astUItype").innerText = types[asteroidData[index].type].description;
+        document.getElementById("astUIsemimajor").innerText = asteroidData[index].a + " AU";
+        document.getElementById("astUIincline").innerText = asteroidData[index].i + " degrees";
+        document.getElementById("astUIecc").innerText = asteroidData[index].e;
+        document.getElementById("astUIma").innerText = asteroidData[index].M + " degrees";
+        document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
+        document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
+        if (!firstSmallClicked) {
+            firstSmallClicked = true;
+            document.getElementById("secondlm").style.display = "";
+            document.getElementById("secondlm").style.opacity = 0;
+            (0, _gsap.gsap).to(document.getElementById("secondlm"), {
+                opacity: 1,
+                duration: 1
+            });
+        // camera transition to first asteroid
+        }
+    });
+});
+function filterAndSearchItems() {
+    const input = document.getElementById("search").value.toLowerCase();
+    const selectedValue = document.getElementById("astType").value;
+    const items = document.getElementsByClassName("small");
+    for(let i = 0; i < items.length; i++){
+        const smallDataItem = asteroidData[i];
+        const itemType = smallDataItem.type;
+        const h3Text = items[i].getElementsByTagName("h3")[0].innerText.toLowerCase();
+        const pText = items[i].getElementsByTagName("p")[0].innerText.toLowerCase();
+        // SEARCH LOGIC
+        const matchesSearch = h3Text.includes(input) || pText.includes(input);
+        // DROPDOWN LOGIC
+        const matchesFilter = selectedValue === "" || selectedValue === "NEA" && itemType < 4 || // Types 0-3 are NEA
+        selectedValue === "PHA" && itemType === 4 || // Type 4 is PHA
+        selectedValue === "NEC" && itemType === 5 // Type 5 is NEC
+        ;
+        // COMBINE!
+        if (matchesSearch && matchesFilter) items[i].style.display = "";
+        else items[i].style.display = "none";
+    }
+}
+document.getElementById("search").addEventListener("keyup", filterAndSearchItems);
+document.getElementById("astType").addEventListener("change", filterAndSearchItems);
 const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new _three.Scene();
@@ -855,13 +1168,10 @@ const jupiterFersenel = {
     rimHex: 0x274566,
     scalar: 1.005
 };
-console.log(0x274566);
-console.log(parseInt("274566", 16));
 const jupiterAxisSpeed = 0.00017453293;
 const jupiterGroup = new (0, _planetJsDefault.default)((0, _planetsJsonDefault.default).jupiter.x, (0, _planetsJsonDefault.default).jupiter.y, scene, (0, _planetsJsonDefault.default).jupiter.geometry, (0, _planetsJsonDefault.default).jupiter.axisSpeed);
 (0, _planetsJsonDefault.default).jupiter.fersenel.rimHex = parseInt((0, _planetsJsonDefault.default).jupiter.fersenel.rimHex, 16);
-console.log((0, _planetsJsonDefault.default).jupiter.fersenel);
-jupiterGroup.createShape(jupiterMaterial, jupiterNightMat, jupiterFersenel);
+jupiterGroup.createShape(jupiterMaterial, jupiterNightMat, (0, _planetsJsonDefault.default).jupiter.fersenel);
 ////////////////////////// EARTH //////////////////////////
 const earthGeometry = [
     0.00085,
@@ -1582,6 +1892,8 @@ function onSpriteClick(event) {
             targetPlanet = clickedLabel.associatedGroup;
             targetPosition = targetPlanet.position.clone().add(new _three.Vector3(0, 0, 0)); // adjust zoom distance
             fadeOutFlag = true;
+            if (targetPlanet === earthGroup) document.getElementById("neobutton").style.display = "block";
+            else document.getElementById("neobutton").style.display = "none";
             document.getElementById("description-value").textContent = targetPlanet.description;
             document.getElementById("mass-value").textContent = targetPlanet.mass;
             document.getElementById("radius-value").textContent = targetPlanet.radius;
@@ -1884,7 +2196,7 @@ function handleWindowResize() {
 }
 window.addEventListener("resize", handleWindowResize, false);
 
-},{"./planet.js":"exNfn","../assets/stars/circle.png":"bpJO1","../assets/textures/earth/earthmap1k.png":"sL8jQ","../assets/textures/earth/earthlights1k.jpg":"hwl0n","../assets/textures/earth/earthspec1k.jpg":"cbuRO","../assets/textures/earth/earthbump1k.jpg":"81aoT","../assets/textures/earth/earthcloudmap.jpg":"6QHR0","../assets/textures/earth/earthcloudmaptrans.jpg":"fx0K9","../assets/textures/jupiter/jupiter.jpg":"kdPTc","../assets/textures/jupiter/jupiternight.jpg":"bIDlt","../assets/textures/mercury/mercurymap.jpg":"iWRN5","../assets/textures/mercury/mercurybump.jpg":"dYcYR","../assets/textures/mercury/mercurynightmap.jpg":"6q8Da","../assets/textures/venus/venusmap.jpg":"E6AsX","../assets/textures/venus/venusmapnight.jpg":"4e6gf","../assets/textures/venus/venusclouds.jpg":"5rqUK","../assets/textures/mars/marsmap.png":"l6QSa","../assets/textures/mars/marsbump.jpg":"c4kMA","../assets/textures/mars/marsclouds.png":"2v5Zj","../assets/textures/mars/marsnight.jpg":"gmgyo","../assets/textures/saturn/th_saturn.png":"1PmpW","../assets/textures/saturn/th_saturnbump.png":"3N3Sf","../assets/textures/saturn/th_saturnclouds.png":"dBdUM","../assets/textures/saturn/th_saturnnight.png":"eeNJU","../assets/textures/saturn/t00fri_gh_saturnrings.png":"aUgNw","../assets/textures/uranus/uranusmap.png":"cmcTM","../assets/textures/uranus/uranuslights.png":"fmPKW","../assets/textures/uranus/uranusrings.png":"fldyh","../assets/textures/neptune/neptunemap.jpg":"6Qb4i","../assets/textures/neptune/neptunebump.png":"ixuWJ","../assets/textures/neptune/neptuneclouds.png":"leeDc","../assets/textures/neptune/neptunelights.jpg":"1pAHL","../assets/textures/neptune/neptunerings.png":"cLZgz","../assets/textures/sun/sunmap.jpg":"daOLx","../assets/textures/sun/sunfluids.png":"ltP79","./subtitles.js":"2NNMB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../node_modules/three":"ktPTu","../node_modules/three/examples/jsm/controls/OrbitControls.js":"7mqRv","../node_modules/three/examples/jsm/controls/TrackballControls.js":"1AMKo","../node_modules/gsap":"fPSuC","../node_modules/three/examples/jsm/postprocessing/RenderPass.js":"hXnUO","../node_modules/three/examples/jsm/postprocessing/EffectComposer.js":"e5jie","../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js":"3iDYE","../node_modules/three/examples/jsm/postprocessing/OutputPass.js":"bggV1","../node_modules/three/examples/jsm/postprocessing/ShaderPass.js":"5IxTN","./planets.json":"k4gu4"}],"exNfn":[function(require,module,exports) {
+},{"./planet.js":"exNfn","../assets/stars/circle.png":"bpJO1","../assets/textures/earth/earthmap1k.png":"sL8jQ","../assets/textures/earth/earthlights1k.jpg":"hwl0n","../assets/textures/earth/earthspec1k.jpg":"cbuRO","../assets/textures/earth/earthbump1k.jpg":"81aoT","../assets/textures/earth/earthcloudmap.jpg":"6QHR0","../assets/textures/earth/earthcloudmaptrans.jpg":"fx0K9","../assets/textures/jupiter/jupiter.jpg":"kdPTc","../assets/textures/jupiter/jupiternight.jpg":"bIDlt","../assets/textures/mercury/mercurymap.jpg":"iWRN5","../assets/textures/mercury/mercurybump.jpg":"dYcYR","../assets/textures/mercury/mercurynightmap.jpg":"6q8Da","../assets/textures/venus/venusmap.jpg":"E6AsX","../assets/textures/venus/venusmapnight.jpg":"4e6gf","../assets/textures/venus/venusclouds.jpg":"5rqUK","../assets/textures/mars/marsmap.png":"l6QSa","../assets/textures/mars/marsbump.jpg":"c4kMA","../assets/textures/mars/marsclouds.png":"2v5Zj","../assets/textures/mars/marsnight.jpg":"gmgyo","../assets/textures/saturn/th_saturn.png":"1PmpW","../assets/textures/saturn/th_saturnbump.png":"3N3Sf","../assets/textures/saturn/th_saturnclouds.png":"dBdUM","../assets/textures/saturn/th_saturnnight.png":"eeNJU","../assets/textures/saturn/t00fri_gh_saturnrings.png":"aUgNw","../assets/textures/uranus/uranusmap.png":"cmcTM","../assets/textures/uranus/uranuslights.png":"fmPKW","../assets/textures/uranus/uranusrings.png":"fldyh","../assets/textures/neptune/neptunemap.jpg":"6Qb4i","../assets/textures/neptune/neptunebump.png":"ixuWJ","../assets/textures/neptune/neptuneclouds.png":"leeDc","../assets/textures/neptune/neptunelights.jpg":"1pAHL","../assets/textures/neptune/neptunerings.png":"cLZgz","../assets/textures/sun/sunmap.jpg":"daOLx","../assets/textures/sun/sunfluids.png":"ltP79","./subtitles.js":"2NNMB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../node_modules/three":"ktPTu","../node_modules/three/examples/jsm/controls/OrbitControls.js":"7mqRv","../node_modules/three/examples/jsm/controls/TrackballControls.js":"1AMKo","../node_modules/gsap":"fPSuC","../node_modules/three/examples/jsm/postprocessing/RenderPass.js":"hXnUO","../node_modules/three/examples/jsm/postprocessing/EffectComposer.js":"e5jie","../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js":"3iDYE","../node_modules/three/examples/jsm/postprocessing/OutputPass.js":"bggV1","../node_modules/three/examples/jsm/postprocessing/ShaderPass.js":"5IxTN","./planets.json":"k4gu4","../assets/asteroids/NEA.png":"dekG2","../assets/asteroids/NEC.png":"c6f47","../assets/asteroids/PHA.png":"95S6T"}],"exNfn":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _three = require("../node_modules/three");
@@ -40785,6 +41097,15 @@ const OutputShader = {
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"k4gu4":[function(require,module,exports) {
 module.exports = JSON.parse('{"jupiter":{"x":-3.13,"y":3.13,"geometry":[0.0093,12],"material":{"map":"../assets/textures/jupiter/jupiter.jpg"},"nightMaterial":{"map":"../assets/textures/jupiter/jupiternight.jpg","blending":"AdditiveBlending"},"fersenel":{"rimHex":"274566","scalar":1.005},"axisSpeed":0.00017453293}}');
 
-},{}]},["aJPIF","8ZNvh"], "8ZNvh", "parcelRequire591d")
+},{}],"dekG2":[function(require,module,exports) {
+module.exports = require("fb03523e4da74559").getBundleURL("lORN7") + "NEA.99f7a4a4.png" + "?" + Date.now();
+
+},{"fb03523e4da74559":"lgJ39"}],"c6f47":[function(require,module,exports) {
+module.exports = require("3979de42d1db21e1").getBundleURL("lORN7") + "NEC.5eb9f195.png" + "?" + Date.now();
+
+},{"3979de42d1db21e1":"lgJ39"}],"95S6T":[function(require,module,exports) {
+module.exports = require("b05edbfc54721588").getBundleURL("lORN7") + "PHA.29275f4d.png" + "?" + Date.now();
+
+},{"b05edbfc54721588":"lgJ39"}]},["aJPIF","8ZNvh"], "8ZNvh", "parcelRequire591d")
 
 //# sourceMappingURL=index.f5c48570.js.map
