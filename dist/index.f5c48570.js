@@ -759,6 +759,7 @@ let currentSubtitles = [];
 let currentPlanetIndex = 0; // Index for selected planet
 let currentClipIndex = 0; // Index for selected audio clip
 let lowerFlag = false;
+let audioflag = true;
 function playAudio(planetIndex, clipIndex) {
     const selectedPlanet = (0, _subtitlesJs.audioData)[planetIndex];
     const selectedClip = selectedPlanet.audioClips[clipIndex];
