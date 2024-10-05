@@ -1093,6 +1093,9 @@ smalls.forEach((small, index)=>{
         document.getElementById("astUIma").innerText = asteroidData[index].M + " degrees";
         document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
         document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
+        let ASTtargetPosition = ErosGroup.position.clone().add(new _three.Vector3(0, 0, 0));
+        const OFFSETVARIABLE = asteroidData[index].a * 2.5;
+        console.log(ASTtargetPosition.x + OFFSETVARIABLE);
         if (!firstSmallClicked) {
             firstSmallClicked = true;
             document.getElementById("secondlm").style.display = "";
@@ -1101,8 +1104,31 @@ smalls.forEach((small, index)=>{
                 opacity: 1,
                 duration: 1
             });
-        // camera transition to first asteroid
-        }
+            // camera transition to first asteroid
+            (0, _gsap.gsap).to(camera.position, {
+                x: ASTtargetPosition.x + OFFSETVARIABLE,
+                y: ASTtargetPosition.y,
+                z: ASTtargetPosition.z,
+                duration: 2,
+                onUpdate: function() {
+                    controls.update();
+                    controls2.update();
+                    controls2.noZoom = true;
+                    controls.enableRotate = false;
+                }
+            });
+            (0, _gsap.gsap).to(controls.target, {
+                x: ASTtargetPosition.x,
+                y: ASTtargetPosition.y,
+                z: ASTtargetPosition.z,
+                duration: 1.5,
+                onUpdate: function() {
+                    controls.update();
+                    controls2.update();
+                }
+            });
+        } else // camera transition from asteroid to asteroi
+        camera.position.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
     });
 });
 function filterAndSearchItems() {
@@ -1215,6 +1241,7 @@ earthGroup.createShape(earthMaterial, earthNightlightsMat, earthFersenel, earthC
 //////////////MOON///////////////////////
 const moonGroup = new _three.Group();
 moonGroup.rotation.y = 1.54 * Math.PI / 180;
+moonGroup.scale.set(1 / 400, 1 / 400, 1 / 400);
 scene.add(moonGroup);
 const moonGeometry = new _three.IcosahedronGeometry(0.5, detail); // 0.0092
 const moonMaterial = new _three.MeshPhongMaterial({
@@ -1495,7 +1522,7 @@ gltfLoaderItokawa.load(new URL(require("5ae9dee44506e1a5")).href, (gltf)=>{
     console.error("Error loading model:", error);
 });
 //
-ItokawaGroup.scale.set(1, 1, 1);
+ItokawaGroup.scale.set(1 / 0.0000013, 1 / 0.0000013, 1 / 0.0000013);
 ///////////////////////////Asteroid Belt/////////////////////
 // Asteroid belt constants
 const numAsteroids = 500;
@@ -1959,7 +1986,6 @@ function getControlsZoom() {
 // USE THIS TO GET THE ZOOM LEVEL IN YOUR CONSOLE
 controls.addEventListener("change", function() {
     var zoomValue = getControlsZoom();
-    console.log("Zoom:", zoomValue); // Do whatever you want with zoomValue here
 });
 ///////////////////////////////////// CURSOR CONTROLS AND RAYCASTING!!!!!!!!!!!!
 let raycaster, mouse;
@@ -2241,20 +2267,20 @@ function animate() {
     planetGroupArr.forEach((planetGroup, index)=>{
         const planetData = planetDataList[index];
         const position = updatePosition(planetData.elements, timeIncrement);
-        planetGroup.position.set(position[0], position[1], position[2]);
-        labels[index + 1].position.set(position[0], position[1], position[2]);
+        planetGroup.position.set(-position[0], position[1], position[2]);
+        labels[index + 1].position.set(-position[0], position[1], position[2]);
     });
     // Update position of moon
     moonGroupArr.forEach((moonGroup, index)=>{
         const moonData = moonDataList[index];
         const position = updatePosition(moonData.elements, timeIncrement);
-        moonGroup.position.set(position[0], position[1], position[2]);
+        moonGroup.position.set(-position[0], position[1], position[2]);
     });
     // Update position of asteroid
     asteroidGroupArr.forEach((asteroidGroup, index)=>{
         const asteroidData = asteroidDataList[index];
         const position = updatePosition(asteroidData.elements, timeIncrement);
-        asteroidGroup.position.set(position[0], position[1], position[2]);
+        asteroidGroup.position.set(-position[0], position[1], position[2]);
     });
     updateAsteroidBelt(timeIncrement);
     if (isZooming) {
