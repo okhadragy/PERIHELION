@@ -588,6 +588,7 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _three = require("../node_modules/three");
 var _orbitControlsJs = require("../node_modules/three/examples/jsm/controls/OrbitControls.js");
 var _trackballControlsJs = require("../node_modules/three/examples/jsm/controls/TrackballControls.js");
+var _addonsJs = require("../node_modules/three/examples/jsm/Addons.js");
 var _gsap = require("../node_modules/gsap");
 var _renderPassJs = require("../node_modules/three/examples/jsm/postprocessing/RenderPass.js");
 var _effectComposerJs = require("../node_modules/three/examples/jsm/postprocessing/EffectComposer.js");
@@ -610,8 +611,11 @@ var _earthbump1KJpg = require("../assets/textures/earth/earthbump1k.jpg");
 var _earthbump1KJpgDefault = parcelHelpers.interopDefault(_earthbump1KJpg);
 var _earthcloudmapJpg = require("../assets/textures/earth/earthcloudmap.jpg");
 var _earthcloudmapJpgDefault = parcelHelpers.interopDefault(_earthcloudmapJpg);
-var _earthcloudmaptransJpg = require("../assets/textures/earth/earthcloudmaptrans.jpg");
-var _earthcloudmaptransJpgDefault = parcelHelpers.interopDefault(_earthcloudmaptransJpg);
+//MOON
+var _moonmap4KJpg = require("../assets/textures/moon/moonmap4k.jpg");
+var _moonmap4KJpgDefault = parcelHelpers.interopDefault(_moonmap4KJpg);
+var _moonbump4KJpg = require("../assets/textures/moon/moonbump4k.jpg");
+var _moonbump4KJpgDefault = parcelHelpers.interopDefault(_moonbump4KJpg);
 // JUPITER
 var _planetsJson = require("./planets.json");
 var _planetsJsonDefault = parcelHelpers.interopDefault(_planetsJson);
@@ -674,8 +678,6 @@ var _neptuneringsPngDefault = parcelHelpers.interopDefault(_neptuneringsPng);
 // SUN
 var _sunmapJpg = require("../assets/textures/sun/sunmap.jpg");
 var _sunmapJpgDefault = parcelHelpers.interopDefault(_sunmapJpg);
-var _sunfluidsPng = require("../assets/textures/sun/sunfluids.png");
-var _sunfluidsPngDefault = parcelHelpers.interopDefault(_sunfluidsPng);
 // SUBTITLES
 var _subtitlesJs = require("./subtitles.js");
 // ASTEROIDS
@@ -686,8 +688,9 @@ var _necPngDefault = parcelHelpers.interopDefault(_necPng);
 var _phaPng = require("../assets/asteroids/PHA.png");
 var _phaPngDefault = parcelHelpers.interopDefault(_phaPng);
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
-let speedFactor = 1;
 const planetGroupArr = [];
+const asteroidGroupArr = [];
+const moonGroupArr = [];
 const DEG2RAD = Math.PI / 180;
 // FOR REFERENCE
 // 1 THREE JS UNIT = 1 AU * 10 = 149597870.7 KM * 10
@@ -736,6 +739,7 @@ const loadingManager = new _three.LoadingManager();
 const song1 = document.getElementById("song1");
 const musicslider = document.getElementById("musicslider");
 const narrslider = document.getElementById("narrslider");
+const speedslider = document.getElementById("speedslider");
 song1.volume = musicslider.value;
 //
 loadingManager.onLoad = function() {
@@ -752,6 +756,11 @@ loadingManager.onLoad = function() {
     });
     document.getElementById("everything").classList.remove("hidden");
 };
+// speed slider
+let speedFactor = speedslider.value;
+speedslider.addEventListener("input", function() {
+    speedFactor = this.value;
+});
 musicslider.addEventListener("input", function() {
     song1.volume = this.value;
 });
@@ -1203,6 +1212,19 @@ const earthFersenel = {
 const earthAxisSpeed = 0.00007272205;
 const earthGroup = new (0, _planetJsDefault.default)(-23.4, 23.4, scene, earthGeometry, earthAxisSpeed);
 earthGroup.createShape(earthMaterial, earthNightlightsMat, earthFersenel, earthCloudsMat);
+//////////////MOON///////////////////////
+const moonGroup = new _three.Group();
+moonGroup.rotation.y = 1.54 * Math.PI / 180;
+scene.add(moonGroup);
+const moonGeometry = new _three.IcosahedronGeometry(0.5, detail); // 0.0092
+const moonMaterial = new _three.MeshPhongMaterial({
+    map: loader.load((0, _moonmap4KJpgDefault.default)),
+    bumpMap: loader.load((0, _moonbump4KJpgDefault.default)),
+    bumpScale: 0.04
+});
+const moonMesh = new _three.Mesh(moonGeometry, moonMaterial);
+moonGroup.add(moonMesh);
+earthGroup.add(moonGroup);
 ////////////////////////// MERCURY //////////////////////////
 const mercuryGeometry = [
     0.00033,
@@ -1428,6 +1450,94 @@ const neptuneRing = {
 const neptuneAxisSpeed = 0.00010908308;
 const neptuneGroup = new (0, _planetJsDefault.default)(-28.32, 28.32, scene, neptuneGeometry, neptuneAxisSpeed);
 neptuneGroup.createShape(neptuneMaterial, neptuneNightlightsMat, neptuneFersenel, neptuneCloudsMat, neptuneRing);
+///////////////////////////// EROS ///////////////////////////
+const ErosGroup = new _three.Group(); // Create a group for the asteroid
+scene.add(ErosGroup); // Add the group to the scene
+const gltfLoaderEros = new (0, _addonsJs.GLTFLoader)();
+gltfLoaderEros.load(new URL(require("b52406d8383adb96")).href, (gltf)=>{
+    const eros = gltf.scene;
+    eros.rotation.x = -0.5 * Math.PI;
+    eros.rotation.y = 1 * Math.PI;
+    eros.rotation.z = 0.1 * Math.PI;
+    ErosGroup.add(eros);
+    console.log("Asteroid model loaded:", eros);
+}, undefined, (error)=>{
+    console.error("Error loading model:", error);
+});
+ErosGroup.scale.set(1 / 82738, 1 / 82738, 1 / 82738);
+/////////////////////////////////////////Bennu////////////////////
+const BennuGroup = new _three.Group();
+scene.add(BennuGroup);
+const gltfLoaderBennu = new (0, _addonsJs.GLTFLoader)();
+gltfLoaderBennu.load(new URL(require("194fb1d7cdd86a67")).href, (gltf)=>{
+    const bennu = gltf.scene;
+    bennu.rotation.x = -0.5 * Math.PI;
+    bennu.rotation.y = 1 * Math.PI;
+    bennu.rotation.z = 0.1 * Math.PI;
+    BennuGroup.add(bennu);
+    console.log("Asteroid model loaded:", bennu);
+}, undefined, (error)=>{
+    console.error("Error loading model:", error);
+});
+BennuGroup.scale.set(1 / 2826000, 1 / 2826000, 1 / 2826000);
+////////////////////Itokawa///////////////////////////////////
+const ItokawaGroup = new _three.Group();
+scene.add(ItokawaGroup);
+const gltfLoaderItokawa = new (0, _addonsJs.GLTFLoader)();
+gltfLoaderItokawa.load(new URL(require("5ae9dee44506e1a5")).href, (gltf)=>{
+    const itokawa = gltf.scene;
+    itokawa.rotation.x = -0.5 * Math.PI;
+    itokawa.rotation.y = 1 * Math.PI;
+    itokawa.rotation.z = 0.1 * Math.PI;
+    ItokawaGroup.add(itokawa);
+    console.log("Asteroid model loaded:", itokawa);
+}, undefined, (error)=>{
+    console.error("Error loading model:", error);
+});
+//
+ItokawaGroup.scale.set(1, 1, 1);
+///////////////////////////Asteroid Belt/////////////////////
+// Asteroid belt constants
+const numAsteroids = 500;
+const minSemiMajorAxis = 1.5;
+const maxSemiMajorAxis = 5.0;
+const beltInclinationRange = 15;
+const eccentricityRange = 0.05;
+// Asteroid geometry and material
+const asteroidGeometry = new _three.IcosahedronGeometry(0.1, 1);
+const asteroidMaterial = new _three.MeshPhongMaterial({
+    color: 0x888888
+});
+const asteroids = [];
+// Generate random orbital parameters for asteroids
+function generateRandomTrajectory() {
+    const smA = Math.random() * (maxSemiMajorAxis - minSemiMajorAxis) + minSemiMajorAxis;
+    const oI = Math.random() * beltInclinationRange;
+    const oE = Math.random() * eccentricityRange;
+    const aN = Math.random() * 360;
+    const lP = Math.random() * 360;
+    const mAe = Math.random() * 360;
+    const Sidereal = smA ** 1.5; // Kepler's law approximation
+    return new Trajectory("Asteroid", smA, oI, oE, aN, lP, mAe, Sidereal);
+}
+// Create the asteroid belt
+function createAsteroidBelt() {
+    for(let i = 0; i < numAsteroids; i++){
+        const trajectory = generateRandomTrajectory();
+        const asteroidMesh = new _three.Mesh(asteroidGeometry, asteroidMaterial);
+        asteroidMesh.userData.trajectory = trajectory;
+        scene.add(asteroidMesh);
+        asteroids.push(asteroidMesh);
+    }
+}
+// Update asteroid belt positions
+function updateAsteroidBelt(timeIncrement) {
+    asteroids.forEach((asteroid)=>{
+        const trajectory = asteroid.userData.trajectory;
+        const position = updatePosition(trajectory, timeIncrement);
+        asteroid.position.set(position[0], position[1], position[2]);
+    });
+}
 ///////////////////////////// SUN ///////////////////////////
 const sunGeometry = [
     0.093,
@@ -1449,7 +1559,7 @@ const sunGroup = new (0, _planetJsDefault.default)(-7.25, 7.25, scene, sunGeomet
 sunGroup.shape = sunGroup.addMesh(sunMaterial);
 sunGroup.light = sunGroup.addLight(lightDetails);
 sunGroup.position.set(0, 0, 0);
-//
+// Arrays
 planetGroupArr.push(mercuryGroup); // Mercury
 planetGroupArr.push(venusGroup); // Venus
 planetGroupArr.push(earthGroup); // Earth
@@ -1458,7 +1568,10 @@ planetGroupArr.push(jupiterGroup); // Jupiter
 planetGroupArr.push(saturnGroup); // Saturn
 planetGroupArr.push(uranusGroup); // Uranus
 planetGroupArr.push(neptuneGroup); // Neptune
-//
+moonGroupArr.push(moonGroup); // Moon
+asteroidGroupArr.push(ErosGroup); // Asteroid(Eros)
+asteroidGroupArr.push(BennuGroup); // Asteroid(Bennu)
+asteroidGroupArr.push(ItokawaGroup); // Asteroid(itokawa)
 /////////////////////////////////////// BLOOM ////////////////////////////////////// 
 const BLOOM_SCENE = 1;
 const bloomLayer = new _three.Layers();
@@ -1579,6 +1692,30 @@ const planetDataList = [
         color: 0xF6B2A4
     }
 ];
+const moonDataList = [
+    {
+        name: "Moon",
+        elements: new Trajectory("Moon", 384400 / 149597870.7, 5.145, 0.0549, 125.08, 318.15, 115.3654, 27.32),
+        color: 0xF6B2A4
+    }
+];
+const asteroidDataList = [
+    {
+        name: "Eros",
+        elements: new Trajectory("Eros", 1.458, 10.8, 0.223, 304.32, 304.4, 178.8, 643),
+        color: 0xffffff
+    },
+    {
+        name: "Bennu",
+        elements: new Trajectory("Bennu", 1.126, 6.034, 0.2037, 118.30, 97.63, 178.8, 438),
+        color: 0xf8f5f3
+    },
+    {
+        name: "Itokawa",
+        elements: new Trajectory("Itokawa", 1.324, 1.622, 0.280, 69.08, 162.87, 178.8, 557.18),
+        color: 0xf8f5f3
+    }
+];
 traceOrbits();
 function updatePosition(trajectory, timeIncrement) {
     trajectory.time += timeIncrement;
@@ -1604,7 +1741,7 @@ function meanToEccentricAnomaly(e, M) {
 function eccentricToTrueAnomaly(e, E) {
     return 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
 }
-// Function to trace the orbits of planets
+// Function to trace the orbits
 function traceOrbits() {
     for (const planet of planetDataList){
         const points = [];
@@ -1619,6 +1756,26 @@ function traceOrbits() {
         const orbitGeometry = new _three.BufferGeometry().setFromPoints(points);
         const orbitMaterial = new _three.LineBasicMaterial({
             color: planet.color,
+            transparent: true,
+            opacity: 0.1
+        });
+        const orbitLine = new _three.Line(orbitGeometry, orbitMaterial);
+        scene.add(orbitLine);
+        orbits.push(orbitLine);
+    }
+    for (const asteroid of asteroidDataList){
+        const points = [];
+        let anomaly = 0;
+        // Loop to generate points for the entire orbit
+        while(anomaly <= 2 * Math.PI){
+            const orbPos = asteroid.elements.propagate(anomaly);
+            points.push(new _three.Vector3(orbPos[0], orbPos[1], orbPos[2]));
+            anomaly += Math.PI / 180; // Increment anomaly by 1 degree in radians
+        }
+        // Create orbit geometry from the points
+        const orbitGeometry = new _three.BufferGeometry().setFromPoints(points);
+        const orbitMaterial = new _three.LineBasicMaterial({
+            color: asteroid.color,
             transparent: true,
             opacity: 0.1
         });
@@ -2087,6 +2244,19 @@ function animate() {
         planetGroup.position.set(position[0], position[1], position[2]);
         labels[index + 1].position.set(position[0], position[1], position[2]);
     });
+    // Update position of moon
+    moonGroupArr.forEach((moonGroup, index)=>{
+        const moonData = moonDataList[index];
+        const position = updatePosition(moonData.elements, timeIncrement);
+        moonGroup.position.set(position[0], position[1], position[2]);
+    });
+    // Update position of asteroid
+    asteroidGroupArr.forEach((asteroidGroup, index)=>{
+        const asteroidData = asteroidDataList[index];
+        const position = updatePosition(asteroidData.elements, timeIncrement);
+        asteroidGroup.position.set(position[0], position[1], position[2]);
+    });
+    updateAsteroidBelt(timeIncrement);
     if (isZooming) {
         targetPosition = targetPlanet.position.clone();
         controls.maxDistance = clickedLabel.associatedNumber;
@@ -2167,6 +2337,7 @@ function animate() {
     uranusGroup.rotateAroundAxis(speedFactor, "-");
     neptuneGroup.rotateAroundAxis(speedFactor);
     sunGroup.rotateAroundAxis(speedFactor);
+    moonGroup.rotation.y += 0.0000026617 * speedFactor;
     scene.traverse(darkenNonBloomed);
     bloomComposer.render();
     scene.traverse(restoreMaterial);
@@ -2174,6 +2345,7 @@ function animate() {
     finalComposer.render();
 // renderer.render(scene, camera);
 }
+createAsteroidBelt();
 function darkenNonBloomed(obj) {
     if (obj.isMesh && bloomLayer.test(obj.layers) === false) {
         materials[obj.uuid] = obj.material;
@@ -2196,194 +2368,7 @@ function handleWindowResize() {
 }
 window.addEventListener("resize", handleWindowResize, false);
 
-},{"./planet.js":"exNfn","../assets/stars/circle.png":"bpJO1","../assets/textures/earth/earthmap1k.png":"sL8jQ","../assets/textures/earth/earthlights1k.jpg":"hwl0n","../assets/textures/earth/earthspec1k.jpg":"cbuRO","../assets/textures/earth/earthbump1k.jpg":"81aoT","../assets/textures/earth/earthcloudmap.jpg":"6QHR0","../assets/textures/earth/earthcloudmaptrans.jpg":"fx0K9","../assets/textures/jupiter/jupiter.jpg":"kdPTc","../assets/textures/jupiter/jupiternight.jpg":"bIDlt","../assets/textures/mercury/mercurymap.jpg":"iWRN5","../assets/textures/mercury/mercurybump.jpg":"dYcYR","../assets/textures/mercury/mercurynightmap.jpg":"6q8Da","../assets/textures/venus/venusmap.jpg":"E6AsX","../assets/textures/venus/venusmapnight.jpg":"4e6gf","../assets/textures/venus/venusclouds.jpg":"5rqUK","../assets/textures/mars/marsmap.png":"l6QSa","../assets/textures/mars/marsbump.jpg":"c4kMA","../assets/textures/mars/marsclouds.png":"2v5Zj","../assets/textures/mars/marsnight.jpg":"gmgyo","../assets/textures/saturn/th_saturn.png":"1PmpW","../assets/textures/saturn/th_saturnbump.png":"3N3Sf","../assets/textures/saturn/th_saturnclouds.png":"dBdUM","../assets/textures/saturn/th_saturnnight.png":"eeNJU","../assets/textures/saturn/t00fri_gh_saturnrings.png":"aUgNw","../assets/textures/uranus/uranusmap.png":"cmcTM","../assets/textures/uranus/uranuslights.png":"fmPKW","../assets/textures/uranus/uranusrings.png":"fldyh","../assets/textures/neptune/neptunemap.jpg":"6Qb4i","../assets/textures/neptune/neptunebump.png":"ixuWJ","../assets/textures/neptune/neptuneclouds.png":"leeDc","../assets/textures/neptune/neptunelights.jpg":"1pAHL","../assets/textures/neptune/neptunerings.png":"cLZgz","../assets/textures/sun/sunmap.jpg":"daOLx","../assets/textures/sun/sunfluids.png":"ltP79","./subtitles.js":"2NNMB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../node_modules/three":"ktPTu","../node_modules/three/examples/jsm/controls/OrbitControls.js":"7mqRv","../node_modules/three/examples/jsm/controls/TrackballControls.js":"1AMKo","../node_modules/gsap":"fPSuC","../node_modules/three/examples/jsm/postprocessing/RenderPass.js":"hXnUO","../node_modules/three/examples/jsm/postprocessing/EffectComposer.js":"e5jie","../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js":"3iDYE","../node_modules/three/examples/jsm/postprocessing/OutputPass.js":"bggV1","../node_modules/three/examples/jsm/postprocessing/ShaderPass.js":"5IxTN","./planets.json":"k4gu4","../assets/asteroids/NEA.png":"dekG2","../assets/asteroids/NEC.png":"c6f47","../assets/asteroids/PHA.png":"95S6T"}],"exNfn":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _three = require("../node_modules/three");
-class Planet extends _three.Group {
-    constructor(x, y, scene, geometry, axisSpeed, sunSpeed = 0){
-        super();
-        this.rotation.x = x * Math.PI / 180;
-        this.rotation.y = y * Math.PI / 180;
-        this.geometry = geometry;
-        this.axisSpeed = axisSpeed;
-        this.sunSpeed = sunSpeed;
-        scene.add(this);
-        this.shape = null;
-        this.nightShape = null;
-        this.clouds = null;
-        this.light = null;
-        this.rings = null;
-        this.fresnel = null;
-    }
-    addMesh(material, type = "basic", scale = false, scalar = 1.005) {
-        const Geometry = new _three.IcosahedronGeometry(this.geometry[0], this.geometry[1]);
-        var Material = "";
-        switch(type){
-            case "basic":
-                Material = new _three.MeshBasicMaterial(material);
-                break;
-            case "phong":
-                Material = new _three.MeshPhongMaterial(material);
-                break;
-            case "fresnel":
-                Material = Planet.getFresnel(material);
-                scale = true;
-                break;
-            case "standard":
-                Material = new _three.MeshStandardMaterial(material);
-                scale = true;
-                break;
-            default:
-                break;
-        }
-        const Mesh = new _three.Mesh(Geometry, Material);
-        if (scale) Mesh.scale.setScalar(scalar);
-        this.add(Mesh);
-        return Mesh;
-    }
-    addRing(geometry, material, scale, rotation = {
-        x: null,
-        y: null
-    }) {
-        const Geometry = new _three.RingGeometry(geometry[0], geometry[1], geometry[2]);
-        const Material = new _three.MeshBasicMaterial(material);
-        const Mesh = new _three.Mesh(Geometry, Material);
-        if (rotation.x) Mesh.rotation.x = rotation.x;
-        if (rotation.y) Mesh.rotation.x = rotation.x;
-        this.add(Mesh);
-        this.scale.set(scale[0], scale[1], scale[2]);
-        this.rings = Mesh;
-        return Mesh;
-    }
-    addLight(details) {
-        const light = new _three.PointLight(details[0], details[1], details[2], details[3], details[4], details[5]);
-        this.add(light);
-        this.light = light;
-        return light;
-    }
-    createShape(material, nightMaterial, fresnel, clouds = {}, ring = {}) {
-        this.shape = this.addMesh(material, "phong");
-        this.nightShape = this.addMesh(nightMaterial);
-        this.fresnel = this.addMesh(fresnel.rimHex, "fresnel", true, fresnel.scalar);
-        if (Object.keys(clouds).length != 0) this.clouds = this.addMesh(clouds.material, "standard", true, clouds.scalar);
-        if (Object.keys(ring).length != 0) this.rings = this.addRing(ring.geometry, ring.material, ring.scale, ring.rotation);
-    }
-    rotateAroundAxis(speedFactor, direction = "+") {
-        switch(direction){
-            case "+":
-                if (this.rings) {
-                    this.shape.rotation.y += this.axisSpeed * speedFactor;
-                    this.nightShape.rotation.y += this.axisSpeed * speedFactor;
-                    this.fresnel.rotation.y += this.axisSpeed * speedFactor;
-                    if (this.clouds) this.clouds.rotation.y += this.axisSpeed * speedFactor;
-                } else this.rotation.y += this.axisSpeed * speedFactor;
-                break;
-            case "-":
-                if (this.rings) {
-                    this.shape.rotation.y -= this.axisSpeed * speedFactor;
-                    this.nightShape.rotation.y -= this.axisSpeed * speedFactor;
-                    this.fresnel.rotation.y -= this.axisSpeed * speedFactor;
-                    if (this.clouds) this.clouds.rotation.y -= this.axisSpeed * speedFactor;
-                } else this.rotation.y -= this.axisSpeed * speedFactor;
-                break;
-            default:
-                break;
-        }
-    }
-    static getFresnel(rimHex) {
-        const facingHex = 0x000000;
-        const uniforms = {
-            color1: {
-                value: new _three.Color(rimHex)
-            },
-            color2: {
-                value: new _three.Color(facingHex)
-            },
-            fresnelBias: {
-                value: 0.1
-            },
-            fresnelScale: {
-                value: 1.0
-            },
-            fresnelPower: {
-                value: 4.0
-            }
-        };
-        const vs = `
-        uniform float fresnelBias;
-        uniform float fresnelScale;
-        uniform float fresnelPower;
-        
-        varying float vReflectionFactor;
-        
-        void main() {
-          vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-          vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
-        
-          vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );
-        
-          vec3 I = worldPosition.xyz - cameraPosition;
-        
-          vReflectionFactor = fresnelBias + fresnelScale * pow( 1.0 + dot( normalize( I ), worldNormal ), fresnelPower );
-        
-          gl_Position = projectionMatrix * mvPosition;
-        }
-        `;
-        const fs = `
-        uniform vec3 color1;
-        uniform vec3 color2;
-        
-        varying float vReflectionFactor;
-        
-        void main() {
-          float f = clamp( vReflectionFactor, 0.0, 1.0 );
-          gl_FragColor = vec4(mix(color2, color1, vec3(f)), f);
-        }
-        `;
-        const fresnelMat = new _three.ShaderMaterial({
-            uniforms: uniforms,
-            vertexShader: vs,
-            fragmentShader: fs,
-            transparent: true,
-            blending: _three.AdditiveBlending
-        });
-        return fresnelMat;
-    }
-}
-exports.default = Planet;
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../node_modules/three":"ktPTu"}],"gkKU3":[function(require,module,exports) {
-exports.interopDefault = function(a) {
-    return a && a.__esModule ? a : {
-        default: a
-    };
-};
-exports.defineInteropFlag = function(a) {
-    Object.defineProperty(a, "__esModule", {
-        value: true
-    });
-};
-exports.exportAll = function(source, dest) {
-    Object.keys(source).forEach(function(key) {
-        if (key === "default" || key === "__esModule" || Object.prototype.hasOwnProperty.call(dest, key)) return;
-        Object.defineProperty(dest, key, {
-            enumerable: true,
-            get: function() {
-                return source[key];
-            }
-        });
-    });
-    return dest;
-};
-exports.export = function(dest, destName, get) {
-    Object.defineProperty(dest, destName, {
-        enumerable: true,
-        get: get
-    });
-};
-
-},{}],"ktPTu":[function(require,module,exports) {
+},{"../node_modules/three":"ktPTu","../node_modules/three/examples/jsm/controls/OrbitControls.js":"7mqRv","../node_modules/three/examples/jsm/controls/TrackballControls.js":"1AMKo","../node_modules/three/examples/jsm/Addons.js":"iBAni","../node_modules/gsap":"fPSuC","../node_modules/three/examples/jsm/postprocessing/RenderPass.js":"hXnUO","../node_modules/three/examples/jsm/postprocessing/EffectComposer.js":"e5jie","../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js":"3iDYE","../node_modules/three/examples/jsm/postprocessing/OutputPass.js":"bggV1","../node_modules/three/examples/jsm/postprocessing/ShaderPass.js":"5IxTN","./planet.js":"exNfn","../assets/stars/circle.png":"bpJO1","../assets/textures/earth/earthmap1k.png":"sL8jQ","../assets/textures/earth/earthlights1k.jpg":"hwl0n","../assets/textures/earth/earthspec1k.jpg":"cbuRO","../assets/textures/earth/earthbump1k.jpg":"81aoT","../assets/textures/earth/earthcloudmap.jpg":"6QHR0","../assets/textures/moon/moonmap4k.jpg":"77X2x","../assets/textures/moon/moonbump4k.jpg":"3EVqM","./planets.json":"k4gu4","../assets/textures/jupiter/jupiter.jpg":"kdPTc","../assets/textures/jupiter/jupiternight.jpg":"bIDlt","../assets/textures/mercury/mercurymap.jpg":"iWRN5","../assets/textures/mercury/mercurybump.jpg":"dYcYR","../assets/textures/mercury/mercurynightmap.jpg":"6q8Da","../assets/textures/venus/venusmap.jpg":"E6AsX","../assets/textures/venus/venusmapnight.jpg":"4e6gf","../assets/textures/venus/venusclouds.jpg":"5rqUK","../assets/textures/mars/marsmap.png":"l6QSa","../assets/textures/mars/marsbump.jpg":"c4kMA","../assets/textures/mars/marsclouds.png":"2v5Zj","../assets/textures/mars/marsnight.jpg":"gmgyo","../assets/textures/saturn/th_saturn.png":"1PmpW","../assets/textures/saturn/th_saturnbump.png":"3N3Sf","../assets/textures/saturn/th_saturnclouds.png":"dBdUM","../assets/textures/saturn/th_saturnnight.png":"eeNJU","../assets/textures/saturn/t00fri_gh_saturnrings.png":"aUgNw","../assets/textures/uranus/uranusmap.png":"cmcTM","../assets/textures/uranus/uranuslights.png":"fmPKW","../assets/textures/uranus/uranusrings.png":"fldyh","../assets/textures/neptune/neptunemap.jpg":"6Qb4i","../assets/textures/neptune/neptunebump.png":"ixuWJ","../assets/textures/neptune/neptuneclouds.png":"leeDc","../assets/textures/neptune/neptunelights.jpg":"1pAHL","../assets/textures/neptune/neptunerings.png":"cLZgz","../assets/textures/sun/sunmap.jpg":"daOLx","./subtitles.js":"2NNMB","../assets/asteroids/NEA.png":"dekG2","../assets/asteroids/NEC.png":"c6f47","../assets/asteroids/PHA.png":"95S6T","b52406d8383adb96":"1XqyZ","194fb1d7cdd86a67":"hUYkQ","5ae9dee44506e1a5":"9hdMf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2024 Three.js Authors
@@ -2809,7 +2794,7 @@ parcelHelpers.export(exports, "ZeroFactor", ()=>ZeroFactor);
 parcelHelpers.export(exports, "ZeroSlopeEnding", ()=>ZeroSlopeEnding);
 parcelHelpers.export(exports, "ZeroStencilOp", ()=>ZeroStencilOp);
 parcelHelpers.export(exports, "createCanvasElement", ()=>createCanvasElement);
-const REVISION = "168";
+const REVISION = "169";
 const MOUSE = {
     LEFT: 0,
     MIDDLE: 1,
@@ -4046,6 +4031,26 @@ function probeAsync(gl, sync, interval) {
         }
         setTimeout(probe, interval);
     });
+}
+function toNormalizedProjectionMatrix(projectionMatrix) {
+    const m = projectionMatrix.elements;
+    // Convert [-1, 1] to [0, 1] projection matrix
+    m[2] = 0.5 * m[2] + 0.5 * m[3];
+    m[6] = 0.5 * m[6] + 0.5 * m[7];
+    m[10] = 0.5 * m[10] + 0.5 * m[11];
+    m[14] = 0.5 * m[14] + 0.5 * m[15];
+}
+function toReversedProjectionMatrix(projectionMatrix) {
+    const m = projectionMatrix.elements;
+    const isPerspectiveMatrix = m[11] === -1;
+    // Reverse [0, 1] projection matrix
+    if (isPerspectiveMatrix) {
+        m[10] = -m[10] - 1;
+        m[14] = -m[14];
+    } else {
+        m[10] = -m[10];
+        m[14] = -m[14] + 1;
+    }
 }
 /**
  * Matrices converting P3 <-> Rec. 709 primaries, without gamut mapping
@@ -7855,6 +7860,9 @@ const _vbc = /*@__PURE__*/ new Vector3();
 const _vap = /*@__PURE__*/ new Vector3();
 const _vbp = /*@__PURE__*/ new Vector3();
 const _vcp = /*@__PURE__*/ new Vector3();
+const _v40 = /*@__PURE__*/ new Vector4();
+const _v41 = /*@__PURE__*/ new Vector4();
+const _v42 = /*@__PURE__*/ new Vector4();
 class Triangle {
     constructor(a = new Vector3(), b = new Vector3(), c = new Vector3()){
         this.a = a;
@@ -7909,6 +7917,19 @@ class Triangle {
         target.addScaledVector(v1, _v3$2.x);
         target.addScaledVector(v2, _v3$2.y);
         target.addScaledVector(v3, _v3$2.z);
+        return target;
+    }
+    static getInterpolatedAttribute(attr, i1, i2, i3, barycoord, target) {
+        _v40.setScalar(0);
+        _v41.setScalar(0);
+        _v42.setScalar(0);
+        _v40.fromBufferAttribute(attr, i1);
+        _v41.fromBufferAttribute(attr, i2);
+        _v42.fromBufferAttribute(attr, i3);
+        target.setScalar(0);
+        target.addScaledVector(_v40, barycoord.x);
+        target.addScaledVector(_v41, barycoord.y);
+        target.addScaledVector(_v42, barycoord.z);
         return target;
     }
     static isFrontFacing(a, b, c, direction) {
@@ -8968,10 +8989,6 @@ class BufferAttribute {
         this.count = array !== undefined ? array.length / itemSize : 0;
         this.normalized = normalized;
         this.usage = StaticDrawUsage;
-        this._updateRange = {
-            offset: 0,
-            count: -1
-        };
         this.updateRanges = [];
         this.gpuType = FloatType;
         this.version = 0;
@@ -8979,10 +8996,6 @@ class BufferAttribute {
     onUploadCallback() {}
     set needsUpdate(value) {
         if (value === true) this.version++;
-    }
-    get updateRange() {
-        warnOnce("THREE.BufferAttribute: updateRange() is deprecated and will be removed in r169. Use addUpdateRange() instead."); // @deprecated, r159
-        return this._updateRange;
     }
     setUsage(value) {
         this.usage = value;
@@ -9825,12 +9838,6 @@ const _vB$1 = /*@__PURE__*/ new Vector3();
 const _vC$1 = /*@__PURE__*/ new Vector3();
 const _tempA = /*@__PURE__*/ new Vector3();
 const _morphA = /*@__PURE__*/ new Vector3();
-const _uvA$1 = /*@__PURE__*/ new Vector2();
-const _uvB$1 = /*@__PURE__*/ new Vector2();
-const _uvC$1 = /*@__PURE__*/ new Vector2();
-const _normalA = /*@__PURE__*/ new Vector3();
-const _normalB = /*@__PURE__*/ new Vector3();
-const _normalC = /*@__PURE__*/ new Vector3();
 const _intersectionPoint = /*@__PURE__*/ new Vector3();
 const _intersectionPointWorld = /*@__PURE__*/ new Vector3();
 class Mesh extends Object3D {
@@ -10014,23 +10021,12 @@ function checkGeometryIntersection(object, material, raycaster, ray, uv, uv1, no
     object.getVertexPosition(c, _vC$1);
     const intersection = checkIntersection$1(object, material, raycaster, ray, _vA$1, _vB$1, _vC$1, _intersectionPoint);
     if (intersection) {
-        if (uv) {
-            _uvA$1.fromBufferAttribute(uv, a);
-            _uvB$1.fromBufferAttribute(uv, b);
-            _uvC$1.fromBufferAttribute(uv, c);
-            intersection.uv = Triangle.getInterpolation(_intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2());
-        }
-        if (uv1) {
-            _uvA$1.fromBufferAttribute(uv1, a);
-            _uvB$1.fromBufferAttribute(uv1, b);
-            _uvC$1.fromBufferAttribute(uv1, c);
-            intersection.uv1 = Triangle.getInterpolation(_intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2());
-        }
+        const barycoord = new Vector3();
+        Triangle.getBarycoord(_intersectionPoint, _vA$1, _vB$1, _vC$1, barycoord);
+        if (uv) intersection.uv = Triangle.getInterpolatedAttribute(uv, a, b, c, barycoord, new Vector2());
+        if (uv1) intersection.uv1 = Triangle.getInterpolatedAttribute(uv1, a, b, c, barycoord, new Vector2());
         if (normal) {
-            _normalA.fromBufferAttribute(normal, a);
-            _normalB.fromBufferAttribute(normal, b);
-            _normalC.fromBufferAttribute(normal, c);
-            intersection.normal = Triangle.getInterpolation(_intersectionPoint, _vA$1, _vB$1, _vC$1, _normalA, _normalB, _normalC, new Vector3());
+            intersection.normal = Triangle.getInterpolatedAttribute(normal, a, b, c, barycoord, new Vector3());
             if (intersection.normal.dot(ray.direction) > 0) intersection.normal.multiplyScalar(-1);
         }
         const face = {
@@ -10042,6 +10038,7 @@ function checkGeometryIntersection(object, material, raycaster, ray, uv, uv1, no
         };
         Triangle.getNormal(_vA$1, _vB$1, _vC$1, face.normal);
         intersection.face = face;
+        intersection.barycoord = barycoord;
     }
     return intersection;
 }
@@ -10987,22 +10984,44 @@ function WebGLAttributes(gl) {
     }
     function updateBuffer(buffer, attribute, bufferType) {
         const array = attribute.array;
-        const updateRange = attribute._updateRange; // @deprecated, r159
         const updateRanges = attribute.updateRanges;
         gl.bindBuffer(bufferType, buffer);
-        if (updateRange.count === -1 && updateRanges.length === 0) // Not using update ranges
+        if (updateRanges.length === 0) // Not using update ranges
         gl.bufferSubData(bufferType, 0, array);
-        if (updateRanges.length !== 0) {
+        else {
+            // Before applying update ranges, we merge any adjacent / overlapping
+            // ranges to reduce load on `gl.bufferSubData`. Empirically, this has led
+            // to performance improvements for applications which make heavy use of
+            // update ranges. Likely due to GPU command overhead.
+            //
+            // Note that to reduce garbage collection between frames, we merge the
+            // update ranges in-place. This is safe because this method will clear the
+            // update ranges once updated.
+            updateRanges.sort((a, b)=>a.start - b.start);
+            // To merge the update ranges in-place, we work from left to right in the
+            // existing updateRanges array, merging ranges. This may result in a final
+            // array which is smaller than the original. This index tracks the last
+            // index representing a merged range, any data after this index can be
+            // trimmed once the merge algorithm is completed.
+            let mergeIndex = 0;
+            for(let i = 1; i < updateRanges.length; i++){
+                const previousRange = updateRanges[mergeIndex];
+                const range = updateRanges[i];
+                // We add one here to merge adjacent ranges. This is safe because ranges
+                // operate over positive integers.
+                if (range.start <= previousRange.start + previousRange.count + 1) previousRange.count = Math.max(previousRange.count, range.start + range.count - previousRange.start);
+                else {
+                    ++mergeIndex;
+                    updateRanges[mergeIndex] = range;
+                }
+            }
+            // Trim the array to only contain the merged ranges.
+            updateRanges.length = mergeIndex + 1;
             for(let i = 0, l = updateRanges.length; i < l; i++){
                 const range = updateRanges[i];
                 gl.bufferSubData(bufferType, range.start * array.BYTES_PER_ELEMENT, array, range.start, range.count);
             }
             attribute.clearUpdateRanges();
-        }
-        // @deprecated, r159
-        if (updateRange.count !== -1) {
-            gl.bufferSubData(bufferType, updateRange.offset * array.BYTES_PER_ELEMENT, array, updateRange.offset, updateRange.count);
-            updateRange.count = -1; // reset range
         }
         attribute.onUploadCallback();
     }
@@ -11239,7 +11258,7 @@ const vertex$3 = "uniform float size;\nuniform float scale;\n#include <common>\n
 const fragment$3 = "uniform vec3 diffuse;\nuniform float opacity;\n#include <common>\n#include <color_pars_fragment>\n#include <map_particle_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n	vec4 diffuseColor = vec4( diffuse, opacity );\n	#include <clipping_planes_fragment>\n	vec3 outgoingLight = vec3( 0.0 );\n	#include <logdepthbuf_fragment>\n	#include <map_particle_fragment>\n	#include <color_fragment>\n	#include <alphatest_fragment>\n	#include <alphahash_fragment>\n	outgoingLight = diffuseColor.rgb;\n	#include <opaque_fragment>\n	#include <tonemapping_fragment>\n	#include <colorspace_fragment>\n	#include <fog_fragment>\n	#include <premultiplied_alpha_fragment>\n}";
 const vertex$2 = "#include <common>\n#include <batching_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <shadowmap_pars_vertex>\nvoid main() {\n	#include <batching_vertex>\n	#include <beginnormal_vertex>\n	#include <morphinstance_vertex>\n	#include <morphnormal_vertex>\n	#include <skinbase_vertex>\n	#include <skinnormal_vertex>\n	#include <defaultnormal_vertex>\n	#include <begin_vertex>\n	#include <morphtarget_vertex>\n	#include <skinning_vertex>\n	#include <project_vertex>\n	#include <logdepthbuf_vertex>\n	#include <worldpos_vertex>\n	#include <shadowmap_vertex>\n	#include <fog_vertex>\n}";
 const fragment$2 = "uniform vec3 color;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <logdepthbuf_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <shadowmask_pars_fragment>\nvoid main() {\n	#include <logdepthbuf_fragment>\n	gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\n	#include <tonemapping_fragment>\n	#include <colorspace_fragment>\n	#include <fog_fragment>\n}";
-const vertex$1 = "uniform float rotation;\nuniform vec2 center;\n#include <common>\n#include <uv_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n	#include <uv_vertex>\n	vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\n	vec2 scale;\n	scale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\n	scale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\n	#ifndef USE_SIZEATTENUATION\n		bool isPerspective = isPerspectiveMatrix( projectionMatrix );\n		if ( isPerspective ) scale *= - mvPosition.z;\n	#endif\n	vec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\n	vec2 rotatedPosition;\n	rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\n	rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\n	mvPosition.xy += rotatedPosition;\n	gl_Position = projectionMatrix * mvPosition;\n	#include <logdepthbuf_vertex>\n	#include <clipping_planes_vertex>\n	#include <fog_vertex>\n}";
+const vertex$1 = "uniform float rotation;\nuniform vec2 center;\n#include <common>\n#include <uv_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n	#include <uv_vertex>\n	vec4 mvPosition = modelViewMatrix[ 3 ];\n	vec2 scale = vec2( length( modelMatrix[ 0 ].xyz ), length( modelMatrix[ 1 ].xyz ) );\n	#ifndef USE_SIZEATTENUATION\n		bool isPerspective = isPerspectiveMatrix( projectionMatrix );\n		if ( isPerspective ) scale *= - mvPosition.z;\n	#endif\n	vec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\n	vec2 rotatedPosition;\n	rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\n	rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\n	mvPosition.xy += rotatedPosition;\n	gl_Position = projectionMatrix * mvPosition;\n	#include <logdepthbuf_vertex>\n	#include <clipping_planes_vertex>\n	#include <fog_vertex>\n}";
 const fragment$1 = "uniform vec3 diffuse;\nuniform float opacity;\n#include <common>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n	vec4 diffuseColor = vec4( diffuse, opacity );\n	#include <clipping_planes_fragment>\n	vec3 outgoingLight = vec3( 0.0 );\n	#include <logdepthbuf_fragment>\n	#include <map_fragment>\n	#include <alphamap_fragment>\n	#include <alphatest_fragment>\n	#include <alphahash_fragment>\n	outgoingLight = diffuseColor.rgb;\n	#include <opaque_fragment>\n	#include <tonemapping_fragment>\n	#include <colorspace_fragment>\n	#include <fog_fragment>\n}";
 const ShaderChunk = {
     alphahash_fragment: alphahash_fragment,
@@ -12650,6 +12669,11 @@ function WebGLCapabilities(gl, extensions, parameters, utils) {
         precision = maxPrecision;
     }
     const logarithmicDepthBuffer = parameters.logarithmicDepthBuffer === true;
+    const reverseDepthBuffer = parameters.reverseDepthBuffer === true && extensions.has("EXT_clip_control");
+    if (reverseDepthBuffer === true) {
+        const ext = extensions.get("EXT_clip_control");
+        ext.clipControlEXT(ext.LOWER_LEFT_EXT, ext.ZERO_TO_ONE_EXT);
+    }
     const maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
     const maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
     const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -12668,6 +12692,7 @@ function WebGLCapabilities(gl, extensions, parameters, utils) {
         textureTypeReadable: textureTypeReadable,
         precision: precision,
         logarithmicDepthBuffer: logarithmicDepthBuffer,
+        reverseDepthBuffer: reverseDepthBuffer,
         maxTextures: maxTextures,
         maxVertexTextures: maxVertexTextures,
         maxTextureSize: maxTextureSize,
@@ -15058,6 +15083,7 @@ function WebGLProgram(renderer, cacheKey, parameters, bindingStates) {
             parameters.sizeAttenuation ? "#define USE_SIZEATTENUATION" : "",
             parameters.numLightProbes > 0 ? "#define USE_LIGHT_PROBES" : "",
             parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
+            parameters.reverseDepthBuffer ? "#define USE_REVERSEDEPTHBUF" : "",
             "uniform mat4 modelMatrix;",
             "uniform mat4 modelViewMatrix;",
             "uniform mat4 projectionMatrix;",
@@ -15165,6 +15191,7 @@ function WebGLProgram(renderer, cacheKey, parameters, bindingStates) {
             parameters.numLightProbes > 0 ? "#define USE_LIGHT_PROBES" : "",
             parameters.decodeVideoTexture ? "#define DECODE_VIDEO_TEXTURE" : "",
             parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
+            parameters.reverseDepthBuffer ? "#define USE_REVERSEDEPTHBUF" : "",
             "uniform mat4 viewMatrix;",
             "uniform vec3 cameraPosition;",
             "uniform bool isOrthographic;",
@@ -15378,6 +15405,7 @@ function WebGLPrograms(renderer, cubemaps, cubeuvmaps, extensions, capabilities,
     const _activeChannels = new Set();
     const programs = [];
     const logarithmicDepthBuffer = capabilities.logarithmicDepthBuffer;
+    const reverseDepthBuffer = capabilities.reverseDepthBuffer;
     const SUPPORTS_VERTEX_TEXTURES = capabilities.vertexTextures;
     let precision = capabilities.precision;
     const shaderIDs = {
@@ -15573,6 +15601,7 @@ function WebGLPrograms(renderer, cubemaps, cubeuvmaps, extensions, capabilities,
             flatShading: material.flatShading === true,
             sizeAttenuation: material.sizeAttenuation === true,
             logarithmicDepthBuffer: logarithmicDepthBuffer,
+            reverseDepthBuffer: reverseDepthBuffer,
             skinning: object.isSkinnedMesh === true,
             morphTargets: geometry.morphAttributes.position !== undefined,
             morphNormals: geometry.morphAttributes.normal !== undefined,
@@ -15714,22 +15743,23 @@ function WebGLPrograms(renderer, cubemaps, cubeuvmaps, extensions, capabilities,
         if (parameters.useFog) _programLayers.enable(1);
         if (parameters.flatShading) _programLayers.enable(2);
         if (parameters.logarithmicDepthBuffer) _programLayers.enable(3);
-        if (parameters.skinning) _programLayers.enable(4);
-        if (parameters.morphTargets) _programLayers.enable(5);
-        if (parameters.morphNormals) _programLayers.enable(6);
-        if (parameters.morphColors) _programLayers.enable(7);
-        if (parameters.premultipliedAlpha) _programLayers.enable(8);
-        if (parameters.shadowMapEnabled) _programLayers.enable(9);
-        if (parameters.doubleSided) _programLayers.enable(10);
-        if (parameters.flipSided) _programLayers.enable(11);
-        if (parameters.useDepthPacking) _programLayers.enable(12);
-        if (parameters.dithering) _programLayers.enable(13);
-        if (parameters.transmission) _programLayers.enable(14);
-        if (parameters.sheen) _programLayers.enable(15);
-        if (parameters.opaque) _programLayers.enable(16);
-        if (parameters.pointsUvs) _programLayers.enable(17);
-        if (parameters.decodeVideoTexture) _programLayers.enable(18);
-        if (parameters.alphaToCoverage) _programLayers.enable(19);
+        if (parameters.reverseDepthBuffer) _programLayers.enable(4);
+        if (parameters.skinning) _programLayers.enable(5);
+        if (parameters.morphTargets) _programLayers.enable(6);
+        if (parameters.morphNormals) _programLayers.enable(7);
+        if (parameters.morphColors) _programLayers.enable(8);
+        if (parameters.premultipliedAlpha) _programLayers.enable(9);
+        if (parameters.shadowMapEnabled) _programLayers.enable(10);
+        if (parameters.doubleSided) _programLayers.enable(11);
+        if (parameters.flipSided) _programLayers.enable(12);
+        if (parameters.useDepthPacking) _programLayers.enable(13);
+        if (parameters.dithering) _programLayers.enable(14);
+        if (parameters.transmission) _programLayers.enable(15);
+        if (parameters.sheen) _programLayers.enable(16);
+        if (parameters.opaque) _programLayers.enable(17);
+        if (parameters.pointsUvs) _programLayers.enable(18);
+        if (parameters.decodeVideoTexture) _programLayers.enable(19);
+        if (parameters.alphaToCoverage) _programLayers.enable(20);
         array.push(_programLayers.mask);
     }
     function getUniforms(material) {
@@ -16642,6 +16672,16 @@ function WebGLShadowMap(renderer, objects, capabilities) {
         }
     }
 }
+const reversedFuncs = {
+    [NeverDepth]: AlwaysDepth,
+    [LessDepth]: GreaterDepth,
+    [EqualDepth]: NotEqualDepth,
+    [LessEqualDepth]: GreaterEqualDepth,
+    [AlwaysDepth]: NeverDepth,
+    [GreaterDepth]: LessDepth,
+    [NotEqualDepth]: EqualDepth,
+    [GreaterEqualDepth]: LessEqualDepth
+};
 function WebGLState(gl) {
     function ColorBuffer() {
         let locked = false;
@@ -16679,10 +16719,14 @@ function WebGLState(gl) {
     }
     function DepthBuffer() {
         let locked = false;
+        let reversed = false;
         let currentDepthMask = null;
         let currentDepthFunc = null;
         let currentDepthClear = null;
         return {
+            setReversed: function(value) {
+                reversed = value;
+            },
             setTest: function(depthTest) {
                 if (depthTest) enable(gl.DEPTH_TEST);
                 else disable(gl.DEPTH_TEST);
@@ -16694,6 +16738,7 @@ function WebGLState(gl) {
                 }
             },
             setFunc: function(depthFunc) {
+                if (reversed) depthFunc = reversedFuncs[depthFunc];
                 if (currentDepthFunc !== depthFunc) {
                     switch(depthFunc){
                         case NeverDepth:
@@ -17597,6 +17642,22 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
             if (glType === _gl.BYTE) internalFormat = _gl.RG8I;
             if (glType === _gl.SHORT) internalFormat = _gl.RG16I;
             if (glType === _gl.INT) internalFormat = _gl.RG32I;
+        }
+        if (glFormat === _gl.RGB_INTEGER) {
+            if (glType === _gl.UNSIGNED_BYTE) internalFormat = _gl.RGB8UI;
+            if (glType === _gl.UNSIGNED_SHORT) internalFormat = _gl.RGB16UI;
+            if (glType === _gl.UNSIGNED_INT) internalFormat = _gl.RGB32UI;
+            if (glType === _gl.BYTE) internalFormat = _gl.RGB8I;
+            if (glType === _gl.SHORT) internalFormat = _gl.RGB16I;
+            if (glType === _gl.INT) internalFormat = _gl.RGB32I;
+        }
+        if (glFormat === _gl.RGBA_INTEGER) {
+            if (glType === _gl.UNSIGNED_BYTE) internalFormat = _gl.RGBA8UI;
+            if (glType === _gl.UNSIGNED_SHORT) internalFormat = _gl.RGBA16UI;
+            if (glType === _gl.UNSIGNED_INT) internalFormat = _gl.RGBA32UI;
+            if (glType === _gl.BYTE) internalFormat = _gl.RGBA8I;
+            if (glType === _gl.SHORT) internalFormat = _gl.RGBA16I;
+            if (glType === _gl.INT) internalFormat = _gl.RGBA32I;
         }
         if (glFormat === _gl.RGB) {
             if (glType === _gl.UNSIGNED_INT_5_9_9_9_REV) internalFormat = _gl.RGB9_E5;
@@ -19864,6 +19925,7 @@ class WebGLRenderer {
         let _clippingEnabled = false;
         let _localClippingEnabled = false;
         // camera matrices cache
+        const _currentProjectionMatrix = new Matrix4();
         const _projScreenMatrix = new Matrix4();
         const _vector3 = new Vector3();
         const _vector4 = new Vector4();
@@ -19923,6 +19985,7 @@ class WebGLRenderer {
             utils = new WebGLUtils(_gl, extensions);
             capabilities = new WebGLCapabilities(_gl, extensions, parameters, utils);
             state = new WebGLState(_gl);
+            if (capabilities.reverseDepthBuffer) state.buffers.depth.setReversed(true);
             info = new WebGLInfo(_gl);
             properties = new WebGLProperties();
             textures = new WebGLTextures(_gl, extensions, state, properties, capabilities, utils, info);
@@ -20086,7 +20149,10 @@ class WebGLRenderer {
                     }
                 } else bits |= _gl.COLOR_BUFFER_BIT;
             }
-            if (depth) bits |= _gl.DEPTH_BUFFER_BIT;
+            if (depth) {
+                bits |= _gl.DEPTH_BUFFER_BIT;
+                _gl.clearDepth(this.capabilities.reverseDepthBuffer ? 0 : 1);
+            }
             if (stencil) {
                 bits |= _gl.STENCIL_BUFFER_BIT;
                 this.state.buffers.stencil.setMask(0xffffffff);
@@ -20274,6 +20340,7 @@ class WebGLRenderer {
             // Only initialize materials in the new scene, not the targetScene.
             const materials = new Set();
             scene.traverse(function(object) {
+                if (!(object.isMesh || object.isPoints || object.isLine || object.isSprite)) return;
                 const material = object.material;
                 if (material) {
                     if (Array.isArray(material)) for(let i = 0; i < material.length; i++){
@@ -20751,7 +20818,12 @@ class WebGLRenderer {
             }
             if (refreshProgram || _currentCamera !== camera) {
                 // common camera uniforms
-                p_uniforms.setValue(_gl, "projectionMatrix", camera.projectionMatrix);
+                if (capabilities.reverseDepthBuffer) {
+                    _currentProjectionMatrix.copy(camera.projectionMatrix);
+                    toNormalizedProjectionMatrix(_currentProjectionMatrix);
+                    toReversedProjectionMatrix(_currentProjectionMatrix);
+                    p_uniforms.setValue(_gl, "projectionMatrix", _currentProjectionMatrix);
+                } else p_uniforms.setValue(_gl, "projectionMatrix", camera.projectionMatrix);
                 p_uniforms.setValue(_gl, "viewMatrix", camera.matrixWorldInverse);
                 const uCamPos = p_uniforms.map.cameraPosition;
                 if (uCamPos !== undefined) uCamPos.setValue(_gl, _vector3.setFromMatrixPosition(camera.matrixWorld));
@@ -20974,37 +21046,33 @@ class WebGLRenderer {
             let framebuffer = properties.get(renderTarget).__webglFramebuffer;
             if (renderTarget.isWebGLCubeRenderTarget && activeCubeFaceIndex !== undefined) framebuffer = framebuffer[activeCubeFaceIndex];
             if (framebuffer) {
-                state.bindFramebuffer(_gl.FRAMEBUFFER, framebuffer);
-                try {
-                    const texture = renderTarget.texture;
-                    const textureFormat = texture.format;
-                    const textureType = texture.type;
-                    if (!capabilities.textureFormatReadable(textureFormat)) throw new Error("THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.");
-                    if (!capabilities.textureTypeReadable(textureType)) throw new Error("THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.");
-                    // the following if statement ensures valid read requests (no out-of-bounds pixels, see #8604)
-                    if (x >= 0 && x <= renderTarget.width - width && y >= 0 && y <= renderTarget.height - height) {
-                        const glBuffer = _gl.createBuffer();
-                        _gl.bindBuffer(_gl.PIXEL_PACK_BUFFER, glBuffer);
-                        _gl.bufferData(_gl.PIXEL_PACK_BUFFER, buffer.byteLength, _gl.STREAM_READ);
-                        _gl.readPixels(x, y, width, height, utils.convert(textureFormat), utils.convert(textureType), 0);
-                        _gl.flush();
-                        // check if the commands have finished every 8 ms
-                        const sync = _gl.fenceSync(_gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-                        await probeAsync(_gl, sync, 4);
-                        try {
-                            _gl.bindBuffer(_gl.PIXEL_PACK_BUFFER, glBuffer);
-                            _gl.getBufferSubData(_gl.PIXEL_PACK_BUFFER, 0, buffer);
-                        } finally{
-                            _gl.deleteBuffer(glBuffer);
-                            _gl.deleteSync(sync);
-                        }
-                        return buffer;
-                    }
-                } finally{
-                    // restore framebuffer of current render target if necessary
-                    const framebuffer = _currentRenderTarget !== null ? properties.get(_currentRenderTarget).__webglFramebuffer : null;
+                const texture = renderTarget.texture;
+                const textureFormat = texture.format;
+                const textureType = texture.type;
+                if (!capabilities.textureFormatReadable(textureFormat)) throw new Error("THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.");
+                if (!capabilities.textureTypeReadable(textureType)) throw new Error("THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.");
+                // the following if statement ensures valid read requests (no out-of-bounds pixels, see #8604)
+                if (x >= 0 && x <= renderTarget.width - width && y >= 0 && y <= renderTarget.height - height) {
+                    // set the active frame buffer to the one we want to read
                     state.bindFramebuffer(_gl.FRAMEBUFFER, framebuffer);
-                }
+                    const glBuffer = _gl.createBuffer();
+                    _gl.bindBuffer(_gl.PIXEL_PACK_BUFFER, glBuffer);
+                    _gl.bufferData(_gl.PIXEL_PACK_BUFFER, buffer.byteLength, _gl.STREAM_READ);
+                    _gl.readPixels(x, y, width, height, utils.convert(textureFormat), utils.convert(textureType), 0);
+                    // reset the frame buffer to the currently set buffer before waiting
+                    const currFramebuffer = _currentRenderTarget !== null ? properties.get(_currentRenderTarget).__webglFramebuffer : null;
+                    state.bindFramebuffer(_gl.FRAMEBUFFER, currFramebuffer);
+                    // check if the commands have finished every 8 ms
+                    const sync = _gl.fenceSync(_gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+                    _gl.flush();
+                    await probeAsync(_gl, sync, 4);
+                    // read the data and delete the buffer
+                    _gl.bindBuffer(_gl.PIXEL_PACK_BUFFER, glBuffer);
+                    _gl.getBufferSubData(_gl.PIXEL_PACK_BUFFER, 0, buffer);
+                    _gl.deleteBuffer(glBuffer);
+                    _gl.deleteSync(sync);
+                    return buffer;
+                } else throw new Error("THREE.WebGLRenderer.readRenderTargetPixelsAsync: requested read bounds are out of range.");
             }
         };
         this.copyFramebufferToTexture = function(texture, position = null, level = 0) {
@@ -21285,10 +21353,6 @@ class InterleavedBuffer {
         this.stride = stride;
         this.count = array !== undefined ? array.length / stride : 0;
         this.usage = StaticDrawUsage;
-        this._updateRange = {
-            offset: 0,
-            count: -1
-        };
         this.updateRanges = [];
         this.version = 0;
         this.uuid = generateUUID();
@@ -21296,10 +21360,6 @@ class InterleavedBuffer {
     onUploadCallback() {}
     set needsUpdate(value) {
         if (value === true) this.version++;
-    }
-    get updateRange() {
-        warnOnce("THREE.InterleavedBuffer: updateRange() is deprecated and will be removed in r169. Use addUpdateRange() instead."); // @deprecated, r159
-        return this._updateRange;
     }
     setUsage(value) {
         this.usage = value;
@@ -21716,6 +21776,15 @@ class LOD extends Object3D {
         });
         this.add(object);
         return this;
+    }
+    removeLevel(distance) {
+        const levels = this.levels;
+        for(let i = 0; i < levels.length; i++)if (levels[i].distance === distance) {
+            const removedElements = levels.splice(i, 1);
+            this.remove(removedElements[0].object);
+            return true;
+        }
+        return false;
     }
     getCurrentLevel() {
         return this._currentLevel;
@@ -22279,6 +22348,8 @@ class BatchedMesh extends Mesh {
         this.customSort = null;
         // stores visible, active, and geometry id per object
         this._drawInfo = [];
+        // instance ids that have been set as inactive, and are available to be overwritten
+        this._availableInstanceIds = [];
         // geometry information
         this._drawRanges = [];
         this._reservedRanges = [];
@@ -22393,15 +22464,23 @@ class BatchedMesh extends Mesh {
         }
     }
     addInstance(geometryId) {
+        const atCapacity = this._drawInfo.length >= this.maxInstanceCount;
         // ensure we're not over geometry
-        if (this._drawInfo.length >= this._maxInstanceCount) throw new Error("BatchedMesh: Maximum item count reached.");
-        this._drawInfo.push({
+        if (atCapacity && this._availableInstanceIds.length === 0) throw new Error("BatchedMesh: Maximum item count reached.");
+        const instanceDrawInfo = {
             visible: true,
             active: true,
             geometryIndex: geometryId
-        });
-        // initialize the matrix
-        const drawId = this._drawInfo.length - 1;
+        };
+        let drawId = null;
+        // Prioritize using previously freed instance ids
+        if (this._availableInstanceIds.length > 0) {
+            drawId = this._availableInstanceIds.pop();
+            this._drawInfo[drawId] = instanceDrawInfo;
+        } else {
+            drawId = this._drawInfo.length;
+            this._drawInfo.push(instanceDrawInfo);
+        }
         const matricesTexture = this._matricesTexture;
         const matricesArray = matricesTexture.image.data;
         _identityMatrix.toArray(matricesArray, drawId * 16);
@@ -22521,25 +22600,15 @@ class BatchedMesh extends Mesh {
 		// TODO: delete geometry and associated instances
 
 	}
-	*/ /*
-	deleteInstance( instanceId ) {
-
-		// Note: User needs to call optimize() afterward to pack the data.
-
-		const drawInfo = this._drawInfo;
-		if ( instanceId >= drawInfo.length || drawInfo[ instanceId ].active === false ) {
-
-			return this;
-
-		}
-
-		drawInfo[ instanceId ].active = false;
-		this._visibilityChanged = true;
-
-		return this;
-
-	}
-	*/ // get bounding box and compute it if it doesn't exist
+	*/ deleteInstance(instanceId) {
+        const drawInfo = this._drawInfo;
+        if (instanceId >= drawInfo.length || drawInfo[instanceId].active === false) return this;
+        drawInfo[instanceId].active = false;
+        this._availableInstanceIds.push(instanceId);
+        this._visibilityChanged = true;
+        return this;
+    }
+    // get bounding box and compute it if it doesn't exist
     getBoundingBoxAt(geometryId, target) {
         if (geometryId >= this._geometryCount) return null;
         // compute bounding box
@@ -22637,6 +22706,27 @@ class BatchedMesh extends Mesh {
         const drawInfo = this._drawInfo;
         if (instanceId >= drawInfo.length || drawInfo[instanceId].active === false) return false;
         return drawInfo[instanceId].visible;
+    }
+    setGeometryIdAt(instanceId, geometryId) {
+        // return early if the geometry is out of range or not active
+        const drawInfo = this._drawInfo;
+        if (instanceId >= drawInfo.length || drawInfo[instanceId].active === false) return null;
+        // check if the provided geometryId is within the valid range
+        if (geometryId < 0 || geometryId >= this._geometryCount) return null;
+        drawInfo[instanceId].geometryIndex = geometryId;
+        return this;
+    }
+    getGeometryIdAt(instanceId) {
+        const drawInfo = this._drawInfo;
+        if (instanceId >= drawInfo.length || drawInfo[instanceId].active === false) return -1;
+        return drawInfo[instanceId].geometryIndex;
+    }
+    getGeometryRangeAt(geometryId, target = {}) {
+        if (geometryId < 0 || geometryId >= this._geometryCount) return null;
+        const drawRange = this._drawRanges[geometryId];
+        target.start = drawRange.start;
+        target.count = drawRange.count;
+        return target;
     }
     raycast(raycaster, intersects) {
         const drawInfo = this._drawInfo;
@@ -22951,6 +23041,7 @@ function checkIntersection(object, raycaster, ray, thresholdSq, a, b) {
         index: a,
         face: null,
         faceIndex: null,
+        barycoord: null,
         object: object
     };
 }
@@ -23097,6 +23188,8 @@ function testPoint(point, index, localThresholdSq, matrixWorld, raycaster, inter
             point: intersectPoint,
             index: index,
             face: null,
+            faceIndex: null,
+            barycoord: null,
             object: object
         });
     }
@@ -24473,10 +24566,14 @@ class CylinderGeometry extends BufferGeometry {
                 const c = indexArray[y + 1][x + 1];
                 const d = indexArray[y][x + 1];
                 // faces
-                indices.push(a, b, d);
-                indices.push(b, c, d);
-                // update group counter
-                groupCount += 6;
+                if (radiusTop > 0) {
+                    indices.push(a, b, d);
+                    groupCount += 3;
+                }
+                if (radiusBottom > 0) {
+                    indices.push(b, c, d);
+                    groupCount += 3;
+                }
             }
             // add a group to the geometry. this will ensure multi material support
             scope.addGroup(groupStart, groupCount, 0);
@@ -29281,7 +29378,7 @@ class MaterialLoader extends Loader {
             if (textures[name] === undefined) console.warn("THREE.MaterialLoader: Undefined texture", name);
             return textures[name];
         }
-        const material = MaterialLoader.createMaterialFromType(json.type);
+        const material = this.createMaterialFromType(json.type);
         if (json.uuid !== undefined) material.uuid = json.uuid;
         if (json.name !== undefined) material.name = json.name;
         if (json.color !== undefined && material.color !== undefined) material.color.setHex(json.color);
@@ -29453,6 +29550,9 @@ class MaterialLoader extends Loader {
     setTextures(value) {
         this.textures = value;
         return this;
+    }
+    createMaterialFromType(type) {
+        return MaterialLoader.createMaterialFromType(type);
     }
     static createMaterialFromType(type) {
         const materialLib = {
@@ -30399,7 +30499,7 @@ class Clock {
     }
 }
 function now() {
-    return (typeof performance === "undefined" ? Date : performance).now(); // see #10732
+    return performance.now();
 }
 const _position$1 = /*@__PURE__*/ new Vector3();
 const _quaternion$1 = /*@__PURE__*/ new Quaternion();
@@ -30569,14 +30669,14 @@ class Audio extends Object3D {
         }
         return this;
     }
-    stop() {
+    stop(delay = 0) {
         if (this.hasPlaybackControl === false) {
             console.warn("THREE.Audio: this Audio has no playback control.");
             return;
         }
         this._progress = 0;
         if (this.source !== null) {
-            this.source.stop();
+            this.source.stop(this.context.currentTime + delay);
             this.source.onended = null;
         }
         this.isPlaying = false;
@@ -33841,7 +33941,7 @@ class ShapePath {
     }
 }
 class Controls extends EventDispatcher {
-    constructor(object, domElement){
+    constructor(object, domElement = null){
         super();
         this.object = object;
         this.domElement = domElement;
@@ -33886,967 +33986,37 @@ if (typeof window !== "undefined") {
     else window.__THREE__ = REVISION;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bpJO1":[function(require,module,exports) {
-module.exports = require("55d64eb025b7e872").getBundleURL("lORN7") + "circle.0c232991.png" + "?" + Date.now();
-
-},{"55d64eb025b7e872":"lgJ39"}],"lgJ39":[function(require,module,exports) {
-"use strict";
-var bundleURL = {};
-function getBundleURLCached(id) {
-    var value = bundleURL[id];
-    if (!value) {
-        value = getBundleURL();
-        bundleURL[id] = value;
-    }
-    return value;
-}
-function getBundleURL() {
-    try {
-        throw new Error();
-    } catch (err) {
-        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
-        if (matches) // The first two stack frames will be this function and getBundleURLCached.
-        // Use the 3rd one, which will be a runtime in the original bundle.
-        return getBaseURL(matches[2]);
-    }
-    return "/";
-}
-function getBaseURL(url) {
-    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
-}
-// TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
-function getOrigin(url) {
-    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
-    if (!matches) throw new Error("Origin not found");
-    return matches[0];
-}
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-exports.getOrigin = getOrigin;
-
-},{}],"sL8jQ":[function(require,module,exports) {
-module.exports = require("966b1f878c54e74a").getBundleURL("lORN7") + "earthmap1k.fd8806d4.png" + "?" + Date.now();
-
-},{"966b1f878c54e74a":"lgJ39"}],"hwl0n":[function(require,module,exports) {
-module.exports = require("99377c4b455b3eda").getBundleURL("lORN7") + "earthlights1k.84bf4344.jpg" + "?" + Date.now();
-
-},{"99377c4b455b3eda":"lgJ39"}],"cbuRO":[function(require,module,exports) {
-module.exports = require("bdb8d22975ff8816").getBundleURL("lORN7") + "earthspec1k.12b577d1.jpg" + "?" + Date.now();
-
-},{"bdb8d22975ff8816":"lgJ39"}],"81aoT":[function(require,module,exports) {
-module.exports = require("fe186ac262aec5cd").getBundleURL("lORN7") + "earthbump1k.4eeb91d8.jpg" + "?" + Date.now();
-
-},{"fe186ac262aec5cd":"lgJ39"}],"6QHR0":[function(require,module,exports) {
-module.exports = require("5ea11ea2bdb14770").getBundleURL("lORN7") + "earthcloudmap.eee12fd8.jpg" + "?" + Date.now();
-
-},{"5ea11ea2bdb14770":"lgJ39"}],"fx0K9":[function(require,module,exports) {
-module.exports = require("35ea55d2d88ce6a6").getBundleURL("lORN7") + "earthcloudmaptrans.5c9989ec.jpg" + "?" + Date.now();
-
-},{"35ea55d2d88ce6a6":"lgJ39"}],"kdPTc":[function(require,module,exports) {
-module.exports = require("9f9498c40c85b611").getBundleURL("lORN7") + "jupiter.38c6cafa.jpg" + "?" + Date.now();
-
-},{"9f9498c40c85b611":"lgJ39"}],"bIDlt":[function(require,module,exports) {
-module.exports = require("fbd7c2a71344b0eb").getBundleURL("lORN7") + "jupiternight.79a1be6e.jpg" + "?" + Date.now();
-
-},{"fbd7c2a71344b0eb":"lgJ39"}],"iWRN5":[function(require,module,exports) {
-module.exports = require("845d5241b16ad255").getBundleURL("lORN7") + "mercurymap.485366de.jpg" + "?" + Date.now();
-
-},{"845d5241b16ad255":"lgJ39"}],"dYcYR":[function(require,module,exports) {
-module.exports = require("23fc6299b78dfd9e").getBundleURL("lORN7") + "mercurybump.5fd5d8dc.jpg" + "?" + Date.now();
-
-},{"23fc6299b78dfd9e":"lgJ39"}],"6q8Da":[function(require,module,exports) {
-module.exports = require("b73fc24652fcade3").getBundleURL("lORN7") + "mercurynightmap.d72f30e7.jpg" + "?" + Date.now();
-
-},{"b73fc24652fcade3":"lgJ39"}],"E6AsX":[function(require,module,exports) {
-module.exports = require("e6c074c98af65a2d").getBundleURL("lORN7") + "venusmap.f244037d.jpg" + "?" + Date.now();
-
-},{"e6c074c98af65a2d":"lgJ39"}],"4e6gf":[function(require,module,exports) {
-module.exports = require("d2cc078b4b72c78").getBundleURL("lORN7") + "venusmapnight.1af4f621.jpg" + "?" + Date.now();
-
-},{"d2cc078b4b72c78":"lgJ39"}],"5rqUK":[function(require,module,exports) {
-module.exports = require("6d50c5aabc92ee5e").getBundleURL("lORN7") + "venusclouds.f758907d.jpg" + "?" + Date.now();
-
-},{"6d50c5aabc92ee5e":"lgJ39"}],"l6QSa":[function(require,module,exports) {
-module.exports = require("18e747fe4eb26e8f").getBundleURL("lORN7") + "marsmap.33200c41.png" + "?" + Date.now();
-
-},{"18e747fe4eb26e8f":"lgJ39"}],"c4kMA":[function(require,module,exports) {
-module.exports = require("2d41b99c46b2406").getBundleURL("lORN7") + "marsbump.f66ec3e1.jpg" + "?" + Date.now();
-
-},{"2d41b99c46b2406":"lgJ39"}],"2v5Zj":[function(require,module,exports) {
-module.exports = require("931742e1de9d4d33").getBundleURL("lORN7") + "marsclouds.f3349186.png" + "?" + Date.now();
-
-},{"931742e1de9d4d33":"lgJ39"}],"gmgyo":[function(require,module,exports) {
-module.exports = require("a6af5df8bf8fb33c").getBundleURL("lORN7") + "marsnight.408f4aa5.jpg" + "?" + Date.now();
-
-},{"a6af5df8bf8fb33c":"lgJ39"}],"1PmpW":[function(require,module,exports) {
-module.exports = require("b4ed7c73b4c8c4be").getBundleURL("lORN7") + "th_saturn.a9c24882.png" + "?" + Date.now();
-
-},{"b4ed7c73b4c8c4be":"lgJ39"}],"3N3Sf":[function(require,module,exports) {
-module.exports = require("3257079fab685c64").getBundleURL("lORN7") + "th_saturnbump.05f2c582.png" + "?" + Date.now();
-
-},{"3257079fab685c64":"lgJ39"}],"dBdUM":[function(require,module,exports) {
-module.exports = require("f9aec6a7a8970509").getBundleURL("lORN7") + "th_saturnclouds.fc4f2c08.png" + "?" + Date.now();
-
-},{"f9aec6a7a8970509":"lgJ39"}],"eeNJU":[function(require,module,exports) {
-module.exports = require("45d76fe65d479229").getBundleURL("lORN7") + "th_saturnnight.42e53af6.png" + "?" + Date.now();
-
-},{"45d76fe65d479229":"lgJ39"}],"aUgNw":[function(require,module,exports) {
-module.exports = require("723e5395232f1e5").getBundleURL("lORN7") + "t00fri_gh_saturnrings.3e922465.png" + "?" + Date.now();
-
-},{"723e5395232f1e5":"lgJ39"}],"cmcTM":[function(require,module,exports) {
-module.exports = require("5eb73bcb5b387a22").getBundleURL("lORN7") + "uranusmap.0ec47f7c.png" + "?" + Date.now();
-
-},{"5eb73bcb5b387a22":"lgJ39"}],"fmPKW":[function(require,module,exports) {
-module.exports = require("ab1b6d8f46608d1e").getBundleURL("lORN7") + "uranuslights.95d320b6.png" + "?" + Date.now();
-
-},{"ab1b6d8f46608d1e":"lgJ39"}],"fldyh":[function(require,module,exports) {
-module.exports = require("b1e4170930a9225").getBundleURL("lORN7") + "uranusrings.231cffc1.png" + "?" + Date.now();
-
-},{"b1e4170930a9225":"lgJ39"}],"6Qb4i":[function(require,module,exports) {
-module.exports = require("9336fe796137151d").getBundleURL("lORN7") + "neptunemap.1011a919.jpg" + "?" + Date.now();
-
-},{"9336fe796137151d":"lgJ39"}],"ixuWJ":[function(require,module,exports) {
-module.exports = require("63356040d2ad5884").getBundleURL("lORN7") + "neptunebump.18b1f61b.png" + "?" + Date.now();
-
-},{"63356040d2ad5884":"lgJ39"}],"leeDc":[function(require,module,exports) {
-module.exports = require("a74b2c8f9e9c8f0").getBundleURL("lORN7") + "neptuneclouds.c4a4f44a.png" + "?" + Date.now();
-
-},{"a74b2c8f9e9c8f0":"lgJ39"}],"1pAHL":[function(require,module,exports) {
-module.exports = require("424096f1f5fe0684").getBundleURL("lORN7") + "neptunelights.83a48508.jpg" + "?" + Date.now();
-
-},{"424096f1f5fe0684":"lgJ39"}],"cLZgz":[function(require,module,exports) {
-module.exports = require("50554957d8315faa").getBundleURL("lORN7") + "neptunerings.522248b7.png" + "?" + Date.now();
-
-},{"50554957d8315faa":"lgJ39"}],"daOLx":[function(require,module,exports) {
-module.exports = require("84dd440b3518d687").getBundleURL("lORN7") + "sunmap.1200be6c.jpg" + "?" + Date.now();
-
-},{"84dd440b3518d687":"lgJ39"}],"ltP79":[function(require,module,exports) {
-module.exports = require("aa8c572f9fbdc8fe").getBundleURL("lORN7") + "sunfluids.d4134e19.png" + "?" + Date.now();
-
-},{"aa8c572f9fbdc8fe":"lgJ39"}],"2NNMB":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "audioData", ()=>audioData);
-const audioData = [
-    // SUN
-    {
-        audioClips: [
-            {
-                file: new URL(require("77eb250518da21b8")).href,
-                subtitles: [
-                    {
-                        text: "Igniting the world anew with such brilliance, the sun rose with casual elegance.",
-                        start: 0,
-                        end: 5
-                    },
-                    {
-                        text: "Whether it is a star or a floating fireball, it remains the heart and soul of the solar system.",
-                        start: 5,
-                        end: 11
-                    }
-                ]
-            },
-            {
-                file: new URL(require("7f2bdb0681aaa782")).href,
-                subtitles: [
-                    {
-                        text: "The Sun is so big that about 1.3 million Earths could fit inside it and it weighs about 500 times more than all the planets and asteroids combined.",
-                        start: 0,
-                        end: 9
-                    }
-                ]
-            },
-            {
-                file: new URL(require("52b38fcc44f0a2bb")).href,
-                subtitles: [
-                    {
-                        text: "Did you know the sun is roughly 4.57 billion years old in Earth years? ",
-                        start: 0,
-                        end: 6
-                    },
-                    {
-                        text: "yet it's only about 20.5 years old in galactic years, reflecting its orbit around the galaxy.",
-                        start: 6,
-                        end: 12
-                    }
-                ]
-            },
-            {
-                file: new URL(require("4ef85548002ef93")).href,
-                subtitles: [
-                    {
-                        text: "It's funny to think we measure the sun's age in Earth years when the Earth didn't even exist when the sun was born.",
-                        start: 0,
-                        end: 6
-                    }
-                ]
-            },
-            {
-                file: new URL(require("affe269034525dbd")).href,
-                subtitles: [
-                    {
-                        text: "Welcome to the solar system.",
-                        start: 0,
-                        end: 2
-                    }
-                ]
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
+exports.interopDefault = function(a) {
+    return a && a.__esModule ? a : {
+        default: a
+    };
+};
+exports.defineInteropFlag = function(a) {
+    Object.defineProperty(a, "__esModule", {
+        value: true
+    });
+};
+exports.exportAll = function(source, dest) {
+    Object.keys(source).forEach(function(key) {
+        if (key === "default" || key === "__esModule" || Object.prototype.hasOwnProperty.call(dest, key)) return;
+        Object.defineProperty(dest, key, {
+            enumerable: true,
+            get: function() {
+                return source[key];
             }
-        ]
-    },
-    // MERCURY
-    {
-        audioClips: [
-            {
-                file: new URL(require("401acc1f688096f8")).href,
-                subtitles: [
-                    {
-                        text: "The wild child of the solar system. It's fast, fiery, and fearless, racing around the Sun like it's on turbo mode.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "With extreme temps and cratered chaos, Mercury's the bold little planet that never hits the brakes.",
-                        start: 7,
-                        end: 14
-                    }
-                ]
-            },
-            {
-                file: new URL(require("60e5817dfe468056")).href,
-                subtitles: [
-                    {
-                        text: "Thirteen times a century Mercury can be observed from the Earth passing across the face of the Sun in an event called a transit.",
-                        start: 0,
-                        end: 8
-                    }
-                ]
-            },
-            {
-                file: new URL(require("43c1e5ad178939bc")).href,
-                subtitles: [
-                    {
-                        text: "Perceived as the hottest planet because it's closest to the Sun, Mercury is actually not the hottest.",
-                        start: 0,
-                        end: 6
-                    },
-                    {
-                        text: "That title goes to Venus, which is hotter due to its thick atmosphere.",
-                        start: 6,
-                        end: 11
-                    }
-                ]
-            },
-            {
-                file: new URL(require("74785612c06ad6e2")).href,
-                subtitles: [
-                    {
-                        text: "Mercury has wrinkles! As its iron core cooled, it formed lobate scarps.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "Looks like even planets can't escape the effects of time.",
-                        start: 7,
-                        end: 10
-                    }
-                ]
-            }
-        ]
-    },
-    // VENUS
-    {
-        audioClips: [
-            {
-                file: new URL(require("ceac81fde1fc515b")).href,
-                subtitles: [
-                    {
-                        text: "The drama queen of the solar system! With crushing pressure, scorching heat, and toxic clouds, it spins backward because why not?",
-                        start: 0,
-                        end: 8
-                    },
-                    {
-                        text: "Fierce, fiery, and totally unpredictable, Venus loves to keep things intense.",
-                        start: 8,
-                        end: 13
-                    }
-                ]
-            },
-            {
-                file: new URL(require("2911bf5d4dc02d0d")).href,
-                subtitles: [
-                    {
-                        text: "Venus has been observed for thousands of years as it is the second brightest object in the night sky.",
-                        start: 0,
-                        end: 6
-                    }
-                ]
-            },
-            {
-                file: new URL(require("8c1f92ce3654c9e7")).href,
-                subtitles: [
-                    {
-                        text: "The clouds of Venus contain sulfuric acid, but the high temperatures mean the rain evaporates before it reaches the surface.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            },
-            {
-                file: new URL(require("60f37827cd139595")).href,
-                subtitles: [
-                    {
-                        text: "Venus has a 'day' that is longer than its 'year,' making it a unique case in the solar system.",
-                        start: 0,
-                        end: 5
-                    }
-                ]
-            },
-            {
-                file: new URL(require("8515030780639e86")).href,
-                subtitles: [
-                    {
-                        text: "Venus rotates on its axis in the opposite direction to most planets, meaning the Sun rises in the west and sets in the east.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            },
-            {
-                file: new URL(require("a5278b8e2909bee9")).href,
-                subtitles: [
-                    {
-                        text: "Venus, known as the Morning Star and Evening Star, was once thought to be two different bodies by early civilizations.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "Its orbit around the Sun causes it to shift visibility from after sunset to before sunrise as it overtakes Earth.",
-                        start: 7,
-                        end: 14
-                    }
-                ]
-            },
-            {
-                file: new URL(require("d767e12f3198dd68")).href,
-                subtitles: [
-                    {
-                        text: "Venus is often called Earth's twin due to its similar size and composition, but its conditions are vastly different.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            }
-        ]
-    },
-    // EARTH
-    {
-        audioClips: [
-            {
-                file: new URL(require("48df59f1dd386e72")).href,
-                subtitles: [
-                    {
-                        text: "The lively hotspot of the solar system. With wild weather and stunning sunsets, it's the place to be\u2014just don't forget your sunscreen.",
-                        start: 0,
-                        end: 9
-                    }
-                ]
-            },
-            {
-                file: new URL(require("dbe4301d3a132249")).href,
-                subtitles: [
-                    {
-                        text: "The Earth was once believed to be the center of the universe. Due to the apparent movements of the Sun and planets in relation to their viewpoint,",
-                        start: 0,
-                        end: 8
-                    },
-                    {
-                        text: "ancient scientists insisted that the Earth remained static, whilst other celestial bodies travelled in circular orbits around it.",
-                        start: 8,
-                        end: 15
-                    }
-                ]
-            },
-            {
-                file: new URL(require("fac2ff1275071c76")).href,
-                subtitles: [
-                    {
-                        text: "Earth doesn't take 24 hours to rotate on its axis. It's actually 23 hours, 56 minutes, and 4 seconds. Astronomers call this a sidereal day.",
-                        start: 0,
-                        end: 10
-                    }
-                ]
-            },
-            {
-                file: new URL(require("650db59159590fd6")).href,
-                subtitles: [
-                    {
-                        text: "Due to the gravitational pull of the Moon, Earth's rotation is gradually slowing down,",
-                        start: 0,
-                        end: 5
-                    },
-                    {
-                        text: "making days longer by about 1.7 milliseconds per century.",
-                        start: 5,
-                        end: 9
-                    }
-                ]
-            }
-        ]
-    },
-    // MARS
-    {
-        audioClips: [
-            {
-                file: new URL(require("62712bcca9b93e47")).href,
-                subtitles: [
-                    {
-                        text: "The solar system's ultimate red rock star! With its dusty deserts and towering volcanoes,",
-                        start: 0,
-                        end: 6
-                    },
-                    {
-                        text: "it's like Earth's quirky cousin who decided to go for a 'no water' aesthetic.",
-                        start: 6,
-                        end: 10
-                    }
-                ]
-            },
-            {
-                file: new URL(require("55bac4352a44c7ca")).href,
-                subtitles: [
-                    {
-                        text: "Mars is home to the tallest mountain in the solar system.",
-                        start: 0,
-                        end: 4
-                    },
-                    {
-                        text: "Olympus Mons, a shield volcano, is 21km high and 600km in diameter. Despite having formed over billions of years,",
-                        start: 4,
-                        end: 13
-                    },
-                    {
-                        text: "evidence from volcanic lava flows is so recent many scientists believe it could still be active.",
-                        start: 13,
-                        end: 19
-                    }
-                ]
-            },
-            {
-                file: new URL(require("8feff3a44857cf1b")).href,
-                subtitles: [
-                    {
-                        text: "Mars has the largest dust storms in the solar system. They can last for months and cover the entire planet.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            },
-            {
-                file: new URL(require("59d2fd9f4eccad07")).href,
-                subtitles: [
-                    {
-                        text: "One day Mars will have a ring. In the next 20-40 million years, Mars' largest moon Phobos will be torn apart",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "by gravitational forces leading to the creation of a ring that could last up to 100 million years.",
-                        start: 7,
-                        end: 14
-                    }
-                ]
-            },
-            {
-                file: new URL(require("c9d3f9938d2dd5de")).href,
-                subtitles: [
-                    {
-                        text: "Pieces of Mars have fallen to Earth. Scientists have discovered tiny traces of Martian atmosphere in meteorites",
-                        start: 0,
-                        end: 6
-                    },
-                    {
-                        text: "that were violently ejected from Mars and spent millions of years traveling through space before landing on our planet.",
-                        start: 6,
-                        end: 12
-                    }
-                ]
-            }
-        ]
-    },
-    // JUPITER
-    {
-        audioClips: [
-            {
-                file: new URL(require("8c84584fbcb3e9eb")).href,
-                subtitles: [
-                    {
-                        text: "The solar system's giant gas king! With a storm bigger than Earth and more moons than you can count,",
-                        start: 0,
-                        end: 6
-                    },
-                    {
-                        text: "it's the ultimate cosmic heavyweight. Bigger, wilder, and full of surprises!",
-                        start: 6,
-                        end: 12
-                    }
-                ]
-            },
-            {
-                file: new URL(require("62af1ed0662ef2dc")).href,
-                subtitles: [
-                    {
-                        text: "Jupiter has the shortest day of all the planets. It turns on its axis once every 9 hours and 55 minutes.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "The rapid rotation flattens the planet slightly, giving it an oblate shape.",
-                        start: 7,
-                        end: 12
-                    }
-                ]
-            },
-            {
-                file: new URL(require("b8e29a7b0eeaf25")).href,
-                subtitles: [
-                    {
-                        text: "It is two and a half times more massive than all the other planets in the solar system combined.",
-                        start: 0,
-                        end: 5
-                    }
-                ]
-            },
-            {
-                file: new URL(require("3bd6694fffd8eb71")).href,
-                subtitles: [
-                    {
-                        text: "It is made primarily of gases and is therefore known as a 'gas giant'.",
-                        start: 0,
-                        end: 5
-                    }
-                ]
-            },
-            {
-                file: new URL(require("f3e5c0ba28d4e310")).href,
-                subtitles: [
-                    {
-                        text: "Jupiter is the fourth brightest object in the solar system. Only the Sun, Moon, and Venus are brighter.",
-                        start: 0,
-                        end: 6
-                    },
-                    {
-                        text: "It is one of five planets visible to the naked eye from Earth.",
-                        start: 6,
-                        end: 10
-                    }
-                ]
-            }
-        ]
-    },
-    // SATURN
-    {
-        audioClips: [
-            {
-                file: new URL(require("341a05d7ad47a7")).href,
-                subtitles: [
-                    {
-                        text: "The ringed royalty of the solar system. It's big, bold, and knows how to rock some serious space bling.",
-                        start: 0,
-                        end: 6
-                    }
-                ]
-            },
-            {
-                file: new URL(require("2ce39f46de59de42")).href,
-                subtitles: [
-                    {
-                        text: "Saturn is the flattest planet. Its polar diameter is 90% of its equatorial diameter, this is due to its low density and fast rotation.",
-                        start: 0,
-                        end: 10
-                    }
-                ]
-            },
-            {
-                file: new URL(require("7ab4a9fa92593032")).href,
-                subtitles: [
-                    {
-                        text: "Saturn turns on its axis once every 10 hours and 34 minutes giving it the second-shortest day of any of the solar system's planets.",
-                        start: 0,
-                        end: 8
-                    }
-                ]
-            },
-            {
-                file: new URL(require("fcda9d574d4cc54e")).href,
-                subtitles: [
-                    {
-                        text: "Saturn has more moons than any other planet. All are frozen worlds. The largest moons are Titan and Rhea.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "20 new moons were discovered in 2019 bringing the total to 82.",
-                        start: 7,
-                        end: 12
-                    }
-                ]
-            }
-        ]
-    },
-    // URANUS
-    {
-        audioClips: [
-            {
-                file: new URL(require("5e002a4321ae4609")).href,
-                subtitles: [
-                    {
-                        text: "The chillest planet around. Spinning on its side and sporting a cool blue vibe, it's the oddball that keeps things weird in the best way.",
-                        start: 0,
-                        end: 8
-                    }
-                ]
-            },
-            {
-                file: new URL(require("98d3614afcb60cf7")).href,
-                subtitles: [
-                    {
-                        text: "Uranus hits the coldest temperatures of any planet. With a minimum atmospheric temperature of -224\xb0C,",
-                        start: 0,
-                        end: 8
-                    },
-                    {
-                        text: "Uranus is nearly the coldest planet in the solar system.",
-                        start: 8,
-                        end: 12
-                    }
-                ]
-            },
-            {
-                file: new URL(require("47f72da5bf450a75")).href,
-                subtitles: [
-                    {
-                        text: "Uranus has two sets of very thin dark-colored rings. The ring particles are small, ranging from dust-sized particles to small boulders.",
-                        start: 0,
-                        end: 8
-                    },
-                    {
-                        text: "There are eleven inner rings and two outer rings. They probably formed when one or more of Uranus's moons were broken up in an impact.",
-                        start: 8,
-                        end: 14
-                    }
-                ]
-            },
-            {
-                file: new URL(require("9cf3c2d6b2929075")).href,
-                subtitles: [
-                    {
-                        text: "Uranus is tipped over on its side with an axial tilt of 98 degrees. It is often described as 'rolling around the Sun on its side.'",
-                        start: 0,
-                        end: 8
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        audioClips: [
-            {
-                file: new URL(require("c5ca05b427515129")).href,
-                subtitles: [
-                    {
-                        text: "The deep-blue giant of the solar system. With wild storms and supersonic winds, it's the cosmic ocean that never stops surprising.",
-                        start: 0,
-                        end: 9
-                    }
-                ]
-            },
-            {
-                file: new URL(require("51b2b8e283cce0d0")).href,
-                subtitles: [
-                    {
-                        text: "Neptune spins on its axis very rapidly. Its equatorial clouds take 16 hours to make one rotation.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "This is because Neptune is not a solid body.",
-                        start: 7,
-                        end: 9
-                    }
-                ]
-            },
-            {
-                file: new URL(require("509555fec0530b56")).href,
-                subtitles: [
-                    {
-                        text: "Neptune is the smallest of the ice giants. Despite being smaller than Uranus, Neptune has a greater mass.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            },
-            {
-                file: new URL(require("f3d058540254a39")).href,
-                subtitles: [
-                    {
-                        text: "Neptune has a very active climate. Large storms whirl through its upper atmosphere,",
-                        start: 0,
-                        end: 5
-                    },
-                    {
-                        text: "and high-speed winds track around the planet at up to 600 meters per second.",
-                        start: 5,
-                        end: 10
-                    }
-                ]
-            },
-            {
-                file: new URL(require("5600d83957bfa430")).href,
-                subtitles: [
-                    {
-                        text: "Neptune has a very thin collection of rings.",
-                        start: 0,
-                        end: 3
-                    },
-                    {
-                        text: "They are likely made up of ice particles mixed with dust grains and possibly coated with a carbon-based substance.",
-                        start: 3,
-                        end: 10
-                    }
-                ]
-            },
-            {
-                file: new URL(require("d65f1141e744edf2")).href,
-                subtitles: [
-                    {
-                        text: "Neptune has 14 moons. The most interesting moon is Triton,",
-                        start: 0,
-                        end: 4
-                    },
-                    {
-                        text: "a frozen world that is spewing nitrogen ice and dust particles out from below its surface. ",
-                        start: 4,
-                        end: 9
-                    },
-                    {
-                        text: "It was likely captured by the gravitational pull of Neptune. It is probably the coldest world in the solar system.",
-                        start: 9,
-                        end: 15
-                    }
-                ]
-            }
-        ]
-    },
-    // MOON
-    {
-        audioClips: [
-            {
-                file: new URL(require("9580d01ad1278252")).href,
-                subtitles: [
-                    {
-                        text: "Earth's trusty sidekick. With its glowing nights and quirky craters, it's the ultimate celestial hangout that's always ready for a lunar adventure.",
-                        start: 0,
-                        end: 8
-                    }
-                ]
-            },
-            {
-                file: new URL(require("2c9b7c048a30a9be")).href,
-                subtitles: [
-                    {
-                        text: "The Moon is the largest satellite of any planet in our solar system. In real terms, however, it is only the fifth largest natural satellite.",
-                        start: 0,
-                        end: 8
-                    }
-                ]
-            },
-            {
-                file: new URL(require("758666c5dc68656")).href,
-                subtitles: [
-                    {
-                        text: "Just like Earth has earthquakes, the Moon has moonquakes! These can be caused by tidal forces from Earth or meteor impacts.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            },
-            {
-                file: new URL(require("69a5c34df2f53061")).href,
-                subtitles: [
-                    {
-                        text: "The dark patches on the Moon, called 'maria', are ancient volcanic plains, giving the Moon its iconic appearance.",
-                        start: 0,
-                        end: 7
-                    },
-                    {
-                        text: "'maria' means 'seas' in Latin, even though they're not water.",
-                        start: 7,
-                        end: 11
-                    }
-                ]
-            },
-            {
-                file: new URL(require("7ee449acde091d97")).href,
-                subtitles: [
-                    {
-                        text: "The footprints left by astronauts on the Moon could last for millions of years because there's no wind or water to erode them.",
-                        start: 0,
-                        end: 7
-                    }
-                ]
-            }
-        ]
-    }
-];
+        });
+    });
+    return dest;
+};
+exports.export = function(dest, destName, get) {
+    Object.defineProperty(dest, destName, {
+        enumerable: true,
+        get: get
+    });
+};
 
-},{"77eb250518da21b8":"jT7EJ","7f2bdb0681aaa782":"7mFIW","52b38fcc44f0a2bb":"gjGJR","4ef85548002ef93":"feNso","affe269034525dbd":"9VyGF","401acc1f688096f8":"7EIrl","60e5817dfe468056":"b565S","43c1e5ad178939bc":"dYtRi","74785612c06ad6e2":"kG5Te","ceac81fde1fc515b":"lssF3","2911bf5d4dc02d0d":"9ZD59","8c1f92ce3654c9e7":"abXm9","60f37827cd139595":"hp5Z1","8515030780639e86":"6YW3l","a5278b8e2909bee9":"fdusr","d767e12f3198dd68":"1RyWC","48df59f1dd386e72":"3ViGa","dbe4301d3a132249":"ekk7i","fac2ff1275071c76":"b10zL","650db59159590fd6":"2GLr7","62712bcca9b93e47":"rrGi1","55bac4352a44c7ca":"iONPc","8feff3a44857cf1b":"7xveE","59d2fd9f4eccad07":"5JUdF","c9d3f9938d2dd5de":"gtJDQ","8c84584fbcb3e9eb":"1bmiW","62af1ed0662ef2dc":"646i7","b8e29a7b0eeaf25":"dkDfY","3bd6694fffd8eb71":"1T0YY","f3e5c0ba28d4e310":"isHtL","341a05d7ad47a7":"2cABQ","2ce39f46de59de42":"5QsgY","7ab4a9fa92593032":"jHIhA","fcda9d574d4cc54e":"4SYJf","5e002a4321ae4609":"3dDci","98d3614afcb60cf7":"hp4op","47f72da5bf450a75":"lB0Qf","9cf3c2d6b2929075":"45oD4","c5ca05b427515129":"cGtFD","51b2b8e283cce0d0":"gS1h4","509555fec0530b56":"28nNq","f3d058540254a39":"2Futo","5600d83957bfa430":"99Wxw","d65f1141e744edf2":"2iXXc","9580d01ad1278252":"ldjWS","2c9b7c048a30a9be":"inkOI","758666c5dc68656":"7JBVk","69a5c34df2f53061":"epCfj","7ee449acde091d97":"a2MYR","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jT7EJ":[function(require,module,exports) {
-module.exports = require("f3ea013328f68682").getBundleURL("lORN7") + "sunintro.33eb93dd.wav" + "?" + Date.now();
-
-},{"f3ea013328f68682":"lgJ39"}],"7mFIW":[function(require,module,exports) {
-module.exports = require("f8beccb8b41f429b").getBundleURL("lORN7") + "sunfact1.ae3273a5.wav" + "?" + Date.now();
-
-},{"f8beccb8b41f429b":"lgJ39"}],"gjGJR":[function(require,module,exports) {
-module.exports = require("f87c8838f1b01b99").getBundleURL("lORN7") + "sunfact2.3c36cf20.wav" + "?" + Date.now();
-
-},{"f87c8838f1b01b99":"lgJ39"}],"feNso":[function(require,module,exports) {
-module.exports = require("de624a623a6d1a9b").getBundleURL("lORN7") + "sunfact3.ad979939.wav" + "?" + Date.now();
-
-},{"de624a623a6d1a9b":"lgJ39"}],"9VyGF":[function(require,module,exports) {
-module.exports = require("258de9bf1b9359a1").getBundleURL("lORN7") + "welcome.89f01d99.wav" + "?" + Date.now();
-
-},{"258de9bf1b9359a1":"lgJ39"}],"7EIrl":[function(require,module,exports) {
-module.exports = require("3db9f2d208578da0").getBundleURL("lORN7") + "mercuryintro.69d17220.wav" + "?" + Date.now();
-
-},{"3db9f2d208578da0":"lgJ39"}],"b565S":[function(require,module,exports) {
-module.exports = require("487d672bd2567e4b").getBundleURL("lORN7") + "mercuryfact1.b5da775c.wav" + "?" + Date.now();
-
-},{"487d672bd2567e4b":"lgJ39"}],"dYtRi":[function(require,module,exports) {
-module.exports = require("f6b135c46e953a35").getBundleURL("lORN7") + "mercuryfact2.02580109.wav" + "?" + Date.now();
-
-},{"f6b135c46e953a35":"lgJ39"}],"kG5Te":[function(require,module,exports) {
-module.exports = require("bb212d9247f8b260").getBundleURL("lORN7") + "mercuryfact3.09d88c29.wav" + "?" + Date.now();
-
-},{"bb212d9247f8b260":"lgJ39"}],"lssF3":[function(require,module,exports) {
-module.exports = require("2b57be6ca0dc7e0b").getBundleURL("lORN7") + "venusintro.f55d2a7f.wav" + "?" + Date.now();
-
-},{"2b57be6ca0dc7e0b":"lgJ39"}],"9ZD59":[function(require,module,exports) {
-module.exports = require("7a9cf7868a63fd2e").getBundleURL("lORN7") + "venusfact1.ff2ddc4c.wav" + "?" + Date.now();
-
-},{"7a9cf7868a63fd2e":"lgJ39"}],"abXm9":[function(require,module,exports) {
-module.exports = require("b86bbf6a011c6b82").getBundleURL("lORN7") + "venusfact2.333835ab.wav" + "?" + Date.now();
-
-},{"b86bbf6a011c6b82":"lgJ39"}],"hp5Z1":[function(require,module,exports) {
-module.exports = require("e14259a1547a289b").getBundleURL("lORN7") + "venusfact3.a191c07c.wav" + "?" + Date.now();
-
-},{"e14259a1547a289b":"lgJ39"}],"6YW3l":[function(require,module,exports) {
-module.exports = require("66dc50fad8ce7d2b").getBundleURL("lORN7") + "venusfact4.0a919259.wav" + "?" + Date.now();
-
-},{"66dc50fad8ce7d2b":"lgJ39"}],"fdusr":[function(require,module,exports) {
-module.exports = require("a3cec2f467be5839").getBundleURL("lORN7") + "venusfact5.04fec526.wav" + "?" + Date.now();
-
-},{"a3cec2f467be5839":"lgJ39"}],"1RyWC":[function(require,module,exports) {
-module.exports = require("37c67efed0d462c2").getBundleURL("lORN7") + "venusfact6.c812893d.wav" + "?" + Date.now();
-
-},{"37c67efed0d462c2":"lgJ39"}],"3ViGa":[function(require,module,exports) {
-module.exports = require("45fdae92ad855b3a").getBundleURL("lORN7") + "earthintro.841ea11c.wav" + "?" + Date.now();
-
-},{"45fdae92ad855b3a":"lgJ39"}],"ekk7i":[function(require,module,exports) {
-module.exports = require("252afb108968914b").getBundleURL("lORN7") + "earthfact1.fdc2cbe1.wav" + "?" + Date.now();
-
-},{"252afb108968914b":"lgJ39"}],"b10zL":[function(require,module,exports) {
-module.exports = require("d4417a620e96fec4").getBundleURL("lORN7") + "earthfact2.31a743bc.wav" + "?" + Date.now();
-
-},{"d4417a620e96fec4":"lgJ39"}],"2GLr7":[function(require,module,exports) {
-module.exports = require("881fc184ce83175b").getBundleURL("lORN7") + "earthfact3.0c620469.wav" + "?" + Date.now();
-
-},{"881fc184ce83175b":"lgJ39"}],"rrGi1":[function(require,module,exports) {
-module.exports = require("e4dda16f76cc5804").getBundleURL("lORN7") + "marsintro.37ea4865.wav" + "?" + Date.now();
-
-},{"e4dda16f76cc5804":"lgJ39"}],"iONPc":[function(require,module,exports) {
-module.exports = require("89f472425317a220").getBundleURL("lORN7") + "marsfact1.a5a58fc4.wav" + "?" + Date.now();
-
-},{"89f472425317a220":"lgJ39"}],"7xveE":[function(require,module,exports) {
-module.exports = require("e904bbaf359b2b5e").getBundleURL("lORN7") + "marsfact2.6b9ff973.wav" + "?" + Date.now();
-
-},{"e904bbaf359b2b5e":"lgJ39"}],"5JUdF":[function(require,module,exports) {
-module.exports = require("1c34e71a550c719c").getBundleURL("lORN7") + "marsfact3.fa007168.wav" + "?" + Date.now();
-
-},{"1c34e71a550c719c":"lgJ39"}],"gtJDQ":[function(require,module,exports) {
-module.exports = require("2847228b2237803b").getBundleURL("lORN7") + "marsfact4.354f19f3.wav" + "?" + Date.now();
-
-},{"2847228b2237803b":"lgJ39"}],"1bmiW":[function(require,module,exports) {
-module.exports = require("d2777bc4208c29f9").getBundleURL("lORN7") + "jupiterintro.43247194.wav" + "?" + Date.now();
-
-},{"d2777bc4208c29f9":"lgJ39"}],"646i7":[function(require,module,exports) {
-module.exports = require("fb32c08c689bed8").getBundleURL("lORN7") + "jupiterfact1.ab51f2e5.wav" + "?" + Date.now();
-
-},{"fb32c08c689bed8":"lgJ39"}],"dkDfY":[function(require,module,exports) {
-module.exports = require("f81a3e625d5cb5de").getBundleURL("lORN7") + "jupiterfact2.53a1c882.wav" + "?" + Date.now();
-
-},{"f81a3e625d5cb5de":"lgJ39"}],"1T0YY":[function(require,module,exports) {
-module.exports = require("ca822d39c88e5e70").getBundleURL("lORN7") + "jupiterfact3.f63ccc87.wav" + "?" + Date.now();
-
-},{"ca822d39c88e5e70":"lgJ39"}],"isHtL":[function(require,module,exports) {
-module.exports = require("e757ced7272aca6a").getBundleURL("lORN7") + "jupiterfact4.75ec5d45.wav" + "?" + Date.now();
-
-},{"e757ced7272aca6a":"lgJ39"}],"2cABQ":[function(require,module,exports) {
-module.exports = require("38b74c2a0744141").getBundleURL("lORN7") + "saturnintro.5f3ee863.wav" + "?" + Date.now();
-
-},{"38b74c2a0744141":"lgJ39"}],"5QsgY":[function(require,module,exports) {
-module.exports = require("953317adc1ca0090").getBundleURL("lORN7") + "saturnfact1.e226499f.wav" + "?" + Date.now();
-
-},{"953317adc1ca0090":"lgJ39"}],"jHIhA":[function(require,module,exports) {
-module.exports = require("4c4e584515f7bf0e").getBundleURL("lORN7") + "saturnfact2.7c6af678.wav" + "?" + Date.now();
-
-},{"4c4e584515f7bf0e":"lgJ39"}],"4SYJf":[function(require,module,exports) {
-module.exports = require("ffa4a8b2fe3ef6ea").getBundleURL("lORN7") + "saturnfact3.4c24bf0e.wav" + "?" + Date.now();
-
-},{"ffa4a8b2fe3ef6ea":"lgJ39"}],"3dDci":[function(require,module,exports) {
-module.exports = require("3bdc92dc5fad9ed1").getBundleURL("lORN7") + "uranusintro.e4019ac3.wav" + "?" + Date.now();
-
-},{"3bdc92dc5fad9ed1":"lgJ39"}],"hp4op":[function(require,module,exports) {
-module.exports = require("652779a61a9e86d6").getBundleURL("lORN7") + "uranusfact1.4b770a06.wav" + "?" + Date.now();
-
-},{"652779a61a9e86d6":"lgJ39"}],"lB0Qf":[function(require,module,exports) {
-module.exports = require("6cab68e630a7e2ac").getBundleURL("lORN7") + "uranusfact3.550069b2.wav" + "?" + Date.now();
-
-},{"6cab68e630a7e2ac":"lgJ39"}],"45oD4":[function(require,module,exports) {
-module.exports = require("94446d222d161bf5").getBundleURL("lORN7") + "uranusfact4.42344c97.wav" + "?" + Date.now();
-
-},{"94446d222d161bf5":"lgJ39"}],"cGtFD":[function(require,module,exports) {
-module.exports = require("7144640464183793").getBundleURL("lORN7") + "neptuneintro.09a9ce57.wav" + "?" + Date.now();
-
-},{"7144640464183793":"lgJ39"}],"gS1h4":[function(require,module,exports) {
-module.exports = require("ab91d449e950968f").getBundleURL("lORN7") + "neptunefact1.37c61e8a.wav" + "?" + Date.now();
-
-},{"ab91d449e950968f":"lgJ39"}],"28nNq":[function(require,module,exports) {
-module.exports = require("1ae3f87ababf756").getBundleURL("lORN7") + "neptunefact2.1730bcf1.wav" + "?" + Date.now();
-
-},{"1ae3f87ababf756":"lgJ39"}],"2Futo":[function(require,module,exports) {
-module.exports = require("7c8110a0aaa62381").getBundleURL("lORN7") + "neptunefact3.a7b93639.wav" + "?" + Date.now();
-
-},{"7c8110a0aaa62381":"lgJ39"}],"99Wxw":[function(require,module,exports) {
-module.exports = require("ae9682babb9e9b69").getBundleURL("lORN7") + "neptunefact4.4a7f8d5f.wav" + "?" + Date.now();
-
-},{"ae9682babb9e9b69":"lgJ39"}],"2iXXc":[function(require,module,exports) {
-module.exports = require("a693d2b2d10f1e6").getBundleURL("lORN7") + "neptunefact5.75d96a81.wav" + "?" + Date.now();
-
-},{"a693d2b2d10f1e6":"lgJ39"}],"ldjWS":[function(require,module,exports) {
-module.exports = require("491a3e823c4ee6da").getBundleURL("lORN7") + "moonintro.8322cea0.wav" + "?" + Date.now();
-
-},{"491a3e823c4ee6da":"lgJ39"}],"inkOI":[function(require,module,exports) {
-module.exports = require("914e2571ae7d1342").getBundleURL("lORN7") + "moonfact1.e7ed3655.wav" + "?" + Date.now();
-
-},{"914e2571ae7d1342":"lgJ39"}],"7JBVk":[function(require,module,exports) {
-module.exports = require("5a72c9b35e7e1c5b").getBundleURL("lORN7") + "moonfact2.70ba5825.wav" + "?" + Date.now();
-
-},{"5a72c9b35e7e1c5b":"lgJ39"}],"epCfj":[function(require,module,exports) {
-module.exports = require("44d96b746a12c37f").getBundleURL("lORN7") + "moonfact3.2db5237c.wav" + "?" + Date.now();
-
-},{"44d96b746a12c37f":"lgJ39"}],"a2MYR":[function(require,module,exports) {
-module.exports = require("ad36d58ad61ffacc").getBundleURL("lORN7") + "moonfact4.5e54e80e.wav" + "?" + Date.now();
-
-},{"ad36d58ad61ffacc":"lgJ39"}],"7mqRv":[function(require,module,exports) {
+},{}],"7mqRv":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "OrbitControls", ()=>OrbitControls);
@@ -36020,16 +35190,32 @@ function onKeyDown(event) {
     else if (event.code === this.keys[_STATE.PAN] && !this.noPan) this.keyState = _STATE.PAN;
 }
 function onMouseDown(event) {
-    if (this.state === _STATE.NONE) switch(event.button){
-        case this.mouseButtons.LEFT:
-            this.state = _STATE.ROTATE;
+    let mouseAction;
+    switch(event.button){
+        case 0:
+            mouseAction = this.mouseButtons.LEFT;
             break;
-        case this.mouseButtons.MIDDLE:
+        case 1:
+            mouseAction = this.mouseButtons.MIDDLE;
+            break;
+        case 2:
+            mouseAction = this.mouseButtons.RIGHT;
+            break;
+        default:
+            mouseAction = -1;
+    }
+    switch(mouseAction){
+        case (0, _three.MOUSE).DOLLY:
             this.state = _STATE.ZOOM;
             break;
-        case this.mouseButtons.RIGHT:
+        case (0, _three.MOUSE).ROTATE:
+            this.state = _STATE.ROTATE;
+            break;
+        case (0, _three.MOUSE).PAN:
             this.state = _STATE.PAN;
             break;
+        default:
+            this.state = _STATE.NONE;
     }
     const state = this.keyState !== _STATE.NONE ? this.keyState : this.state;
     if (state === _STATE.ROTATE && !this.noRotate) {
@@ -36142,6 +35328,4589 @@ function onTouchEnd(event) {
     }
     this.dispatchEvent(_endEvent);
 }
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iBAni":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "WebGL", ()=>(0, _webGLJsDefault.default));
+parcelHelpers.export(exports, "Curves", ()=>_curveExtrasJs);
+parcelHelpers.export(exports, "NURBSUtils", ()=>_nurbsutilsJs);
+parcelHelpers.export(exports, "Water2", ()=>(0, _water2Js.Water));
+parcelHelpers.export(exports, "BokehShader2", ()=>(0, _bokehShader2Js.BokehShader));
+parcelHelpers.export(exports, "BufferGeometryUtils", ()=>_bufferGeometryUtilsJs);
+parcelHelpers.export(exports, "CameraUtils", ()=>_cameraUtilsJs);
+parcelHelpers.export(exports, "GeometryCompressionUtils", ()=>_geometryCompressionUtilsJs);
+parcelHelpers.export(exports, "GeometryUtils", ()=>_geometryUtilsJs);
+parcelHelpers.export(exports, "SceneUtils", ()=>_sceneUtilsJs);
+parcelHelpers.export(exports, "SkeletonUtils", ()=>_skeletonUtilsJs);
+parcelHelpers.export(exports, "SortUtils", ()=>_sortUtilsJs);
+var _animationClipCreatorJs = require("./animation/AnimationClipCreator.js");
+parcelHelpers.exportAll(_animationClipCreatorJs, exports);
+var _ccdiksolverJs = require("./animation/CCDIKSolver.js");
+parcelHelpers.exportAll(_ccdiksolverJs, exports);
+var _mmdanimationHelperJs = require("./animation/MMDAnimationHelper.js");
+parcelHelpers.exportAll(_mmdanimationHelperJs, exports);
+var _mmdphysicsJs = require("./animation/MMDPhysics.js");
+parcelHelpers.exportAll(_mmdphysicsJs, exports);
+var _cinematicCameraJs = require("./cameras/CinematicCamera.js");
+parcelHelpers.exportAll(_cinematicCameraJs, exports);
+var _webGLJs = require("./capabilities/WebGL.js");
+var _webGLJsDefault = parcelHelpers.interopDefault(_webGLJs);
+var _arcballControlsJs = require("./controls/ArcballControls.js");
+parcelHelpers.exportAll(_arcballControlsJs, exports);
+var _dragControlsJs = require("./controls/DragControls.js");
+parcelHelpers.exportAll(_dragControlsJs, exports);
+var _firstPersonControlsJs = require("./controls/FirstPersonControls.js");
+parcelHelpers.exportAll(_firstPersonControlsJs, exports);
+var _flyControlsJs = require("./controls/FlyControls.js");
+parcelHelpers.exportAll(_flyControlsJs, exports);
+var _mapControlsJs = require("./controls/MapControls.js");
+parcelHelpers.exportAll(_mapControlsJs, exports);
+var _orbitControlsJs = require("./controls/OrbitControls.js");
+parcelHelpers.exportAll(_orbitControlsJs, exports);
+var _pointerLockControlsJs = require("./controls/PointerLockControls.js");
+parcelHelpers.exportAll(_pointerLockControlsJs, exports);
+var _trackballControlsJs = require("./controls/TrackballControls.js");
+parcelHelpers.exportAll(_trackballControlsJs, exports);
+var _transformControlsJs = require("./controls/TransformControls.js");
+parcelHelpers.exportAll(_transformControlsJs, exports);
+var _csmJs = require("./csm/CSM.js");
+parcelHelpers.exportAll(_csmJs, exports);
+var _csmfrustumJs = require("./csm/CSMFrustum.js");
+parcelHelpers.exportAll(_csmfrustumJs, exports);
+var _csmhelperJs = require("./csm/CSMHelper.js");
+parcelHelpers.exportAll(_csmhelperJs, exports);
+var _csmshaderJs = require("./csm/CSMShader.js");
+parcelHelpers.exportAll(_csmshaderJs, exports);
+var _curveExtrasJs = require("./curves/CurveExtras.js");
+var _nurbscurveJs = require("./curves/NURBSCurve.js");
+parcelHelpers.exportAll(_nurbscurveJs, exports);
+var _nurbssurfaceJs = require("./curves/NURBSSurface.js");
+parcelHelpers.exportAll(_nurbssurfaceJs, exports);
+var _nurbsvolumeJs = require("./curves/NURBSVolume.js");
+parcelHelpers.exportAll(_nurbsvolumeJs, exports);
+var _nurbsutilsJs = require("./curves/NURBSUtils.js");
+var _anaglyphEffectJs = require("./effects/AnaglyphEffect.js");
+parcelHelpers.exportAll(_anaglyphEffectJs, exports);
+var _asciiEffectJs = require("./effects/AsciiEffect.js");
+parcelHelpers.exportAll(_asciiEffectJs, exports);
+var _outlineEffectJs = require("./effects/OutlineEffect.js");
+parcelHelpers.exportAll(_outlineEffectJs, exports);
+var _parallaxBarrierEffectJs = require("./effects/ParallaxBarrierEffect.js");
+parcelHelpers.exportAll(_parallaxBarrierEffectJs, exports);
+var _peppersGhostEffectJs = require("./effects/PeppersGhostEffect.js");
+parcelHelpers.exportAll(_peppersGhostEffectJs, exports);
+var _stereoEffectJs = require("./effects/StereoEffect.js");
+parcelHelpers.exportAll(_stereoEffectJs, exports);
+var _debugEnvironmentJs = require("./environments/DebugEnvironment.js");
+parcelHelpers.exportAll(_debugEnvironmentJs, exports);
+var _roomEnvironmentJs = require("./environments/RoomEnvironment.js");
+parcelHelpers.exportAll(_roomEnvironmentJs, exports);
+var _dracoexporterJs = require("./exporters/DRACOExporter.js");
+parcelHelpers.exportAll(_dracoexporterJs, exports);
+var _exrexporterJs = require("./exporters/EXRExporter.js");
+parcelHelpers.exportAll(_exrexporterJs, exports);
+var _gltfexporterJs = require("./exporters/GLTFExporter.js");
+parcelHelpers.exportAll(_gltfexporterJs, exports);
+var _ktx2ExporterJs = require("./exporters/KTX2Exporter.js");
+parcelHelpers.exportAll(_ktx2ExporterJs, exports);
+var _mmdexporterJs = require("./exporters/MMDExporter.js");
+parcelHelpers.exportAll(_mmdexporterJs, exports);
+var _objexporterJs = require("./exporters/OBJExporter.js");
+parcelHelpers.exportAll(_objexporterJs, exports);
+var _plyexporterJs = require("./exporters/PLYExporter.js");
+parcelHelpers.exportAll(_plyexporterJs, exports);
+var _stlexporterJs = require("./exporters/STLExporter.js");
+parcelHelpers.exportAll(_stlexporterJs, exports);
+var _usdzexporterJs = require("./exporters/USDZExporter.js");
+parcelHelpers.exportAll(_usdzexporterJs, exports);
+var _boxLineGeometryJs = require("./geometries/BoxLineGeometry.js");
+parcelHelpers.exportAll(_boxLineGeometryJs, exports);
+var _convexGeometryJs = require("./geometries/ConvexGeometry.js");
+parcelHelpers.exportAll(_convexGeometryJs, exports);
+var _decalGeometryJs = require("./geometries/DecalGeometry.js");
+parcelHelpers.exportAll(_decalGeometryJs, exports);
+var _parametricGeometriesJs = require("./geometries/ParametricGeometries.js");
+parcelHelpers.exportAll(_parametricGeometriesJs, exports);
+var _parametricGeometryJs = require("./geometries/ParametricGeometry.js");
+parcelHelpers.exportAll(_parametricGeometryJs, exports);
+var _roundedBoxGeometryJs = require("./geometries/RoundedBoxGeometry.js");
+parcelHelpers.exportAll(_roundedBoxGeometryJs, exports);
+var _teapotGeometryJs = require("./geometries/TeapotGeometry.js");
+parcelHelpers.exportAll(_teapotGeometryJs, exports);
+var _textGeometryJs = require("./geometries/TextGeometry.js");
+parcelHelpers.exportAll(_textGeometryJs, exports);
+var _lightProbeHelperJs = require("./helpers/LightProbeHelper.js");
+parcelHelpers.exportAll(_lightProbeHelperJs, exports);
+var _octreeHelperJs = require("./helpers/OctreeHelper.js");
+parcelHelpers.exportAll(_octreeHelperJs, exports);
+var _positionalAudioHelperJs = require("./helpers/PositionalAudioHelper.js");
+parcelHelpers.exportAll(_positionalAudioHelperJs, exports);
+var _rectAreaLightHelperJs = require("./helpers/RectAreaLightHelper.js");
+parcelHelpers.exportAll(_rectAreaLightHelperJs, exports);
+var _textureHelperJs = require("./helpers/TextureHelper.js");
+parcelHelpers.exportAll(_textureHelperJs, exports);
+var _vertexNormalsHelperJs = require("./helpers/VertexNormalsHelper.js");
+parcelHelpers.exportAll(_vertexNormalsHelperJs, exports);
+var _vertexTangentsHelperJs = require("./helpers/VertexTangentsHelper.js");
+parcelHelpers.exportAll(_vertexTangentsHelperJs, exports);
+var _viewHelperJs = require("./helpers/ViewHelper.js");
+parcelHelpers.exportAll(_viewHelperJs, exports);
+var _htmlmeshJs = require("./interactive/HTMLMesh.js");
+parcelHelpers.exportAll(_htmlmeshJs, exports);
+var _interactiveGroupJs = require("./interactive/InteractiveGroup.js");
+parcelHelpers.exportAll(_interactiveGroupJs, exports);
+var _selectionBoxJs = require("./interactive/SelectionBox.js");
+parcelHelpers.exportAll(_selectionBoxJs, exports);
+var _selectionHelperJs = require("./interactive/SelectionHelper.js");
+parcelHelpers.exportAll(_selectionHelperJs, exports);
+var _lightProbeGeneratorJs = require("./lights/LightProbeGenerator.js");
+parcelHelpers.exportAll(_lightProbeGeneratorJs, exports);
+var _rectAreaLightTexturesLibJs = require("./lights/RectAreaLightTexturesLib.js");
+parcelHelpers.exportAll(_rectAreaLightTexturesLibJs, exports);
+var _rectAreaLightUniformsLibJs = require("./lights/RectAreaLightUniformsLib.js");
+parcelHelpers.exportAll(_rectAreaLightUniformsLibJs, exports);
+var _line2Js = require("./lines/Line2.js");
+parcelHelpers.exportAll(_line2Js, exports);
+var _lineGeometryJs = require("./lines/LineGeometry.js");
+parcelHelpers.exportAll(_lineGeometryJs, exports);
+var _lineMaterialJs = require("./lines/LineMaterial.js");
+parcelHelpers.exportAll(_lineMaterialJs, exports);
+var _lineSegments2Js = require("./lines/LineSegments2.js");
+parcelHelpers.exportAll(_lineSegments2Js, exports);
+var _lineSegmentsGeometryJs = require("./lines/LineSegmentsGeometry.js");
+parcelHelpers.exportAll(_lineSegmentsGeometryJs, exports);
+var _wireframeJs = require("./lines/Wireframe.js");
+parcelHelpers.exportAll(_wireframeJs, exports);
+var _wireframeGeometry2Js = require("./lines/WireframeGeometry2.js");
+parcelHelpers.exportAll(_wireframeGeometry2Js, exports);
+var _3DmloaderJs = require("./loaders/3DMLoader.js");
+parcelHelpers.exportAll(_3DmloaderJs, exports);
+var _3MfloaderJs = require("./loaders/3MFLoader.js");
+parcelHelpers.exportAll(_3MfloaderJs, exports);
+var _amfloaderJs = require("./loaders/AMFLoader.js");
+parcelHelpers.exportAll(_amfloaderJs, exports);
+var _bvhloaderJs = require("./loaders/BVHLoader.js");
+parcelHelpers.exportAll(_bvhloaderJs, exports);
+var _colladaLoaderJs = require("./loaders/ColladaLoader.js");
+parcelHelpers.exportAll(_colladaLoaderJs, exports);
+var _ddsloaderJs = require("./loaders/DDSLoader.js");
+parcelHelpers.exportAll(_ddsloaderJs, exports);
+var _dracoloaderJs = require("./loaders/DRACOLoader.js");
+parcelHelpers.exportAll(_dracoloaderJs, exports);
+var _exrloaderJs = require("./loaders/EXRLoader.js");
+parcelHelpers.exportAll(_exrloaderJs, exports);
+var _fbxloaderJs = require("./loaders/FBXLoader.js");
+parcelHelpers.exportAll(_fbxloaderJs, exports);
+var _fontLoaderJs = require("./loaders/FontLoader.js");
+parcelHelpers.exportAll(_fontLoaderJs, exports);
+var _gcodeLoaderJs = require("./loaders/GCodeLoader.js");
+parcelHelpers.exportAll(_gcodeLoaderJs, exports);
+var _gltfloaderJs = require("./loaders/GLTFLoader.js");
+parcelHelpers.exportAll(_gltfloaderJs, exports);
+var _hdrcubeTextureLoaderJs = require("./loaders/HDRCubeTextureLoader.js");
+parcelHelpers.exportAll(_hdrcubeTextureLoaderJs, exports);
+var _iesloaderJs = require("./loaders/IESLoader.js");
+parcelHelpers.exportAll(_iesloaderJs, exports);
+var _kmzloaderJs = require("./loaders/KMZLoader.js");
+parcelHelpers.exportAll(_kmzloaderJs, exports);
+var _ktx2LoaderJs = require("./loaders/KTX2Loader.js");
+parcelHelpers.exportAll(_ktx2LoaderJs, exports);
+var _ktxloaderJs = require("./loaders/KTXLoader.js");
+parcelHelpers.exportAll(_ktxloaderJs, exports);
+var _ldrawLoaderJs = require("./loaders/LDrawLoader.js");
+parcelHelpers.exportAll(_ldrawLoaderJs, exports);
+var _lut3DlLoaderJs = require("./loaders/LUT3dlLoader.js");
+parcelHelpers.exportAll(_lut3DlLoaderJs, exports);
+var _lutcubeLoaderJs = require("./loaders/LUTCubeLoader.js");
+parcelHelpers.exportAll(_lutcubeLoaderJs, exports);
+var _lwoloaderJs = require("./loaders/LWOLoader.js");
+parcelHelpers.exportAll(_lwoloaderJs, exports);
+var _lottieLoaderJs = require("./loaders/LottieLoader.js");
+parcelHelpers.exportAll(_lottieLoaderJs, exports);
+var _md2LoaderJs = require("./loaders/MD2Loader.js");
+parcelHelpers.exportAll(_md2LoaderJs, exports);
+var _mddloaderJs = require("./loaders/MDDLoader.js");
+parcelHelpers.exportAll(_mddloaderJs, exports);
+var _mmdloaderJs = require("./loaders/MMDLoader.js");
+parcelHelpers.exportAll(_mmdloaderJs, exports);
+var _mtlloaderJs = require("./loaders/MTLLoader.js");
+parcelHelpers.exportAll(_mtlloaderJs, exports);
+var _nrrdloaderJs = require("./loaders/NRRDLoader.js");
+parcelHelpers.exportAll(_nrrdloaderJs, exports);
+var _objloaderJs = require("./loaders/OBJLoader.js");
+parcelHelpers.exportAll(_objloaderJs, exports);
+var _pcdloaderJs = require("./loaders/PCDLoader.js");
+parcelHelpers.exportAll(_pcdloaderJs, exports);
+var _pdbloaderJs = require("./loaders/PDBLoader.js");
+parcelHelpers.exportAll(_pdbloaderJs, exports);
+var _plyloaderJs = require("./loaders/PLYLoader.js");
+parcelHelpers.exportAll(_plyloaderJs, exports);
+var _pvrloaderJs = require("./loaders/PVRLoader.js");
+parcelHelpers.exportAll(_pvrloaderJs, exports);
+var _rgbeloaderJs = require("./loaders/RGBELoader.js");
+parcelHelpers.exportAll(_rgbeloaderJs, exports);
+var _ultraHDRLoaderJs = require("./loaders/UltraHDRLoader.js");
+parcelHelpers.exportAll(_ultraHDRLoaderJs, exports);
+var _rgbmloaderJs = require("./loaders/RGBMLoader.js");
+parcelHelpers.exportAll(_rgbmloaderJs, exports);
+var _stlloaderJs = require("./loaders/STLLoader.js");
+parcelHelpers.exportAll(_stlloaderJs, exports);
+var _svgloaderJs = require("./loaders/SVGLoader.js");
+parcelHelpers.exportAll(_svgloaderJs, exports);
+var _tdsloaderJs = require("./loaders/TDSLoader.js");
+parcelHelpers.exportAll(_tdsloaderJs, exports);
+var _tgaloaderJs = require("./loaders/TGALoader.js");
+parcelHelpers.exportAll(_tgaloaderJs, exports);
+var _tiffloaderJs = require("./loaders/TIFFLoader.js");
+parcelHelpers.exportAll(_tiffloaderJs, exports);
+var _ttfloaderJs = require("./loaders/TTFLoader.js");
+parcelHelpers.exportAll(_ttfloaderJs, exports);
+var _usdzloaderJs = require("./loaders/USDZLoader.js");
+parcelHelpers.exportAll(_usdzloaderJs, exports);
+var _voxloaderJs = require("./loaders/VOXLoader.js");
+parcelHelpers.exportAll(_voxloaderJs, exports);
+var _vrmlloaderJs = require("./loaders/VRMLLoader.js");
+parcelHelpers.exportAll(_vrmlloaderJs, exports);
+var _vtkloaderJs = require("./loaders/VTKLoader.js");
+parcelHelpers.exportAll(_vtkloaderJs, exports);
+var _xyzloaderJs = require("./loaders/XYZLoader.js");
+parcelHelpers.exportAll(_xyzloaderJs, exports);
+var _meshGouraudMaterialJs = require("./materials/MeshGouraudMaterial.js");
+parcelHelpers.exportAll(_meshGouraudMaterialJs, exports);
+var _capsuleJs = require("./math/Capsule.js");
+parcelHelpers.exportAll(_capsuleJs, exports);
+var _colorConverterJs = require("./math/ColorConverter.js");
+parcelHelpers.exportAll(_colorConverterJs, exports);
+var _convexHullJs = require("./math/ConvexHull.js");
+parcelHelpers.exportAll(_convexHullJs, exports);
+var _improvedNoiseJs = require("./math/ImprovedNoise.js");
+parcelHelpers.exportAll(_improvedNoiseJs, exports);
+var _lutJs = require("./math/Lut.js");
+parcelHelpers.exportAll(_lutJs, exports);
+var _meshSurfaceSamplerJs = require("./math/MeshSurfaceSampler.js");
+parcelHelpers.exportAll(_meshSurfaceSamplerJs, exports);
+var _obbJs = require("./math/OBB.js");
+parcelHelpers.exportAll(_obbJs, exports);
+var _octreeJs = require("./math/Octree.js");
+parcelHelpers.exportAll(_octreeJs, exports);
+var _simplexNoiseJs = require("./math/SimplexNoise.js");
+parcelHelpers.exportAll(_simplexNoiseJs, exports);
+var _convexObjectBreakerJs = require("./misc/ConvexObjectBreaker.js");
+parcelHelpers.exportAll(_convexObjectBreakerJs, exports);
+var _gpucomputationRendererJs = require("./misc/GPUComputationRenderer.js");
+parcelHelpers.exportAll(_gpucomputationRendererJs, exports);
+var _gyroscopeJs = require("./misc/Gyroscope.js");
+parcelHelpers.exportAll(_gyroscopeJs, exports);
+var _md2CharacterJs = require("./misc/MD2Character.js");
+parcelHelpers.exportAll(_md2CharacterJs, exports);
+var _md2CharacterComplexJs = require("./misc/MD2CharacterComplex.js");
+parcelHelpers.exportAll(_md2CharacterComplexJs, exports);
+var _morphAnimMeshJs = require("./misc/MorphAnimMesh.js");
+parcelHelpers.exportAll(_morphAnimMeshJs, exports);
+var _morphBlendMeshJs = require("./misc/MorphBlendMesh.js");
+parcelHelpers.exportAll(_morphBlendMeshJs, exports);
+var _progressiveLightMapJs = require("./misc/ProgressiveLightMap.js");
+parcelHelpers.exportAll(_progressiveLightMapJs, exports);
+var _rollerCoasterJs = require("./misc/RollerCoaster.js");
+parcelHelpers.exportAll(_rollerCoasterJs, exports);
+var _timerJs = require("./misc/Timer.js");
+parcelHelpers.exportAll(_timerJs, exports);
+var _tubePainterJs = require("./misc/TubePainter.js");
+parcelHelpers.exportAll(_tubePainterJs, exports);
+var _volumeJs = require("./misc/Volume.js");
+parcelHelpers.exportAll(_volumeJs, exports);
+var _volumeSliceJs = require("./misc/VolumeSlice.js");
+parcelHelpers.exportAll(_volumeSliceJs, exports);
+var _curveModifierJs = require("./modifiers/CurveModifier.js");
+parcelHelpers.exportAll(_curveModifierJs, exports);
+var _edgeSplitModifierJs = require("./modifiers/EdgeSplitModifier.js");
+parcelHelpers.exportAll(_edgeSplitModifierJs, exports);
+var _simplifyModifierJs = require("./modifiers/SimplifyModifier.js");
+parcelHelpers.exportAll(_simplifyModifierJs, exports);
+var _tessellateModifierJs = require("./modifiers/TessellateModifier.js");
+parcelHelpers.exportAll(_tessellateModifierJs, exports);
+var _groundedSkyboxJs = require("./objects/GroundedSkybox.js");
+parcelHelpers.exportAll(_groundedSkyboxJs, exports);
+var _lensflareJs = require("./objects/Lensflare.js");
+parcelHelpers.exportAll(_lensflareJs, exports);
+var _marchingCubesJs = require("./objects/MarchingCubes.js");
+parcelHelpers.exportAll(_marchingCubesJs, exports);
+var _reflectorJs = require("./objects/Reflector.js");
+parcelHelpers.exportAll(_reflectorJs, exports);
+var _reflectorForSSRPassJs = require("./objects/ReflectorForSSRPass.js");
+parcelHelpers.exportAll(_reflectorForSSRPassJs, exports);
+var _refractorJs = require("./objects/Refractor.js");
+parcelHelpers.exportAll(_refractorJs, exports);
+var _shadowMeshJs = require("./objects/ShadowMesh.js");
+parcelHelpers.exportAll(_shadowMeshJs, exports);
+var _skyJs = require("./objects/Sky.js");
+parcelHelpers.exportAll(_skyJs, exports);
+var _waterJs = require("./objects/Water.js");
+parcelHelpers.exportAll(_waterJs, exports);
+var _water2Js = require("./objects/Water2.js");
+var _ammoPhysicsJs = require("./physics/AmmoPhysics.js");
+parcelHelpers.exportAll(_ammoPhysicsJs, exports);
+var _rapierPhysicsJs = require("./physics/RapierPhysics.js");
+parcelHelpers.exportAll(_rapierPhysicsJs, exports);
+var _afterimagePassJs = require("./postprocessing/AfterimagePass.js");
+parcelHelpers.exportAll(_afterimagePassJs, exports);
+var _bloomPassJs = require("./postprocessing/BloomPass.js");
+parcelHelpers.exportAll(_bloomPassJs, exports);
+var _bokehPassJs = require("./postprocessing/BokehPass.js");
+parcelHelpers.exportAll(_bokehPassJs, exports);
+var _clearPassJs = require("./postprocessing/ClearPass.js");
+parcelHelpers.exportAll(_clearPassJs, exports);
+var _cubeTexturePassJs = require("./postprocessing/CubeTexturePass.js");
+parcelHelpers.exportAll(_cubeTexturePassJs, exports);
+var _dotScreenPassJs = require("./postprocessing/DotScreenPass.js");
+parcelHelpers.exportAll(_dotScreenPassJs, exports);
+var _effectComposerJs = require("./postprocessing/EffectComposer.js");
+parcelHelpers.exportAll(_effectComposerJs, exports);
+var _filmPassJs = require("./postprocessing/FilmPass.js");
+parcelHelpers.exportAll(_filmPassJs, exports);
+var _glitchPassJs = require("./postprocessing/GlitchPass.js");
+parcelHelpers.exportAll(_glitchPassJs, exports);
+var _gtaopassJs = require("./postprocessing/GTAOPass.js");
+parcelHelpers.exportAll(_gtaopassJs, exports);
+var _halftonePassJs = require("./postprocessing/HalftonePass.js");
+parcelHelpers.exportAll(_halftonePassJs, exports);
+var _lutpassJs = require("./postprocessing/LUTPass.js");
+parcelHelpers.exportAll(_lutpassJs, exports);
+var _maskPassJs = require("./postprocessing/MaskPass.js");
+parcelHelpers.exportAll(_maskPassJs, exports);
+var _outlinePassJs = require("./postprocessing/OutlinePass.js");
+parcelHelpers.exportAll(_outlinePassJs, exports);
+var _outputPassJs = require("./postprocessing/OutputPass.js");
+parcelHelpers.exportAll(_outputPassJs, exports);
+var _passJs = require("./postprocessing/Pass.js");
+parcelHelpers.exportAll(_passJs, exports);
+var _renderPassJs = require("./postprocessing/RenderPass.js");
+parcelHelpers.exportAll(_renderPassJs, exports);
+var _renderPixelatedPassJs = require("./postprocessing/RenderPixelatedPass.js");
+parcelHelpers.exportAll(_renderPixelatedPassJs, exports);
+var _saopassJs = require("./postprocessing/SAOPass.js");
+parcelHelpers.exportAll(_saopassJs, exports);
+var _smaapassJs = require("./postprocessing/SMAAPass.js");
+parcelHelpers.exportAll(_smaapassJs, exports);
+var _ssaarenderPassJs = require("./postprocessing/SSAARenderPass.js");
+parcelHelpers.exportAll(_ssaarenderPassJs, exports);
+var _ssaopassJs = require("./postprocessing/SSAOPass.js");
+parcelHelpers.exportAll(_ssaopassJs, exports);
+var _ssrpassJs = require("./postprocessing/SSRPass.js");
+parcelHelpers.exportAll(_ssrpassJs, exports);
+var _savePassJs = require("./postprocessing/SavePass.js");
+parcelHelpers.exportAll(_savePassJs, exports);
+var _shaderPassJs = require("./postprocessing/ShaderPass.js");
+parcelHelpers.exportAll(_shaderPassJs, exports);
+var _taarenderPassJs = require("./postprocessing/TAARenderPass.js");
+parcelHelpers.exportAll(_taarenderPassJs, exports);
+var _texturePassJs = require("./postprocessing/TexturePass.js");
+parcelHelpers.exportAll(_texturePassJs, exports);
+var _unrealBloomPassJs = require("./postprocessing/UnrealBloomPass.js");
+parcelHelpers.exportAll(_unrealBloomPassJs, exports);
+var _css2DrendererJs = require("./renderers/CSS2DRenderer.js");
+parcelHelpers.exportAll(_css2DrendererJs, exports);
+var _css3DrendererJs = require("./renderers/CSS3DRenderer.js");
+parcelHelpers.exportAll(_css3DrendererJs, exports);
+var _projectorJs = require("./renderers/Projector.js");
+parcelHelpers.exportAll(_projectorJs, exports);
+var _svgrendererJs = require("./renderers/SVGRenderer.js");
+parcelHelpers.exportAll(_svgrendererJs, exports);
+var _acesfilmicToneMappingShaderJs = require("./shaders/ACESFilmicToneMappingShader.js");
+parcelHelpers.exportAll(_acesfilmicToneMappingShaderJs, exports);
+var _afterimageShaderJs = require("./shaders/AfterimageShader.js");
+parcelHelpers.exportAll(_afterimageShaderJs, exports);
+var _basicShaderJs = require("./shaders/BasicShader.js");
+parcelHelpers.exportAll(_basicShaderJs, exports);
+var _bleachBypassShaderJs = require("./shaders/BleachBypassShader.js");
+parcelHelpers.exportAll(_bleachBypassShaderJs, exports);
+var _blendShaderJs = require("./shaders/BlendShader.js");
+parcelHelpers.exportAll(_blendShaderJs, exports);
+var _bokehShaderJs = require("./shaders/BokehShader.js");
+parcelHelpers.exportAll(_bokehShaderJs, exports);
+var _bokehShader2Js = require("./shaders/BokehShader2.js");
+var _brightnessContrastShaderJs = require("./shaders/BrightnessContrastShader.js");
+parcelHelpers.exportAll(_brightnessContrastShaderJs, exports);
+var _colorCorrectionShaderJs = require("./shaders/ColorCorrectionShader.js");
+parcelHelpers.exportAll(_colorCorrectionShaderJs, exports);
+var _colorifyShaderJs = require("./shaders/ColorifyShader.js");
+parcelHelpers.exportAll(_colorifyShaderJs, exports);
+var _convolutionShaderJs = require("./shaders/ConvolutionShader.js");
+parcelHelpers.exportAll(_convolutionShaderJs, exports);
+var _copyShaderJs = require("./shaders/CopyShader.js");
+parcelHelpers.exportAll(_copyShaderJs, exports);
+var _dofmipMapShaderJs = require("./shaders/DOFMipMapShader.js");
+parcelHelpers.exportAll(_dofmipMapShaderJs, exports);
+var _depthLimitedBlurShaderJs = require("./shaders/DepthLimitedBlurShader.js");
+parcelHelpers.exportAll(_depthLimitedBlurShaderJs, exports);
+var _digitalGlitchJs = require("./shaders/DigitalGlitch.js");
+parcelHelpers.exportAll(_digitalGlitchJs, exports);
+var _dotScreenShaderJs = require("./shaders/DotScreenShader.js");
+parcelHelpers.exportAll(_dotScreenShaderJs, exports);
+var _exposureShaderJs = require("./shaders/ExposureShader.js");
+parcelHelpers.exportAll(_exposureShaderJs, exports);
+var _fxaashaderJs = require("./shaders/FXAAShader.js");
+parcelHelpers.exportAll(_fxaashaderJs, exports);
+var _filmShaderJs = require("./shaders/FilmShader.js");
+parcelHelpers.exportAll(_filmShaderJs, exports);
+var _focusShaderJs = require("./shaders/FocusShader.js");
+parcelHelpers.exportAll(_focusShaderJs, exports);
+var _freiChenShaderJs = require("./shaders/FreiChenShader.js");
+parcelHelpers.exportAll(_freiChenShaderJs, exports);
+var _gammaCorrectionShaderJs = require("./shaders/GammaCorrectionShader.js");
+parcelHelpers.exportAll(_gammaCorrectionShaderJs, exports);
+var _godRaysShaderJs = require("./shaders/GodRaysShader.js");
+parcelHelpers.exportAll(_godRaysShaderJs, exports);
+var _gtaoshaderJs = require("./shaders/GTAOShader.js");
+parcelHelpers.exportAll(_gtaoshaderJs, exports);
+var _halftoneShaderJs = require("./shaders/HalftoneShader.js");
+parcelHelpers.exportAll(_halftoneShaderJs, exports);
+var _horizontalBlurShaderJs = require("./shaders/HorizontalBlurShader.js");
+parcelHelpers.exportAll(_horizontalBlurShaderJs, exports);
+var _horizontalTiltShiftShaderJs = require("./shaders/HorizontalTiltShiftShader.js");
+parcelHelpers.exportAll(_horizontalTiltShiftShaderJs, exports);
+var _hueSaturationShaderJs = require("./shaders/HueSaturationShader.js");
+parcelHelpers.exportAll(_hueSaturationShaderJs, exports);
+var _kaleidoShaderJs = require("./shaders/KaleidoShader.js");
+parcelHelpers.exportAll(_kaleidoShaderJs, exports);
+var _luminosityHighPassShaderJs = require("./shaders/LuminosityHighPassShader.js");
+parcelHelpers.exportAll(_luminosityHighPassShaderJs, exports);
+var _luminosityShaderJs = require("./shaders/LuminosityShader.js");
+parcelHelpers.exportAll(_luminosityShaderJs, exports);
+var _mmdtoonShaderJs = require("./shaders/MMDToonShader.js");
+parcelHelpers.exportAll(_mmdtoonShaderJs, exports);
+var _mirrorShaderJs = require("./shaders/MirrorShader.js");
+parcelHelpers.exportAll(_mirrorShaderJs, exports);
+var _normalMapShaderJs = require("./shaders/NormalMapShader.js");
+parcelHelpers.exportAll(_normalMapShaderJs, exports);
+var _outputShaderJs = require("./shaders/OutputShader.js");
+parcelHelpers.exportAll(_outputShaderJs, exports);
+var _rgbshiftShaderJs = require("./shaders/RGBShiftShader.js");
+parcelHelpers.exportAll(_rgbshiftShaderJs, exports);
+var _saoshaderJs = require("./shaders/SAOShader.js");
+parcelHelpers.exportAll(_saoshaderJs, exports);
+var _smaashaderJs = require("./shaders/SMAAShader.js");
+parcelHelpers.exportAll(_smaashaderJs, exports);
+var _ssaoshaderJs = require("./shaders/SSAOShader.js");
+parcelHelpers.exportAll(_ssaoshaderJs, exports);
+var _ssrshaderJs = require("./shaders/SSRShader.js");
+parcelHelpers.exportAll(_ssrshaderJs, exports);
+var _sepiaShaderJs = require("./shaders/SepiaShader.js");
+parcelHelpers.exportAll(_sepiaShaderJs, exports);
+var _sobelOperatorShaderJs = require("./shaders/SobelOperatorShader.js");
+parcelHelpers.exportAll(_sobelOperatorShaderJs, exports);
+var _subsurfaceScatteringShaderJs = require("./shaders/SubsurfaceScatteringShader.js");
+parcelHelpers.exportAll(_subsurfaceScatteringShaderJs, exports);
+var _technicolorShaderJs = require("./shaders/TechnicolorShader.js");
+parcelHelpers.exportAll(_technicolorShaderJs, exports);
+var _toonShaderJs = require("./shaders/ToonShader.js");
+parcelHelpers.exportAll(_toonShaderJs, exports);
+var _triangleBlurShaderJs = require("./shaders/TriangleBlurShader.js");
+parcelHelpers.exportAll(_triangleBlurShaderJs, exports);
+var _unpackDepthRGBAShaderJs = require("./shaders/UnpackDepthRGBAShader.js");
+parcelHelpers.exportAll(_unpackDepthRGBAShaderJs, exports);
+var _velocityShaderJs = require("./shaders/VelocityShader.js");
+parcelHelpers.exportAll(_velocityShaderJs, exports);
+var _verticalBlurShaderJs = require("./shaders/VerticalBlurShader.js");
+parcelHelpers.exportAll(_verticalBlurShaderJs, exports);
+var _verticalTiltShiftShaderJs = require("./shaders/VerticalTiltShiftShader.js");
+parcelHelpers.exportAll(_verticalTiltShiftShaderJs, exports);
+var _vignetteShaderJs = require("./shaders/VignetteShader.js");
+parcelHelpers.exportAll(_vignetteShaderJs, exports);
+var _volumeShaderJs = require("./shaders/VolumeShader.js");
+parcelHelpers.exportAll(_volumeShaderJs, exports);
+var _waterRefractionShaderJs = require("./shaders/WaterRefractionShader.js");
+parcelHelpers.exportAll(_waterRefractionShaderJs, exports);
+var _flakesTextureJs = require("./textures/FlakesTexture.js");
+parcelHelpers.exportAll(_flakesTextureJs, exports);
+var _bufferGeometryUtilsJs = require("./utils/BufferGeometryUtils.js");
+var _cameraUtilsJs = require("./utils/CameraUtils.js");
+var _geometryCompressionUtilsJs = require("./utils/GeometryCompressionUtils.js");
+var _geometryUtilsJs = require("./utils/GeometryUtils.js");
+var _ldrawUtilsJs = require("./utils/LDrawUtils.js");
+parcelHelpers.exportAll(_ldrawUtilsJs, exports);
+var _sceneUtilsJs = require("./utils/SceneUtils.js");
+var _shadowMapViewerJs = require("./utils/ShadowMapViewer.js");
+parcelHelpers.exportAll(_shadowMapViewerJs, exports);
+var _skeletonUtilsJs = require("./utils/SkeletonUtils.js");
+var _sortUtilsJs = require("./utils/SortUtils.js");
+var _textureUtilsJs = require("./utils/TextureUtils.js");
+parcelHelpers.exportAll(_textureUtilsJs, exports);
+var _uvsDebugJs = require("./utils/UVsDebug.js");
+parcelHelpers.exportAll(_uvsDebugJs, exports);
+var _workerPoolJs = require("./utils/WorkerPool.js");
+parcelHelpers.exportAll(_workerPoolJs, exports);
+var _arbuttonJs = require("./webxr/ARButton.js");
+parcelHelpers.exportAll(_arbuttonJs, exports);
+var _oculusHandModelJs = require("./webxr/OculusHandModel.js");
+parcelHelpers.exportAll(_oculusHandModelJs, exports);
+var _oculusHandPointerModelJs = require("./webxr/OculusHandPointerModel.js");
+parcelHelpers.exportAll(_oculusHandPointerModelJs, exports);
+var _text2DJs = require("./webxr/Text2D.js");
+parcelHelpers.exportAll(_text2DJs, exports);
+var _vrbuttonJs = require("./webxr/VRButton.js");
+parcelHelpers.exportAll(_vrbuttonJs, exports);
+var _xrbuttonJs = require("./webxr/XRButton.js");
+parcelHelpers.exportAll(_xrbuttonJs, exports);
+var _xrcontrollerModelFactoryJs = require("./webxr/XRControllerModelFactory.js");
+parcelHelpers.exportAll(_xrcontrollerModelFactoryJs, exports);
+var _xrestimatedLightJs = require("./webxr/XREstimatedLight.js");
+parcelHelpers.exportAll(_xrestimatedLightJs, exports);
+var _xrhandMeshModelJs = require("./webxr/XRHandMeshModel.js");
+parcelHelpers.exportAll(_xrhandMeshModelJs, exports);
+var _xrhandModelFactoryJs = require("./webxr/XRHandModelFactory.js");
+parcelHelpers.exportAll(_xrhandModelFactoryJs, exports);
+var _xrhandPrimitiveModelJs = require("./webxr/XRHandPrimitiveModel.js");
+parcelHelpers.exportAll(_xrhandPrimitiveModelJs, exports);
+var _xrplanesJs = require("./webxr/XRPlanes.js");
+parcelHelpers.exportAll(_xrplanesJs, exports);
+
+},{"./animation/AnimationClipCreator.js":false,"./animation/CCDIKSolver.js":false,"./animation/MMDAnimationHelper.js":false,"./animation/MMDPhysics.js":false,"./cameras/CinematicCamera.js":false,"./capabilities/WebGL.js":false,"./controls/ArcballControls.js":false,"./controls/DragControls.js":false,"./controls/FirstPersonControls.js":false,"./controls/FlyControls.js":false,"./controls/MapControls.js":false,"./controls/OrbitControls.js":false,"./controls/PointerLockControls.js":false,"./controls/TrackballControls.js":false,"./controls/TransformControls.js":false,"./csm/CSM.js":false,"./csm/CSMFrustum.js":false,"./csm/CSMHelper.js":false,"./csm/CSMShader.js":false,"./curves/CurveExtras.js":false,"./curves/NURBSCurve.js":false,"./curves/NURBSSurface.js":false,"./curves/NURBSVolume.js":false,"./curves/NURBSUtils.js":false,"./effects/AnaglyphEffect.js":false,"./effects/AsciiEffect.js":false,"./effects/OutlineEffect.js":false,"./effects/ParallaxBarrierEffect.js":false,"./effects/PeppersGhostEffect.js":false,"./effects/StereoEffect.js":false,"./environments/DebugEnvironment.js":false,"./environments/RoomEnvironment.js":false,"./exporters/DRACOExporter.js":false,"./exporters/EXRExporter.js":false,"./exporters/GLTFExporter.js":false,"./exporters/KTX2Exporter.js":false,"./exporters/MMDExporter.js":false,"./exporters/OBJExporter.js":false,"./exporters/PLYExporter.js":false,"./exporters/STLExporter.js":false,"./exporters/USDZExporter.js":false,"./geometries/BoxLineGeometry.js":false,"./geometries/ConvexGeometry.js":false,"./geometries/DecalGeometry.js":false,"./geometries/ParametricGeometries.js":false,"./geometries/ParametricGeometry.js":false,"./geometries/RoundedBoxGeometry.js":false,"./geometries/TeapotGeometry.js":false,"./geometries/TextGeometry.js":false,"./helpers/LightProbeHelper.js":false,"./helpers/OctreeHelper.js":false,"./helpers/PositionalAudioHelper.js":false,"./helpers/RectAreaLightHelper.js":false,"./helpers/TextureHelper.js":false,"./helpers/VertexNormalsHelper.js":false,"./helpers/VertexTangentsHelper.js":false,"./helpers/ViewHelper.js":false,"./interactive/HTMLMesh.js":false,"./interactive/InteractiveGroup.js":false,"./interactive/SelectionBox.js":false,"./interactive/SelectionHelper.js":false,"./lights/LightProbeGenerator.js":false,"./lights/RectAreaLightTexturesLib.js":false,"./lights/RectAreaLightUniformsLib.js":false,"./lines/Line2.js":false,"./lines/LineGeometry.js":false,"./lines/LineMaterial.js":false,"./lines/LineSegments2.js":false,"./lines/LineSegmentsGeometry.js":false,"./lines/Wireframe.js":false,"./lines/WireframeGeometry2.js":false,"./loaders/3DMLoader.js":false,"./loaders/3MFLoader.js":false,"./loaders/AMFLoader.js":false,"./loaders/BVHLoader.js":false,"./loaders/ColladaLoader.js":false,"./loaders/DDSLoader.js":false,"./loaders/DRACOLoader.js":false,"./loaders/EXRLoader.js":false,"./loaders/FBXLoader.js":false,"./loaders/FontLoader.js":false,"./loaders/GCodeLoader.js":false,"./loaders/GLTFLoader.js":"dVRsF","./loaders/HDRCubeTextureLoader.js":false,"./loaders/IESLoader.js":false,"./loaders/KMZLoader.js":false,"./loaders/KTX2Loader.js":false,"./loaders/KTXLoader.js":false,"./loaders/LDrawLoader.js":false,"./loaders/LUT3dlLoader.js":false,"./loaders/LUTCubeLoader.js":false,"./loaders/LWOLoader.js":false,"./loaders/LottieLoader.js":false,"./loaders/MD2Loader.js":false,"./loaders/MDDLoader.js":false,"./loaders/MMDLoader.js":false,"./loaders/MTLLoader.js":false,"./loaders/NRRDLoader.js":false,"./loaders/OBJLoader.js":false,"./loaders/PCDLoader.js":false,"./loaders/PDBLoader.js":false,"./loaders/PLYLoader.js":false,"./loaders/PVRLoader.js":false,"./loaders/RGBELoader.js":false,"./loaders/UltraHDRLoader.js":false,"./loaders/RGBMLoader.js":false,"./loaders/STLLoader.js":false,"./loaders/SVGLoader.js":false,"./loaders/TDSLoader.js":false,"./loaders/TGALoader.js":false,"./loaders/TIFFLoader.js":false,"./loaders/TTFLoader.js":false,"./loaders/USDZLoader.js":false,"./loaders/VOXLoader.js":false,"./loaders/VRMLLoader.js":false,"./loaders/VTKLoader.js":false,"./loaders/XYZLoader.js":false,"./materials/MeshGouraudMaterial.js":false,"./math/Capsule.js":false,"./math/ColorConverter.js":false,"./math/ConvexHull.js":false,"./math/ImprovedNoise.js":false,"./math/Lut.js":false,"./math/MeshSurfaceSampler.js":false,"./math/OBB.js":false,"./math/Octree.js":false,"./math/SimplexNoise.js":false,"./misc/ConvexObjectBreaker.js":false,"./misc/GPUComputationRenderer.js":false,"./misc/Gyroscope.js":false,"./misc/MD2Character.js":false,"./misc/MD2CharacterComplex.js":false,"./misc/MorphAnimMesh.js":false,"./misc/MorphBlendMesh.js":false,"./misc/ProgressiveLightMap.js":false,"./misc/RollerCoaster.js":false,"./misc/Timer.js":false,"./misc/TubePainter.js":false,"./misc/Volume.js":false,"./misc/VolumeSlice.js":false,"./modifiers/CurveModifier.js":false,"./modifiers/EdgeSplitModifier.js":false,"./modifiers/SimplifyModifier.js":false,"./modifiers/TessellateModifier.js":false,"./objects/GroundedSkybox.js":false,"./objects/Lensflare.js":false,"./objects/MarchingCubes.js":false,"./objects/Reflector.js":false,"./objects/ReflectorForSSRPass.js":false,"./objects/Refractor.js":false,"./objects/ShadowMesh.js":false,"./objects/Sky.js":false,"./objects/Water.js":false,"./objects/Water2.js":false,"./physics/AmmoPhysics.js":false,"./physics/RapierPhysics.js":false,"./postprocessing/AfterimagePass.js":false,"./postprocessing/BloomPass.js":false,"./postprocessing/BokehPass.js":false,"./postprocessing/ClearPass.js":false,"./postprocessing/CubeTexturePass.js":false,"./postprocessing/DotScreenPass.js":false,"./postprocessing/EffectComposer.js":false,"./postprocessing/FilmPass.js":false,"./postprocessing/GlitchPass.js":false,"./postprocessing/GTAOPass.js":false,"./postprocessing/HalftonePass.js":false,"./postprocessing/LUTPass.js":false,"./postprocessing/MaskPass.js":false,"./postprocessing/OutlinePass.js":false,"./postprocessing/OutputPass.js":false,"./postprocessing/Pass.js":false,"./postprocessing/RenderPass.js":false,"./postprocessing/RenderPixelatedPass.js":false,"./postprocessing/SAOPass.js":false,"./postprocessing/SMAAPass.js":false,"./postprocessing/SSAARenderPass.js":false,"./postprocessing/SSAOPass.js":false,"./postprocessing/SSRPass.js":false,"./postprocessing/SavePass.js":false,"./postprocessing/ShaderPass.js":false,"./postprocessing/TAARenderPass.js":false,"./postprocessing/TexturePass.js":false,"./postprocessing/UnrealBloomPass.js":false,"./renderers/CSS2DRenderer.js":false,"./renderers/CSS3DRenderer.js":false,"./renderers/Projector.js":false,"./renderers/SVGRenderer.js":false,"./shaders/ACESFilmicToneMappingShader.js":false,"./shaders/AfterimageShader.js":false,"./shaders/BasicShader.js":false,"./shaders/BleachBypassShader.js":false,"./shaders/BlendShader.js":false,"./shaders/BokehShader.js":false,"./shaders/BokehShader2.js":false,"./shaders/BrightnessContrastShader.js":false,"./shaders/ColorCorrectionShader.js":false,"./shaders/ColorifyShader.js":false,"./shaders/ConvolutionShader.js":false,"./shaders/CopyShader.js":false,"./shaders/DOFMipMapShader.js":false,"./shaders/DepthLimitedBlurShader.js":false,"./shaders/DigitalGlitch.js":false,"./shaders/DotScreenShader.js":false,"./shaders/ExposureShader.js":false,"./shaders/FXAAShader.js":false,"./shaders/FilmShader.js":false,"./shaders/FocusShader.js":false,"./shaders/FreiChenShader.js":false,"./shaders/GammaCorrectionShader.js":false,"./shaders/GodRaysShader.js":false,"./shaders/GTAOShader.js":false,"./shaders/HalftoneShader.js":false,"./shaders/HorizontalBlurShader.js":false,"./shaders/HorizontalTiltShiftShader.js":false,"./shaders/HueSaturationShader.js":false,"./shaders/KaleidoShader.js":false,"./shaders/LuminosityHighPassShader.js":false,"./shaders/LuminosityShader.js":false,"./shaders/MMDToonShader.js":false,"./shaders/MirrorShader.js":false,"./shaders/NormalMapShader.js":false,"./shaders/OutputShader.js":false,"./shaders/RGBShiftShader.js":false,"./shaders/SAOShader.js":false,"./shaders/SMAAShader.js":false,"./shaders/SSAOShader.js":false,"./shaders/SSRShader.js":false,"./shaders/SepiaShader.js":false,"./shaders/SobelOperatorShader.js":false,"./shaders/SubsurfaceScatteringShader.js":false,"./shaders/TechnicolorShader.js":false,"./shaders/ToonShader.js":false,"./shaders/TriangleBlurShader.js":false,"./shaders/UnpackDepthRGBAShader.js":false,"./shaders/VelocityShader.js":false,"./shaders/VerticalBlurShader.js":false,"./shaders/VerticalTiltShiftShader.js":false,"./shaders/VignetteShader.js":false,"./shaders/VolumeShader.js":false,"./shaders/WaterRefractionShader.js":false,"./textures/FlakesTexture.js":false,"./utils/BufferGeometryUtils.js":false,"./utils/CameraUtils.js":false,"./utils/GeometryCompressionUtils.js":false,"./utils/GeometryUtils.js":false,"./utils/LDrawUtils.js":false,"./utils/SceneUtils.js":false,"./utils/ShadowMapViewer.js":false,"./utils/SkeletonUtils.js":false,"./utils/SortUtils.js":false,"./utils/TextureUtils.js":false,"./utils/UVsDebug.js":false,"./utils/WorkerPool.js":false,"./webxr/ARButton.js":false,"./webxr/OculusHandModel.js":false,"./webxr/OculusHandPointerModel.js":false,"./webxr/Text2D.js":false,"./webxr/VRButton.js":false,"./webxr/XRButton.js":false,"./webxr/XRControllerModelFactory.js":false,"./webxr/XREstimatedLight.js":false,"./webxr/XRHandMeshModel.js":false,"./webxr/XRHandModelFactory.js":false,"./webxr/XRHandPrimitiveModel.js":false,"./webxr/XRPlanes.js":false,"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dVRsF":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "GLTFLoader", ()=>GLTFLoader);
+var _three = require("three");
+var _bufferGeometryUtilsJs = require("../utils/BufferGeometryUtils.js");
+class GLTFLoader extends (0, _three.Loader) {
+    constructor(manager){
+        super(manager);
+        this.dracoLoader = null;
+        this.ktx2Loader = null;
+        this.meshoptDecoder = null;
+        this.pluginCallbacks = [];
+        this.register(function(parser) {
+            return new GLTFMaterialsClearcoatExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsDispersionExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFTextureBasisUExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFTextureWebPExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFTextureAVIFExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsSheenExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsTransmissionExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsVolumeExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsIorExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsEmissiveStrengthExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsSpecularExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsIridescenceExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsAnisotropyExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMaterialsBumpExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFLightsExtension(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMeshoptCompression(parser);
+        });
+        this.register(function(parser) {
+            return new GLTFMeshGpuInstancing(parser);
+        });
+    }
+    load(url, onLoad, onProgress, onError) {
+        const scope = this;
+        let resourcePath;
+        if (this.resourcePath !== "") resourcePath = this.resourcePath;
+        else if (this.path !== "") {
+            // If a base path is set, resources will be relative paths from that plus the relative path of the gltf file
+            // Example  path = 'https://my-cnd-server.com/', url = 'assets/models/model.gltf'
+            // resourcePath = 'https://my-cnd-server.com/assets/models/'
+            // referenced resource 'model.bin' will be loaded from 'https://my-cnd-server.com/assets/models/model.bin'
+            // referenced resource '../textures/texture.png' will be loaded from 'https://my-cnd-server.com/assets/textures/texture.png'
+            const relativeUrl = (0, _three.LoaderUtils).extractUrlBase(url);
+            resourcePath = (0, _three.LoaderUtils).resolveURL(relativeUrl, this.path);
+        } else resourcePath = (0, _three.LoaderUtils).extractUrlBase(url);
+        // Tells the LoadingManager to track an extra item, which resolves after
+        // the model is fully loaded. This means the count of items loaded will
+        // be incorrect, but ensures manager.onLoad() does not fire early.
+        this.manager.itemStart(url);
+        const _onError = function(e) {
+            if (onError) onError(e);
+            else console.error(e);
+            scope.manager.itemError(url);
+            scope.manager.itemEnd(url);
+        };
+        const loader = new (0, _three.FileLoader)(this.manager);
+        loader.setPath(this.path);
+        loader.setResponseType("arraybuffer");
+        loader.setRequestHeader(this.requestHeader);
+        loader.setWithCredentials(this.withCredentials);
+        loader.load(url, function(data) {
+            try {
+                scope.parse(data, resourcePath, function(gltf) {
+                    onLoad(gltf);
+                    scope.manager.itemEnd(url);
+                }, _onError);
+            } catch (e) {
+                _onError(e);
+            }
+        }, onProgress, _onError);
+    }
+    setDRACOLoader(dracoLoader) {
+        this.dracoLoader = dracoLoader;
+        return this;
+    }
+    setKTX2Loader(ktx2Loader) {
+        this.ktx2Loader = ktx2Loader;
+        return this;
+    }
+    setMeshoptDecoder(meshoptDecoder) {
+        this.meshoptDecoder = meshoptDecoder;
+        return this;
+    }
+    register(callback) {
+        if (this.pluginCallbacks.indexOf(callback) === -1) this.pluginCallbacks.push(callback);
+        return this;
+    }
+    unregister(callback) {
+        if (this.pluginCallbacks.indexOf(callback) !== -1) this.pluginCallbacks.splice(this.pluginCallbacks.indexOf(callback), 1);
+        return this;
+    }
+    parse(data, path, onLoad, onError) {
+        let json;
+        const extensions = {};
+        const plugins = {};
+        const textDecoder = new TextDecoder();
+        if (typeof data === "string") json = JSON.parse(data);
+        else if (data instanceof ArrayBuffer) {
+            const magic = textDecoder.decode(new Uint8Array(data, 0, 4));
+            if (magic === BINARY_EXTENSION_HEADER_MAGIC) {
+                try {
+                    extensions[EXTENSIONS.KHR_BINARY_GLTF] = new GLTFBinaryExtension(data);
+                } catch (error) {
+                    if (onError) onError(error);
+                    return;
+                }
+                json = JSON.parse(extensions[EXTENSIONS.KHR_BINARY_GLTF].content);
+            } else json = JSON.parse(textDecoder.decode(data));
+        } else json = data;
+        if (json.asset === undefined || json.asset.version[0] < 2) {
+            if (onError) onError(new Error("THREE.GLTFLoader: Unsupported asset. glTF versions >=2.0 are supported."));
+            return;
+        }
+        const parser = new GLTFParser(json, {
+            path: path || this.resourcePath || "",
+            crossOrigin: this.crossOrigin,
+            requestHeader: this.requestHeader,
+            manager: this.manager,
+            ktx2Loader: this.ktx2Loader,
+            meshoptDecoder: this.meshoptDecoder
+        });
+        parser.fileLoader.setRequestHeader(this.requestHeader);
+        for(let i = 0; i < this.pluginCallbacks.length; i++){
+            const plugin = this.pluginCallbacks[i](parser);
+            if (!plugin.name) console.error("THREE.GLTFLoader: Invalid plugin found: missing name");
+            plugins[plugin.name] = plugin;
+            // Workaround to avoid determining as unknown extension
+            // in addUnknownExtensionsToUserData().
+            // Remove this workaround if we move all the existing
+            // extension handlers to plugin system
+            extensions[plugin.name] = true;
+        }
+        if (json.extensionsUsed) for(let i = 0; i < json.extensionsUsed.length; ++i){
+            const extensionName = json.extensionsUsed[i];
+            const extensionsRequired = json.extensionsRequired || [];
+            switch(extensionName){
+                case EXTENSIONS.KHR_MATERIALS_UNLIT:
+                    extensions[extensionName] = new GLTFMaterialsUnlitExtension();
+                    break;
+                case EXTENSIONS.KHR_DRACO_MESH_COMPRESSION:
+                    extensions[extensionName] = new GLTFDracoMeshCompressionExtension(json, this.dracoLoader);
+                    break;
+                case EXTENSIONS.KHR_TEXTURE_TRANSFORM:
+                    extensions[extensionName] = new GLTFTextureTransformExtension();
+                    break;
+                case EXTENSIONS.KHR_MESH_QUANTIZATION:
+                    extensions[extensionName] = new GLTFMeshQuantizationExtension();
+                    break;
+                default:
+                    if (extensionsRequired.indexOf(extensionName) >= 0 && plugins[extensionName] === undefined) console.warn('THREE.GLTFLoader: Unknown extension "' + extensionName + '".');
+            }
+        }
+        parser.setExtensions(extensions);
+        parser.setPlugins(plugins);
+        parser.parse(onLoad, onError);
+    }
+    parseAsync(data, path) {
+        const scope = this;
+        return new Promise(function(resolve, reject) {
+            scope.parse(data, path, resolve, reject);
+        });
+    }
+}
+/* GLTFREGISTRY */ function GLTFRegistry() {
+    let objects = {};
+    return {
+        get: function(key) {
+            return objects[key];
+        },
+        add: function(key, object) {
+            objects[key] = object;
+        },
+        remove: function(key) {
+            delete objects[key];
+        },
+        removeAll: function() {
+            objects = {};
+        }
+    };
+}
+/*********************************/ /********** EXTENSIONS ***********/ /*********************************/ const EXTENSIONS = {
+    KHR_BINARY_GLTF: "KHR_binary_glTF",
+    KHR_DRACO_MESH_COMPRESSION: "KHR_draco_mesh_compression",
+    KHR_LIGHTS_PUNCTUAL: "KHR_lights_punctual",
+    KHR_MATERIALS_CLEARCOAT: "KHR_materials_clearcoat",
+    KHR_MATERIALS_DISPERSION: "KHR_materials_dispersion",
+    KHR_MATERIALS_IOR: "KHR_materials_ior",
+    KHR_MATERIALS_SHEEN: "KHR_materials_sheen",
+    KHR_MATERIALS_SPECULAR: "KHR_materials_specular",
+    KHR_MATERIALS_TRANSMISSION: "KHR_materials_transmission",
+    KHR_MATERIALS_IRIDESCENCE: "KHR_materials_iridescence",
+    KHR_MATERIALS_ANISOTROPY: "KHR_materials_anisotropy",
+    KHR_MATERIALS_UNLIT: "KHR_materials_unlit",
+    KHR_MATERIALS_VOLUME: "KHR_materials_volume",
+    KHR_TEXTURE_BASISU: "KHR_texture_basisu",
+    KHR_TEXTURE_TRANSFORM: "KHR_texture_transform",
+    KHR_MESH_QUANTIZATION: "KHR_mesh_quantization",
+    KHR_MATERIALS_EMISSIVE_STRENGTH: "KHR_materials_emissive_strength",
+    EXT_MATERIALS_BUMP: "EXT_materials_bump",
+    EXT_TEXTURE_WEBP: "EXT_texture_webp",
+    EXT_TEXTURE_AVIF: "EXT_texture_avif",
+    EXT_MESHOPT_COMPRESSION: "EXT_meshopt_compression",
+    EXT_MESH_GPU_INSTANCING: "EXT_mesh_gpu_instancing"
+};
+/**
+ * Punctual Lights Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual
+ */ class GLTFLightsExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_LIGHTS_PUNCTUAL;
+        // Object3D instance caches
+        this.cache = {
+            refs: {},
+            uses: {}
+        };
+    }
+    _markDefs() {
+        const parser = this.parser;
+        const nodeDefs = this.parser.json.nodes || [];
+        for(let nodeIndex = 0, nodeLength = nodeDefs.length; nodeIndex < nodeLength; nodeIndex++){
+            const nodeDef = nodeDefs[nodeIndex];
+            if (nodeDef.extensions && nodeDef.extensions[this.name] && nodeDef.extensions[this.name].light !== undefined) parser._addNodeRef(this.cache, nodeDef.extensions[this.name].light);
+        }
+    }
+    _loadLight(lightIndex) {
+        const parser = this.parser;
+        const cacheKey = "light:" + lightIndex;
+        let dependency = parser.cache.get(cacheKey);
+        if (dependency) return dependency;
+        const json = parser.json;
+        const extensions = json.extensions && json.extensions[this.name] || {};
+        const lightDefs = extensions.lights || [];
+        const lightDef = lightDefs[lightIndex];
+        let lightNode;
+        const color = new (0, _three.Color)(0xffffff);
+        if (lightDef.color !== undefined) color.setRGB(lightDef.color[0], lightDef.color[1], lightDef.color[2], (0, _three.LinearSRGBColorSpace));
+        const range = lightDef.range !== undefined ? lightDef.range : 0;
+        switch(lightDef.type){
+            case "directional":
+                lightNode = new (0, _three.DirectionalLight)(color);
+                lightNode.target.position.set(0, 0, -1);
+                lightNode.add(lightNode.target);
+                break;
+            case "point":
+                lightNode = new (0, _three.PointLight)(color);
+                lightNode.distance = range;
+                break;
+            case "spot":
+                lightNode = new (0, _three.SpotLight)(color);
+                lightNode.distance = range;
+                // Handle spotlight properties.
+                lightDef.spot = lightDef.spot || {};
+                lightDef.spot.innerConeAngle = lightDef.spot.innerConeAngle !== undefined ? lightDef.spot.innerConeAngle : 0;
+                lightDef.spot.outerConeAngle = lightDef.spot.outerConeAngle !== undefined ? lightDef.spot.outerConeAngle : Math.PI / 4.0;
+                lightNode.angle = lightDef.spot.outerConeAngle;
+                lightNode.penumbra = 1.0 - lightDef.spot.innerConeAngle / lightDef.spot.outerConeAngle;
+                lightNode.target.position.set(0, 0, -1);
+                lightNode.add(lightNode.target);
+                break;
+            default:
+                throw new Error("THREE.GLTFLoader: Unexpected light type: " + lightDef.type);
+        }
+        // Some lights (e.g. spot) default to a position other than the origin. Reset the position
+        // here, because node-level parsing will only override position if explicitly specified.
+        lightNode.position.set(0, 0, 0);
+        lightNode.decay = 2;
+        assignExtrasToUserData(lightNode, lightDef);
+        if (lightDef.intensity !== undefined) lightNode.intensity = lightDef.intensity;
+        lightNode.name = parser.createUniqueName(lightDef.name || "light_" + lightIndex);
+        dependency = Promise.resolve(lightNode);
+        parser.cache.add(cacheKey, dependency);
+        return dependency;
+    }
+    getDependency(type, index) {
+        if (type !== "light") return;
+        return this._loadLight(index);
+    }
+    createNodeAttachment(nodeIndex) {
+        const self1 = this;
+        const parser = this.parser;
+        const json = parser.json;
+        const nodeDef = json.nodes[nodeIndex];
+        const lightDef = nodeDef.extensions && nodeDef.extensions[this.name] || {};
+        const lightIndex = lightDef.light;
+        if (lightIndex === undefined) return null;
+        return this._loadLight(lightIndex).then(function(light) {
+            return parser._getNodeRef(self1.cache, lightIndex, light);
+        });
+    }
+}
+/**
+ * Unlit Materials Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
+ */ class GLTFMaterialsUnlitExtension {
+    constructor(){
+        this.name = EXTENSIONS.KHR_MATERIALS_UNLIT;
+    }
+    getMaterialType() {
+        return 0, _three.MeshBasicMaterial;
+    }
+    extendParams(materialParams, materialDef, parser) {
+        const pending = [];
+        materialParams.color = new (0, _three.Color)(1.0, 1.0, 1.0);
+        materialParams.opacity = 1.0;
+        const metallicRoughness = materialDef.pbrMetallicRoughness;
+        if (metallicRoughness) {
+            if (Array.isArray(metallicRoughness.baseColorFactor)) {
+                const array = metallicRoughness.baseColorFactor;
+                materialParams.color.setRGB(array[0], array[1], array[2], (0, _three.LinearSRGBColorSpace));
+                materialParams.opacity = array[3];
+            }
+            if (metallicRoughness.baseColorTexture !== undefined) pending.push(parser.assignTexture(materialParams, "map", metallicRoughness.baseColorTexture, (0, _three.SRGBColorSpace)));
+        }
+        return Promise.all(pending);
+    }
+}
+/**
+ * Materials Emissive Strength Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/blob/5768b3ce0ef32bc39cdf1bef10b948586635ead3/extensions/2.0/Khronos/KHR_materials_emissive_strength/README.md
+ */ class GLTFMaterialsEmissiveStrengthExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_EMISSIVE_STRENGTH;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const emissiveStrength = materialDef.extensions[this.name].emissiveStrength;
+        if (emissiveStrength !== undefined) materialParams.emissiveIntensity = emissiveStrength;
+        return Promise.resolve();
+    }
+}
+/**
+ * Clearcoat Materials Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_clearcoat
+ */ class GLTFMaterialsClearcoatExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_CLEARCOAT;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        if (extension.clearcoatFactor !== undefined) materialParams.clearcoat = extension.clearcoatFactor;
+        if (extension.clearcoatTexture !== undefined) pending.push(parser.assignTexture(materialParams, "clearcoatMap", extension.clearcoatTexture));
+        if (extension.clearcoatRoughnessFactor !== undefined) materialParams.clearcoatRoughness = extension.clearcoatRoughnessFactor;
+        if (extension.clearcoatRoughnessTexture !== undefined) pending.push(parser.assignTexture(materialParams, "clearcoatRoughnessMap", extension.clearcoatRoughnessTexture));
+        if (extension.clearcoatNormalTexture !== undefined) {
+            pending.push(parser.assignTexture(materialParams, "clearcoatNormalMap", extension.clearcoatNormalTexture));
+            if (extension.clearcoatNormalTexture.scale !== undefined) {
+                const scale = extension.clearcoatNormalTexture.scale;
+                materialParams.clearcoatNormalScale = new (0, _three.Vector2)(scale, scale);
+            }
+        }
+        return Promise.all(pending);
+    }
+}
+/**
+ * Materials dispersion Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_dispersion
+ */ class GLTFMaterialsDispersionExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_DISPERSION;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const extension = materialDef.extensions[this.name];
+        materialParams.dispersion = extension.dispersion !== undefined ? extension.dispersion : 0;
+        return Promise.resolve();
+    }
+}
+/**
+ * Iridescence Materials Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_iridescence
+ */ class GLTFMaterialsIridescenceExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_IRIDESCENCE;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        if (extension.iridescenceFactor !== undefined) materialParams.iridescence = extension.iridescenceFactor;
+        if (extension.iridescenceTexture !== undefined) pending.push(parser.assignTexture(materialParams, "iridescenceMap", extension.iridescenceTexture));
+        if (extension.iridescenceIor !== undefined) materialParams.iridescenceIOR = extension.iridescenceIor;
+        if (materialParams.iridescenceThicknessRange === undefined) materialParams.iridescenceThicknessRange = [
+            100,
+            400
+        ];
+        if (extension.iridescenceThicknessMinimum !== undefined) materialParams.iridescenceThicknessRange[0] = extension.iridescenceThicknessMinimum;
+        if (extension.iridescenceThicknessMaximum !== undefined) materialParams.iridescenceThicknessRange[1] = extension.iridescenceThicknessMaximum;
+        if (extension.iridescenceThicknessTexture !== undefined) pending.push(parser.assignTexture(materialParams, "iridescenceThicknessMap", extension.iridescenceThicknessTexture));
+        return Promise.all(pending);
+    }
+}
+/**
+ * Sheen Materials Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_sheen
+ */ class GLTFMaterialsSheenExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_SHEEN;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        materialParams.sheenColor = new (0, _three.Color)(0, 0, 0);
+        materialParams.sheenRoughness = 0;
+        materialParams.sheen = 1;
+        const extension = materialDef.extensions[this.name];
+        if (extension.sheenColorFactor !== undefined) {
+            const colorFactor = extension.sheenColorFactor;
+            materialParams.sheenColor.setRGB(colorFactor[0], colorFactor[1], colorFactor[2], (0, _three.LinearSRGBColorSpace));
+        }
+        if (extension.sheenRoughnessFactor !== undefined) materialParams.sheenRoughness = extension.sheenRoughnessFactor;
+        if (extension.sheenColorTexture !== undefined) pending.push(parser.assignTexture(materialParams, "sheenColorMap", extension.sheenColorTexture, (0, _three.SRGBColorSpace)));
+        if (extension.sheenRoughnessTexture !== undefined) pending.push(parser.assignTexture(materialParams, "sheenRoughnessMap", extension.sheenRoughnessTexture));
+        return Promise.all(pending);
+    }
+}
+/**
+ * Transmission Materials Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_transmission
+ * Draft: https://github.com/KhronosGroup/glTF/pull/1698
+ */ class GLTFMaterialsTransmissionExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_TRANSMISSION;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        if (extension.transmissionFactor !== undefined) materialParams.transmission = extension.transmissionFactor;
+        if (extension.transmissionTexture !== undefined) pending.push(parser.assignTexture(materialParams, "transmissionMap", extension.transmissionTexture));
+        return Promise.all(pending);
+    }
+}
+/**
+ * Materials Volume Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_volume
+ */ class GLTFMaterialsVolumeExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_VOLUME;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        materialParams.thickness = extension.thicknessFactor !== undefined ? extension.thicknessFactor : 0;
+        if (extension.thicknessTexture !== undefined) pending.push(parser.assignTexture(materialParams, "thicknessMap", extension.thicknessTexture));
+        materialParams.attenuationDistance = extension.attenuationDistance || Infinity;
+        const colorArray = extension.attenuationColor || [
+            1,
+            1,
+            1
+        ];
+        materialParams.attenuationColor = new (0, _three.Color)().setRGB(colorArray[0], colorArray[1], colorArray[2], (0, _three.LinearSRGBColorSpace));
+        return Promise.all(pending);
+    }
+}
+/**
+ * Materials ior Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_ior
+ */ class GLTFMaterialsIorExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_IOR;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const extension = materialDef.extensions[this.name];
+        materialParams.ior = extension.ior !== undefined ? extension.ior : 1.5;
+        return Promise.resolve();
+    }
+}
+/**
+ * Materials specular Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_specular
+ */ class GLTFMaterialsSpecularExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_SPECULAR;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        materialParams.specularIntensity = extension.specularFactor !== undefined ? extension.specularFactor : 1.0;
+        if (extension.specularTexture !== undefined) pending.push(parser.assignTexture(materialParams, "specularIntensityMap", extension.specularTexture));
+        const colorArray = extension.specularColorFactor || [
+            1,
+            1,
+            1
+        ];
+        materialParams.specularColor = new (0, _three.Color)().setRGB(colorArray[0], colorArray[1], colorArray[2], (0, _three.LinearSRGBColorSpace));
+        if (extension.specularColorTexture !== undefined) pending.push(parser.assignTexture(materialParams, "specularColorMap", extension.specularColorTexture, (0, _three.SRGBColorSpace)));
+        return Promise.all(pending);
+    }
+}
+/**
+ * Materials bump Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/EXT_materials_bump
+ */ class GLTFMaterialsBumpExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.EXT_MATERIALS_BUMP;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        materialParams.bumpScale = extension.bumpFactor !== undefined ? extension.bumpFactor : 1.0;
+        if (extension.bumpTexture !== undefined) pending.push(parser.assignTexture(materialParams, "bumpMap", extension.bumpTexture));
+        return Promise.all(pending);
+    }
+}
+/**
+ * Materials anisotropy Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_anisotropy
+ */ class GLTFMaterialsAnisotropyExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_MATERIALS_ANISOTROPY;
+    }
+    getMaterialType(materialIndex) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return null;
+        return 0, _three.MeshPhysicalMaterial;
+    }
+    extendMaterialParams(materialIndex, materialParams) {
+        const parser = this.parser;
+        const materialDef = parser.json.materials[materialIndex];
+        if (!materialDef.extensions || !materialDef.extensions[this.name]) return Promise.resolve();
+        const pending = [];
+        const extension = materialDef.extensions[this.name];
+        if (extension.anisotropyStrength !== undefined) materialParams.anisotropy = extension.anisotropyStrength;
+        if (extension.anisotropyRotation !== undefined) materialParams.anisotropyRotation = extension.anisotropyRotation;
+        if (extension.anisotropyTexture !== undefined) pending.push(parser.assignTexture(materialParams, "anisotropyMap", extension.anisotropyTexture));
+        return Promise.all(pending);
+    }
+}
+/**
+ * BasisU Texture Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+ */ class GLTFTextureBasisUExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.KHR_TEXTURE_BASISU;
+    }
+    loadTexture(textureIndex) {
+        const parser = this.parser;
+        const json = parser.json;
+        const textureDef = json.textures[textureIndex];
+        if (!textureDef.extensions || !textureDef.extensions[this.name]) return null;
+        const extension = textureDef.extensions[this.name];
+        const loader = parser.options.ktx2Loader;
+        if (!loader) {
+            if (json.extensionsRequired && json.extensionsRequired.indexOf(this.name) >= 0) throw new Error("THREE.GLTFLoader: setKTX2Loader must be called before loading KTX2 textures");
+            else // Assumes that the extension is optional and that a fallback texture is present
+            return null;
+        }
+        return parser.loadTextureImage(textureIndex, extension.source, loader);
+    }
+}
+/**
+ * WebP Texture Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_texture_webp
+ */ class GLTFTextureWebPExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.EXT_TEXTURE_WEBP;
+        this.isSupported = null;
+    }
+    loadTexture(textureIndex) {
+        const name = this.name;
+        const parser = this.parser;
+        const json = parser.json;
+        const textureDef = json.textures[textureIndex];
+        if (!textureDef.extensions || !textureDef.extensions[name]) return null;
+        const extension = textureDef.extensions[name];
+        const source = json.images[extension.source];
+        let loader = parser.textureLoader;
+        if (source.uri) {
+            const handler = parser.options.manager.getHandler(source.uri);
+            if (handler !== null) loader = handler;
+        }
+        return this.detectSupport().then(function(isSupported) {
+            if (isSupported) return parser.loadTextureImage(textureIndex, extension.source, loader);
+            if (json.extensionsRequired && json.extensionsRequired.indexOf(name) >= 0) throw new Error("THREE.GLTFLoader: WebP required by asset but unsupported.");
+            // Fall back to PNG or JPEG.
+            return parser.loadTexture(textureIndex);
+        });
+    }
+    detectSupport() {
+        if (!this.isSupported) this.isSupported = new Promise(function(resolve) {
+            const image = new Image();
+            // Lossy test image. Support for lossy images doesn't guarantee support for all
+            // WebP images, unfortunately.
+            image.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA";
+            image.onload = image.onerror = function() {
+                resolve(image.height === 1);
+            };
+        });
+        return this.isSupported;
+    }
+}
+/**
+ * AVIF Texture Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_texture_avif
+ */ class GLTFTextureAVIFExtension {
+    constructor(parser){
+        this.parser = parser;
+        this.name = EXTENSIONS.EXT_TEXTURE_AVIF;
+        this.isSupported = null;
+    }
+    loadTexture(textureIndex) {
+        const name = this.name;
+        const parser = this.parser;
+        const json = parser.json;
+        const textureDef = json.textures[textureIndex];
+        if (!textureDef.extensions || !textureDef.extensions[name]) return null;
+        const extension = textureDef.extensions[name];
+        const source = json.images[extension.source];
+        let loader = parser.textureLoader;
+        if (source.uri) {
+            const handler = parser.options.manager.getHandler(source.uri);
+            if (handler !== null) loader = handler;
+        }
+        return this.detectSupport().then(function(isSupported) {
+            if (isSupported) return parser.loadTextureImage(textureIndex, extension.source, loader);
+            if (json.extensionsRequired && json.extensionsRequired.indexOf(name) >= 0) throw new Error("THREE.GLTFLoader: AVIF required by asset but unsupported.");
+            // Fall back to PNG or JPEG.
+            return parser.loadTexture(textureIndex);
+        });
+    }
+    detectSupport() {
+        if (!this.isSupported) this.isSupported = new Promise(function(resolve) {
+            const image = new Image();
+            // Lossy test image.
+            image.src = "data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAABcAAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAEAAAABAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAMAAAAABNjb2xybmNseAACAAIABoAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAAB9tZGF0EgAKCBgABogQEDQgMgkQAAAAB8dSLfI=";
+            image.onload = image.onerror = function() {
+                resolve(image.height === 1);
+            };
+        });
+        return this.isSupported;
+    }
+}
+/**
+ * meshopt BufferView Compression Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_meshopt_compression
+ */ class GLTFMeshoptCompression {
+    constructor(parser){
+        this.name = EXTENSIONS.EXT_MESHOPT_COMPRESSION;
+        this.parser = parser;
+    }
+    loadBufferView(index) {
+        const json = this.parser.json;
+        const bufferView = json.bufferViews[index];
+        if (bufferView.extensions && bufferView.extensions[this.name]) {
+            const extensionDef = bufferView.extensions[this.name];
+            const buffer = this.parser.getDependency("buffer", extensionDef.buffer);
+            const decoder = this.parser.options.meshoptDecoder;
+            if (!decoder || !decoder.supported) {
+                if (json.extensionsRequired && json.extensionsRequired.indexOf(this.name) >= 0) throw new Error("THREE.GLTFLoader: setMeshoptDecoder must be called before loading compressed files");
+                else // Assumes that the extension is optional and that fallback buffer data is present
+                return null;
+            }
+            return buffer.then(function(res) {
+                const byteOffset = extensionDef.byteOffset || 0;
+                const byteLength = extensionDef.byteLength || 0;
+                const count = extensionDef.count;
+                const stride = extensionDef.byteStride;
+                const source = new Uint8Array(res, byteOffset, byteLength);
+                if (decoder.decodeGltfBufferAsync) return decoder.decodeGltfBufferAsync(count, stride, source, extensionDef.mode, extensionDef.filter).then(function(res) {
+                    return res.buffer;
+                });
+                else // Support for MeshoptDecoder 0.18 or earlier, without decodeGltfBufferAsync
+                return decoder.ready.then(function() {
+                    const result = new ArrayBuffer(count * stride);
+                    decoder.decodeGltfBuffer(new Uint8Array(result), count, stride, source, extensionDef.mode, extensionDef.filter);
+                    return result;
+                });
+            });
+        } else return null;
+    }
+}
+/**
+ * GPU Instancing Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_mesh_gpu_instancing
+ *
+ */ class GLTFMeshGpuInstancing {
+    constructor(parser){
+        this.name = EXTENSIONS.EXT_MESH_GPU_INSTANCING;
+        this.parser = parser;
+    }
+    createNodeMesh(nodeIndex) {
+        const json = this.parser.json;
+        const nodeDef = json.nodes[nodeIndex];
+        if (!nodeDef.extensions || !nodeDef.extensions[this.name] || nodeDef.mesh === undefined) return null;
+        const meshDef = json.meshes[nodeDef.mesh];
+        // No Points or Lines + Instancing support yet
+        for (const primitive of meshDef.primitives){
+            if (primitive.mode !== WEBGL_CONSTANTS.TRIANGLES && primitive.mode !== WEBGL_CONSTANTS.TRIANGLE_STRIP && primitive.mode !== WEBGL_CONSTANTS.TRIANGLE_FAN && primitive.mode !== undefined) return null;
+        }
+        const extensionDef = nodeDef.extensions[this.name];
+        const attributesDef = extensionDef.attributes;
+        // @TODO: Can we support InstancedMesh + SkinnedMesh?
+        const pending = [];
+        const attributes = {};
+        for(const key in attributesDef)pending.push(this.parser.getDependency("accessor", attributesDef[key]).then((accessor)=>{
+            attributes[key] = accessor;
+            return attributes[key];
+        }));
+        if (pending.length < 1) return null;
+        pending.push(this.parser.createNodeMesh(nodeIndex));
+        return Promise.all(pending).then((results)=>{
+            const nodeObject = results.pop();
+            const meshes = nodeObject.isGroup ? nodeObject.children : [
+                nodeObject
+            ];
+            const count = results[0].count; // All attribute counts should be same
+            const instancedMeshes = [];
+            for (const mesh of meshes){
+                // Temporal variables
+                const m = new (0, _three.Matrix4)();
+                const p = new (0, _three.Vector3)();
+                const q = new (0, _three.Quaternion)();
+                const s = new (0, _three.Vector3)(1, 1, 1);
+                const instancedMesh = new (0, _three.InstancedMesh)(mesh.geometry, mesh.material, count);
+                for(let i = 0; i < count; i++){
+                    if (attributes.TRANSLATION) p.fromBufferAttribute(attributes.TRANSLATION, i);
+                    if (attributes.ROTATION) q.fromBufferAttribute(attributes.ROTATION, i);
+                    if (attributes.SCALE) s.fromBufferAttribute(attributes.SCALE, i);
+                    instancedMesh.setMatrixAt(i, m.compose(p, q, s));
+                }
+                // Add instance attributes to the geometry, excluding TRS.
+                for(const attributeName in attributes){
+                    if (attributeName === "_COLOR_0") {
+                        const attr = attributes[attributeName];
+                        instancedMesh.instanceColor = new (0, _three.InstancedBufferAttribute)(attr.array, attr.itemSize, attr.normalized);
+                    } else if (attributeName !== "TRANSLATION" && attributeName !== "ROTATION" && attributeName !== "SCALE") mesh.geometry.setAttribute(attributeName, attributes[attributeName]);
+                }
+                // Just in case
+                (0, _three.Object3D).prototype.copy.call(instancedMesh, mesh);
+                this.parser.assignFinalMaterial(instancedMesh);
+                instancedMeshes.push(instancedMesh);
+            }
+            if (nodeObject.isGroup) {
+                nodeObject.clear();
+                nodeObject.add(...instancedMeshes);
+                return nodeObject;
+            }
+            return instancedMeshes[0];
+        });
+    }
+}
+/* BINARY EXTENSION */ const BINARY_EXTENSION_HEADER_MAGIC = "glTF";
+const BINARY_EXTENSION_HEADER_LENGTH = 12;
+const BINARY_EXTENSION_CHUNK_TYPES = {
+    JSON: 0x4E4F534A,
+    BIN: 0x004E4942
+};
+class GLTFBinaryExtension {
+    constructor(data){
+        this.name = EXTENSIONS.KHR_BINARY_GLTF;
+        this.content = null;
+        this.body = null;
+        const headerView = new DataView(data, 0, BINARY_EXTENSION_HEADER_LENGTH);
+        const textDecoder = new TextDecoder();
+        this.header = {
+            magic: textDecoder.decode(new Uint8Array(data.slice(0, 4))),
+            version: headerView.getUint32(4, true),
+            length: headerView.getUint32(8, true)
+        };
+        if (this.header.magic !== BINARY_EXTENSION_HEADER_MAGIC) throw new Error("THREE.GLTFLoader: Unsupported glTF-Binary header.");
+        else if (this.header.version < 2.0) throw new Error("THREE.GLTFLoader: Legacy binary file detected.");
+        const chunkContentsLength = this.header.length - BINARY_EXTENSION_HEADER_LENGTH;
+        const chunkView = new DataView(data, BINARY_EXTENSION_HEADER_LENGTH);
+        let chunkIndex = 0;
+        while(chunkIndex < chunkContentsLength){
+            const chunkLength = chunkView.getUint32(chunkIndex, true);
+            chunkIndex += 4;
+            const chunkType = chunkView.getUint32(chunkIndex, true);
+            chunkIndex += 4;
+            if (chunkType === BINARY_EXTENSION_CHUNK_TYPES.JSON) {
+                const contentArray = new Uint8Array(data, BINARY_EXTENSION_HEADER_LENGTH + chunkIndex, chunkLength);
+                this.content = textDecoder.decode(contentArray);
+            } else if (chunkType === BINARY_EXTENSION_CHUNK_TYPES.BIN) {
+                const byteOffset = BINARY_EXTENSION_HEADER_LENGTH + chunkIndex;
+                this.body = data.slice(byteOffset, byteOffset + chunkLength);
+            }
+            // Clients must ignore chunks with unknown types.
+            chunkIndex += chunkLength;
+        }
+        if (this.content === null) throw new Error("THREE.GLTFLoader: JSON content not found.");
+    }
+}
+/**
+ * DRACO Mesh Compression Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_draco_mesh_compression
+ */ class GLTFDracoMeshCompressionExtension {
+    constructor(json, dracoLoader){
+        if (!dracoLoader) throw new Error("THREE.GLTFLoader: No DRACOLoader instance provided.");
+        this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
+        this.json = json;
+        this.dracoLoader = dracoLoader;
+        this.dracoLoader.preload();
+    }
+    decodePrimitive(primitive, parser) {
+        const json = this.json;
+        const dracoLoader = this.dracoLoader;
+        const bufferViewIndex = primitive.extensions[this.name].bufferView;
+        const gltfAttributeMap = primitive.extensions[this.name].attributes;
+        const threeAttributeMap = {};
+        const attributeNormalizedMap = {};
+        const attributeTypeMap = {};
+        for(const attributeName in gltfAttributeMap){
+            const threeAttributeName = ATTRIBUTES[attributeName] || attributeName.toLowerCase();
+            threeAttributeMap[threeAttributeName] = gltfAttributeMap[attributeName];
+        }
+        for(const attributeName in primitive.attributes){
+            const threeAttributeName = ATTRIBUTES[attributeName] || attributeName.toLowerCase();
+            if (gltfAttributeMap[attributeName] !== undefined) {
+                const accessorDef = json.accessors[primitive.attributes[attributeName]];
+                const componentType = WEBGL_COMPONENT_TYPES[accessorDef.componentType];
+                attributeTypeMap[threeAttributeName] = componentType.name;
+                attributeNormalizedMap[threeAttributeName] = accessorDef.normalized === true;
+            }
+        }
+        return parser.getDependency("bufferView", bufferViewIndex).then(function(bufferView) {
+            return new Promise(function(resolve, reject) {
+                dracoLoader.decodeDracoFile(bufferView, function(geometry) {
+                    for(const attributeName in geometry.attributes){
+                        const attribute = geometry.attributes[attributeName];
+                        const normalized = attributeNormalizedMap[attributeName];
+                        if (normalized !== undefined) attribute.normalized = normalized;
+                    }
+                    resolve(geometry);
+                }, threeAttributeMap, attributeTypeMap, (0, _three.LinearSRGBColorSpace), reject);
+            });
+        });
+    }
+}
+/**
+ * Texture Transform Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_transform
+ */ class GLTFTextureTransformExtension {
+    constructor(){
+        this.name = EXTENSIONS.KHR_TEXTURE_TRANSFORM;
+    }
+    extendTexture(texture, transform) {
+        if ((transform.texCoord === undefined || transform.texCoord === texture.channel) && transform.offset === undefined && transform.rotation === undefined && transform.scale === undefined) // See https://github.com/mrdoob/three.js/issues/21819.
+        return texture;
+        texture = texture.clone();
+        if (transform.texCoord !== undefined) texture.channel = transform.texCoord;
+        if (transform.offset !== undefined) texture.offset.fromArray(transform.offset);
+        if (transform.rotation !== undefined) texture.rotation = transform.rotation;
+        if (transform.scale !== undefined) texture.repeat.fromArray(transform.scale);
+        texture.needsUpdate = true;
+        return texture;
+    }
+}
+/**
+ * Mesh Quantization Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization
+ */ class GLTFMeshQuantizationExtension {
+    constructor(){
+        this.name = EXTENSIONS.KHR_MESH_QUANTIZATION;
+    }
+}
+/*********************************/ /********** INTERPOLATION ********/ /*********************************/ // Spline Interpolation
+// Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#appendix-c-spline-interpolation
+class GLTFCubicSplineInterpolant extends (0, _three.Interpolant) {
+    constructor(parameterPositions, sampleValues, sampleSize, resultBuffer){
+        super(parameterPositions, sampleValues, sampleSize, resultBuffer);
+    }
+    copySampleValue_(index) {
+        // Copies a sample value to the result buffer. See description of glTF
+        // CUBICSPLINE values layout in interpolate_() function below.
+        const result = this.resultBuffer, values = this.sampleValues, valueSize = this.valueSize, offset = index * valueSize * 3 + valueSize;
+        for(let i = 0; i !== valueSize; i++)result[i] = values[offset + i];
+        return result;
+    }
+    interpolate_(i1, t0, t, t1) {
+        const result = this.resultBuffer;
+        const values = this.sampleValues;
+        const stride = this.valueSize;
+        const stride2 = stride * 2;
+        const stride3 = stride * 3;
+        const td = t1 - t0;
+        const p = (t - t0) / td;
+        const pp = p * p;
+        const ppp = pp * p;
+        const offset1 = i1 * stride3;
+        const offset0 = offset1 - stride3;
+        const s2 = -2 * ppp + 3 * pp;
+        const s3 = ppp - pp;
+        const s0 = 1 - s2;
+        const s1 = s3 - pp + p;
+        // Layout of keyframe output values for CUBICSPLINE animations:
+        //   [ inTangent_1, splineVertex_1, outTangent_1, inTangent_2, splineVertex_2, ... ]
+        for(let i = 0; i !== stride; i++){
+            const p0 = values[offset0 + i + stride]; // splineVertex_k
+            const m0 = values[offset0 + i + stride2] * td; // outTangent_k * (t_k+1 - t_k)
+            const p1 = values[offset1 + i + stride]; // splineVertex_k+1
+            const m1 = values[offset1 + i] * td; // inTangent_k+1 * (t_k+1 - t_k)
+            result[i] = s0 * p0 + s1 * m0 + s2 * p1 + s3 * m1;
+        }
+        return result;
+    }
+}
+const _q = new (0, _three.Quaternion)();
+class GLTFCubicSplineQuaternionInterpolant extends GLTFCubicSplineInterpolant {
+    interpolate_(i1, t0, t, t1) {
+        const result = super.interpolate_(i1, t0, t, t1);
+        _q.fromArray(result).normalize().toArray(result);
+        return result;
+    }
+}
+/*********************************/ /********** INTERNALS ************/ /*********************************/ /* CONSTANTS */ const WEBGL_CONSTANTS = {
+    FLOAT: 5126,
+    //FLOAT_MAT2: 35674,
+    FLOAT_MAT3: 35675,
+    FLOAT_MAT4: 35676,
+    FLOAT_VEC2: 35664,
+    FLOAT_VEC3: 35665,
+    FLOAT_VEC4: 35666,
+    LINEAR: 9729,
+    REPEAT: 10497,
+    SAMPLER_2D: 35678,
+    POINTS: 0,
+    LINES: 1,
+    LINE_LOOP: 2,
+    LINE_STRIP: 3,
+    TRIANGLES: 4,
+    TRIANGLE_STRIP: 5,
+    TRIANGLE_FAN: 6,
+    UNSIGNED_BYTE: 5121,
+    UNSIGNED_SHORT: 5123
+};
+const WEBGL_COMPONENT_TYPES = {
+    5120: Int8Array,
+    5121: Uint8Array,
+    5122: Int16Array,
+    5123: Uint16Array,
+    5125: Uint32Array,
+    5126: Float32Array
+};
+const WEBGL_FILTERS = {
+    9728: (0, _three.NearestFilter),
+    9729: (0, _three.LinearFilter),
+    9984: (0, _three.NearestMipmapNearestFilter),
+    9985: (0, _three.LinearMipmapNearestFilter),
+    9986: (0, _three.NearestMipmapLinearFilter),
+    9987: (0, _three.LinearMipmapLinearFilter)
+};
+const WEBGL_WRAPPINGS = {
+    33071: (0, _three.ClampToEdgeWrapping),
+    33648: (0, _three.MirroredRepeatWrapping),
+    10497: (0, _three.RepeatWrapping)
+};
+const WEBGL_TYPE_SIZES = {
+    "SCALAR": 1,
+    "VEC2": 2,
+    "VEC3": 3,
+    "VEC4": 4,
+    "MAT2": 4,
+    "MAT3": 9,
+    "MAT4": 16
+};
+const ATTRIBUTES = {
+    POSITION: "position",
+    NORMAL: "normal",
+    TANGENT: "tangent",
+    TEXCOORD_0: "uv",
+    TEXCOORD_1: "uv1",
+    TEXCOORD_2: "uv2",
+    TEXCOORD_3: "uv3",
+    COLOR_0: "color",
+    WEIGHTS_0: "skinWeight",
+    JOINTS_0: "skinIndex"
+};
+const PATH_PROPERTIES = {
+    scale: "scale",
+    translation: "position",
+    rotation: "quaternion",
+    weights: "morphTargetInfluences"
+};
+const INTERPOLATION = {
+    CUBICSPLINE: undefined,
+    // keyframe track will be initialized with a default interpolation type, then modified.
+    LINEAR: (0, _three.InterpolateLinear),
+    STEP: (0, _three.InterpolateDiscrete)
+};
+const ALPHA_MODES = {
+    OPAQUE: "OPAQUE",
+    MASK: "MASK",
+    BLEND: "BLEND"
+};
+/**
+ * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#default-material
+ */ function createDefaultMaterial(cache) {
+    if (cache["DefaultMaterial"] === undefined) cache["DefaultMaterial"] = new (0, _three.MeshStandardMaterial)({
+        color: 0xFFFFFF,
+        emissive: 0x000000,
+        metalness: 1,
+        roughness: 1,
+        transparent: false,
+        depthTest: true,
+        side: (0, _three.FrontSide)
+    });
+    return cache["DefaultMaterial"];
+}
+function addUnknownExtensionsToUserData(knownExtensions, object, objectDef) {
+    // Add unknown glTF extensions to an object's userData.
+    for(const name in objectDef.extensions)if (knownExtensions[name] === undefined) {
+        object.userData.gltfExtensions = object.userData.gltfExtensions || {};
+        object.userData.gltfExtensions[name] = objectDef.extensions[name];
+    }
+}
+/**
+ * @param {Object3D|Material|BufferGeometry} object
+ * @param {GLTF.definition} gltfDef
+ */ function assignExtrasToUserData(object, gltfDef) {
+    if (gltfDef.extras !== undefined) {
+        if (typeof gltfDef.extras === "object") Object.assign(object.userData, gltfDef.extras);
+        else console.warn("THREE.GLTFLoader: Ignoring primitive type .extras, " + gltfDef.extras);
+    }
+}
+/**
+ * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#morph-targets
+ *
+ * @param {BufferGeometry} geometry
+ * @param {Array<GLTF.Target>} targets
+ * @param {GLTFParser} parser
+ * @return {Promise<BufferGeometry>}
+ */ function addMorphTargets(geometry, targets, parser) {
+    let hasMorphPosition = false;
+    let hasMorphNormal = false;
+    let hasMorphColor = false;
+    for(let i = 0, il = targets.length; i < il; i++){
+        const target = targets[i];
+        if (target.POSITION !== undefined) hasMorphPosition = true;
+        if (target.NORMAL !== undefined) hasMorphNormal = true;
+        if (target.COLOR_0 !== undefined) hasMorphColor = true;
+        if (hasMorphPosition && hasMorphNormal && hasMorphColor) break;
+    }
+    if (!hasMorphPosition && !hasMorphNormal && !hasMorphColor) return Promise.resolve(geometry);
+    const pendingPositionAccessors = [];
+    const pendingNormalAccessors = [];
+    const pendingColorAccessors = [];
+    for(let i = 0, il = targets.length; i < il; i++){
+        const target = targets[i];
+        if (hasMorphPosition) {
+            const pendingAccessor = target.POSITION !== undefined ? parser.getDependency("accessor", target.POSITION) : geometry.attributes.position;
+            pendingPositionAccessors.push(pendingAccessor);
+        }
+        if (hasMorphNormal) {
+            const pendingAccessor = target.NORMAL !== undefined ? parser.getDependency("accessor", target.NORMAL) : geometry.attributes.normal;
+            pendingNormalAccessors.push(pendingAccessor);
+        }
+        if (hasMorphColor) {
+            const pendingAccessor = target.COLOR_0 !== undefined ? parser.getDependency("accessor", target.COLOR_0) : geometry.attributes.color;
+            pendingColorAccessors.push(pendingAccessor);
+        }
+    }
+    return Promise.all([
+        Promise.all(pendingPositionAccessors),
+        Promise.all(pendingNormalAccessors),
+        Promise.all(pendingColorAccessors)
+    ]).then(function(accessors) {
+        const morphPositions = accessors[0];
+        const morphNormals = accessors[1];
+        const morphColors = accessors[2];
+        if (hasMorphPosition) geometry.morphAttributes.position = morphPositions;
+        if (hasMorphNormal) geometry.morphAttributes.normal = morphNormals;
+        if (hasMorphColor) geometry.morphAttributes.color = morphColors;
+        geometry.morphTargetsRelative = true;
+        return geometry;
+    });
+}
+/**
+ * @param {Mesh} mesh
+ * @param {GLTF.Mesh} meshDef
+ */ function updateMorphTargets(mesh, meshDef) {
+    mesh.updateMorphTargets();
+    if (meshDef.weights !== undefined) for(let i = 0, il = meshDef.weights.length; i < il; i++)mesh.morphTargetInfluences[i] = meshDef.weights[i];
+    // .extras has user-defined data, so check that .extras.targetNames is an array.
+    if (meshDef.extras && Array.isArray(meshDef.extras.targetNames)) {
+        const targetNames = meshDef.extras.targetNames;
+        if (mesh.morphTargetInfluences.length === targetNames.length) {
+            mesh.morphTargetDictionary = {};
+            for(let i = 0, il = targetNames.length; i < il; i++)mesh.morphTargetDictionary[targetNames[i]] = i;
+        } else console.warn("THREE.GLTFLoader: Invalid extras.targetNames length. Ignoring names.");
+    }
+}
+function createPrimitiveKey(primitiveDef) {
+    let geometryKey;
+    const dracoExtension = primitiveDef.extensions && primitiveDef.extensions[EXTENSIONS.KHR_DRACO_MESH_COMPRESSION];
+    if (dracoExtension) geometryKey = "draco:" + dracoExtension.bufferView + ":" + dracoExtension.indices + ":" + createAttributesKey(dracoExtension.attributes);
+    else geometryKey = primitiveDef.indices + ":" + createAttributesKey(primitiveDef.attributes) + ":" + primitiveDef.mode;
+    if (primitiveDef.targets !== undefined) for(let i = 0, il = primitiveDef.targets.length; i < il; i++)geometryKey += ":" + createAttributesKey(primitiveDef.targets[i]);
+    return geometryKey;
+}
+function createAttributesKey(attributes) {
+    let attributesKey = "";
+    const keys = Object.keys(attributes).sort();
+    for(let i = 0, il = keys.length; i < il; i++)attributesKey += keys[i] + ":" + attributes[keys[i]] + ";";
+    return attributesKey;
+}
+function getNormalizedComponentScale(constructor) {
+    // Reference:
+    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
+    switch(constructor){
+        case Int8Array:
+            return 1 / 127;
+        case Uint8Array:
+            return 1 / 255;
+        case Int16Array:
+            return 1 / 32767;
+        case Uint16Array:
+            return 1 / 65535;
+        default:
+            throw new Error("THREE.GLTFLoader: Unsupported normalized accessor component type.");
+    }
+}
+function getImageURIMimeType(uri) {
+    if (uri.search(/\.jpe?g($|\?)/i) > 0 || uri.search(/^data\:image\/jpeg/) === 0) return "image/jpeg";
+    if (uri.search(/\.webp($|\?)/i) > 0 || uri.search(/^data\:image\/webp/) === 0) return "image/webp";
+    return "image/png";
+}
+const _identityMatrix = new (0, _three.Matrix4)();
+/* GLTF PARSER */ class GLTFParser {
+    constructor(json = {}, options = {}){
+        this.json = json;
+        this.extensions = {};
+        this.plugins = {};
+        this.options = options;
+        // loader object cache
+        this.cache = new GLTFRegistry();
+        // associations between Three.js objects and glTF elements
+        this.associations = new Map();
+        // BufferGeometry caching
+        this.primitiveCache = {};
+        // Node cache
+        this.nodeCache = {};
+        // Object3D instance caches
+        this.meshCache = {
+            refs: {},
+            uses: {}
+        };
+        this.cameraCache = {
+            refs: {},
+            uses: {}
+        };
+        this.lightCache = {
+            refs: {},
+            uses: {}
+        };
+        this.sourceCache = {};
+        this.textureCache = {};
+        // Track node names, to ensure no duplicates
+        this.nodeNamesUsed = {};
+        // Use an ImageBitmapLoader if imageBitmaps are supported. Moves much of the
+        // expensive work of uploading a texture to the GPU off the main thread.
+        let isSafari = false;
+        let safariVersion = -1;
+        let isFirefox = false;
+        let firefoxVersion = -1;
+        if (typeof navigator !== "undefined") {
+            const userAgent = navigator.userAgent;
+            isSafari = /^((?!chrome|android).)*safari/i.test(userAgent) === true;
+            const safariMatch = userAgent.match(/Version\/(\d+)/);
+            safariVersion = isSafari && safariMatch ? parseInt(safariMatch[1], 10) : -1;
+            isFirefox = userAgent.indexOf("Firefox") > -1;
+            firefoxVersion = isFirefox ? userAgent.match(/Firefox\/([0-9]+)\./)[1] : -1;
+        }
+        if (typeof createImageBitmap === "undefined" || isSafari && safariVersion < 17 || isFirefox && firefoxVersion < 98) this.textureLoader = new (0, _three.TextureLoader)(this.options.manager);
+        else this.textureLoader = new (0, _three.ImageBitmapLoader)(this.options.manager);
+        this.textureLoader.setCrossOrigin(this.options.crossOrigin);
+        this.textureLoader.setRequestHeader(this.options.requestHeader);
+        this.fileLoader = new (0, _three.FileLoader)(this.options.manager);
+        this.fileLoader.setResponseType("arraybuffer");
+        if (this.options.crossOrigin === "use-credentials") this.fileLoader.setWithCredentials(true);
+    }
+    setExtensions(extensions) {
+        this.extensions = extensions;
+    }
+    setPlugins(plugins) {
+        this.plugins = plugins;
+    }
+    parse(onLoad, onError) {
+        const parser = this;
+        const json = this.json;
+        const extensions = this.extensions;
+        // Clear the loader cache
+        this.cache.removeAll();
+        this.nodeCache = {};
+        // Mark the special nodes/meshes in json for efficient parse
+        this._invokeAll(function(ext) {
+            return ext._markDefs && ext._markDefs();
+        });
+        Promise.all(this._invokeAll(function(ext) {
+            return ext.beforeRoot && ext.beforeRoot();
+        })).then(function() {
+            return Promise.all([
+                parser.getDependencies("scene"),
+                parser.getDependencies("animation"),
+                parser.getDependencies("camera")
+            ]);
+        }).then(function(dependencies) {
+            const result = {
+                scene: dependencies[0][json.scene || 0],
+                scenes: dependencies[0],
+                animations: dependencies[1],
+                cameras: dependencies[2],
+                asset: json.asset,
+                parser: parser,
+                userData: {}
+            };
+            addUnknownExtensionsToUserData(extensions, result, json);
+            assignExtrasToUserData(result, json);
+            return Promise.all(parser._invokeAll(function(ext) {
+                return ext.afterRoot && ext.afterRoot(result);
+            })).then(function() {
+                for (const scene of result.scenes)scene.updateMatrixWorld();
+                onLoad(result);
+            });
+        }).catch(onError);
+    }
+    /**
+	 * Marks the special nodes/meshes in json for efficient parse.
+	 */ _markDefs() {
+        const nodeDefs = this.json.nodes || [];
+        const skinDefs = this.json.skins || [];
+        const meshDefs = this.json.meshes || [];
+        // Nothing in the node definition indicates whether it is a Bone or an
+        // Object3D. Use the skins' joint references to mark bones.
+        for(let skinIndex = 0, skinLength = skinDefs.length; skinIndex < skinLength; skinIndex++){
+            const joints = skinDefs[skinIndex].joints;
+            for(let i = 0, il = joints.length; i < il; i++)nodeDefs[joints[i]].isBone = true;
+        }
+        // Iterate over all nodes, marking references to shared resources,
+        // as well as skeleton joints.
+        for(let nodeIndex = 0, nodeLength = nodeDefs.length; nodeIndex < nodeLength; nodeIndex++){
+            const nodeDef = nodeDefs[nodeIndex];
+            if (nodeDef.mesh !== undefined) {
+                this._addNodeRef(this.meshCache, nodeDef.mesh);
+                // Nothing in the mesh definition indicates whether it is
+                // a SkinnedMesh or Mesh. Use the node's mesh reference
+                // to mark SkinnedMesh if node has skin.
+                if (nodeDef.skin !== undefined) meshDefs[nodeDef.mesh].isSkinnedMesh = true;
+            }
+            if (nodeDef.camera !== undefined) this._addNodeRef(this.cameraCache, nodeDef.camera);
+        }
+    }
+    /**
+	 * Counts references to shared node / Object3D resources. These resources
+	 * can be reused, or "instantiated", at multiple nodes in the scene
+	 * hierarchy. Mesh, Camera, and Light instances are instantiated and must
+	 * be marked. Non-scenegraph resources (like Materials, Geometries, and
+	 * Textures) can be reused directly and are not marked here.
+	 *
+	 * Example: CesiumMilkTruck sample model reuses "Wheel" meshes.
+	 */ _addNodeRef(cache, index) {
+        if (index === undefined) return;
+        if (cache.refs[index] === undefined) cache.refs[index] = cache.uses[index] = 0;
+        cache.refs[index]++;
+    }
+    /** Returns a reference to a shared resource, cloning it if necessary. */ _getNodeRef(cache, index, object) {
+        if (cache.refs[index] <= 1) return object;
+        const ref = object.clone();
+        // Propagates mappings to the cloned object, prevents mappings on the
+        // original object from being lost.
+        const updateMappings = (original, clone)=>{
+            const mappings = this.associations.get(original);
+            if (mappings != null) this.associations.set(clone, mappings);
+            for (const [i, child] of original.children.entries())updateMappings(child, clone.children[i]);
+        };
+        updateMappings(object, ref);
+        ref.name += "_instance_" + cache.uses[index]++;
+        return ref;
+    }
+    _invokeOne(func) {
+        const extensions = Object.values(this.plugins);
+        extensions.push(this);
+        for(let i = 0; i < extensions.length; i++){
+            const result = func(extensions[i]);
+            if (result) return result;
+        }
+        return null;
+    }
+    _invokeAll(func) {
+        const extensions = Object.values(this.plugins);
+        extensions.unshift(this);
+        const pending = [];
+        for(let i = 0; i < extensions.length; i++){
+            const result = func(extensions[i]);
+            if (result) pending.push(result);
+        }
+        return pending;
+    }
+    /**
+	 * Requests the specified dependency asynchronously, with caching.
+	 * @param {string} type
+	 * @param {number} index
+	 * @return {Promise<Object3D|Material|THREE.Texture|AnimationClip|ArrayBuffer|Object>}
+	 */ getDependency(type, index) {
+        const cacheKey = type + ":" + index;
+        let dependency = this.cache.get(cacheKey);
+        if (!dependency) {
+            switch(type){
+                case "scene":
+                    dependency = this.loadScene(index);
+                    break;
+                case "node":
+                    dependency = this._invokeOne(function(ext) {
+                        return ext.loadNode && ext.loadNode(index);
+                    });
+                    break;
+                case "mesh":
+                    dependency = this._invokeOne(function(ext) {
+                        return ext.loadMesh && ext.loadMesh(index);
+                    });
+                    break;
+                case "accessor":
+                    dependency = this.loadAccessor(index);
+                    break;
+                case "bufferView":
+                    dependency = this._invokeOne(function(ext) {
+                        return ext.loadBufferView && ext.loadBufferView(index);
+                    });
+                    break;
+                case "buffer":
+                    dependency = this.loadBuffer(index);
+                    break;
+                case "material":
+                    dependency = this._invokeOne(function(ext) {
+                        return ext.loadMaterial && ext.loadMaterial(index);
+                    });
+                    break;
+                case "texture":
+                    dependency = this._invokeOne(function(ext) {
+                        return ext.loadTexture && ext.loadTexture(index);
+                    });
+                    break;
+                case "skin":
+                    dependency = this.loadSkin(index);
+                    break;
+                case "animation":
+                    dependency = this._invokeOne(function(ext) {
+                        return ext.loadAnimation && ext.loadAnimation(index);
+                    });
+                    break;
+                case "camera":
+                    dependency = this.loadCamera(index);
+                    break;
+                default:
+                    dependency = this._invokeOne(function(ext) {
+                        return ext != this && ext.getDependency && ext.getDependency(type, index);
+                    });
+                    if (!dependency) throw new Error("Unknown type: " + type);
+                    break;
+            }
+            this.cache.add(cacheKey, dependency);
+        }
+        return dependency;
+    }
+    /**
+	 * Requests all dependencies of the specified type asynchronously, with caching.
+	 * @param {string} type
+	 * @return {Promise<Array<Object>>}
+	 */ getDependencies(type) {
+        let dependencies = this.cache.get(type);
+        if (!dependencies) {
+            const parser = this;
+            const defs = this.json[type + (type === "mesh" ? "es" : "s")] || [];
+            dependencies = Promise.all(defs.map(function(def, index) {
+                return parser.getDependency(type, index);
+            }));
+            this.cache.add(type, dependencies);
+        }
+        return dependencies;
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views
+	 * @param {number} bufferIndex
+	 * @return {Promise<ArrayBuffer>}
+	 */ loadBuffer(bufferIndex) {
+        const bufferDef = this.json.buffers[bufferIndex];
+        const loader = this.fileLoader;
+        if (bufferDef.type && bufferDef.type !== "arraybuffer") throw new Error("THREE.GLTFLoader: " + bufferDef.type + " buffer type is not supported.");
+        // If present, GLB container is required to be the first buffer.
+        if (bufferDef.uri === undefined && bufferIndex === 0) return Promise.resolve(this.extensions[EXTENSIONS.KHR_BINARY_GLTF].body);
+        const options = this.options;
+        return new Promise(function(resolve, reject) {
+            loader.load((0, _three.LoaderUtils).resolveURL(bufferDef.uri, options.path), resolve, undefined, function() {
+                reject(new Error('THREE.GLTFLoader: Failed to load buffer "' + bufferDef.uri + '".'));
+            });
+        });
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views
+	 * @param {number} bufferViewIndex
+	 * @return {Promise<ArrayBuffer>}
+	 */ loadBufferView(bufferViewIndex) {
+        const bufferViewDef = this.json.bufferViews[bufferViewIndex];
+        return this.getDependency("buffer", bufferViewDef.buffer).then(function(buffer) {
+            const byteLength = bufferViewDef.byteLength || 0;
+            const byteOffset = bufferViewDef.byteOffset || 0;
+            return buffer.slice(byteOffset, byteOffset + byteLength);
+        });
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors
+	 * @param {number} accessorIndex
+	 * @return {Promise<BufferAttribute|InterleavedBufferAttribute>}
+	 */ loadAccessor(accessorIndex) {
+        const parser = this;
+        const json = this.json;
+        const accessorDef = this.json.accessors[accessorIndex];
+        if (accessorDef.bufferView === undefined && accessorDef.sparse === undefined) {
+            const itemSize = WEBGL_TYPE_SIZES[accessorDef.type];
+            const TypedArray = WEBGL_COMPONENT_TYPES[accessorDef.componentType];
+            const normalized = accessorDef.normalized === true;
+            const array = new TypedArray(accessorDef.count * itemSize);
+            return Promise.resolve(new (0, _three.BufferAttribute)(array, itemSize, normalized));
+        }
+        const pendingBufferViews = [];
+        if (accessorDef.bufferView !== undefined) pendingBufferViews.push(this.getDependency("bufferView", accessorDef.bufferView));
+        else pendingBufferViews.push(null);
+        if (accessorDef.sparse !== undefined) {
+            pendingBufferViews.push(this.getDependency("bufferView", accessorDef.sparse.indices.bufferView));
+            pendingBufferViews.push(this.getDependency("bufferView", accessorDef.sparse.values.bufferView));
+        }
+        return Promise.all(pendingBufferViews).then(function(bufferViews) {
+            const bufferView = bufferViews[0];
+            const itemSize = WEBGL_TYPE_SIZES[accessorDef.type];
+            const TypedArray = WEBGL_COMPONENT_TYPES[accessorDef.componentType];
+            // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
+            const elementBytes = TypedArray.BYTES_PER_ELEMENT;
+            const itemBytes = elementBytes * itemSize;
+            const byteOffset = accessorDef.byteOffset || 0;
+            const byteStride = accessorDef.bufferView !== undefined ? json.bufferViews[accessorDef.bufferView].byteStride : undefined;
+            const normalized = accessorDef.normalized === true;
+            let array, bufferAttribute;
+            // The buffer is not interleaved if the stride is the item size in bytes.
+            if (byteStride && byteStride !== itemBytes) {
+                // Each "slice" of the buffer, as defined by 'count' elements of 'byteStride' bytes, gets its own InterleavedBuffer
+                // This makes sure that IBA.count reflects accessor.count properly
+                const ibSlice = Math.floor(byteOffset / byteStride);
+                const ibCacheKey = "InterleavedBuffer:" + accessorDef.bufferView + ":" + accessorDef.componentType + ":" + ibSlice + ":" + accessorDef.count;
+                let ib = parser.cache.get(ibCacheKey);
+                if (!ib) {
+                    array = new TypedArray(bufferView, ibSlice * byteStride, accessorDef.count * byteStride / elementBytes);
+                    // Integer parameters to IB/IBA are in array elements, not bytes.
+                    ib = new (0, _three.InterleavedBuffer)(array, byteStride / elementBytes);
+                    parser.cache.add(ibCacheKey, ib);
+                }
+                bufferAttribute = new (0, _three.InterleavedBufferAttribute)(ib, itemSize, byteOffset % byteStride / elementBytes, normalized);
+            } else {
+                if (bufferView === null) array = new TypedArray(accessorDef.count * itemSize);
+                else array = new TypedArray(bufferView, byteOffset, accessorDef.count * itemSize);
+                bufferAttribute = new (0, _three.BufferAttribute)(array, itemSize, normalized);
+            }
+            // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#sparse-accessors
+            if (accessorDef.sparse !== undefined) {
+                const itemSizeIndices = WEBGL_TYPE_SIZES.SCALAR;
+                const TypedArrayIndices = WEBGL_COMPONENT_TYPES[accessorDef.sparse.indices.componentType];
+                const byteOffsetIndices = accessorDef.sparse.indices.byteOffset || 0;
+                const byteOffsetValues = accessorDef.sparse.values.byteOffset || 0;
+                const sparseIndices = new TypedArrayIndices(bufferViews[1], byteOffsetIndices, accessorDef.sparse.count * itemSizeIndices);
+                const sparseValues = new TypedArray(bufferViews[2], byteOffsetValues, accessorDef.sparse.count * itemSize);
+                if (bufferView !== null) // Avoid modifying the original ArrayBuffer, if the bufferView wasn't initialized with zeroes.
+                bufferAttribute = new (0, _three.BufferAttribute)(bufferAttribute.array.slice(), bufferAttribute.itemSize, bufferAttribute.normalized);
+                // Ignore normalized since we copy from sparse
+                bufferAttribute.normalized = false;
+                for(let i = 0, il = sparseIndices.length; i < il; i++){
+                    const index = sparseIndices[i];
+                    bufferAttribute.setX(index, sparseValues[i * itemSize]);
+                    if (itemSize >= 2) bufferAttribute.setY(index, sparseValues[i * itemSize + 1]);
+                    if (itemSize >= 3) bufferAttribute.setZ(index, sparseValues[i * itemSize + 2]);
+                    if (itemSize >= 4) bufferAttribute.setW(index, sparseValues[i * itemSize + 3]);
+                    if (itemSize >= 5) throw new Error("THREE.GLTFLoader: Unsupported itemSize in sparse BufferAttribute.");
+                }
+                bufferAttribute.normalized = normalized;
+            }
+            return bufferAttribute;
+        });
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#textures
+	 * @param {number} textureIndex
+	 * @return {Promise<THREE.Texture|null>}
+	 */ loadTexture(textureIndex) {
+        const json = this.json;
+        const options = this.options;
+        const textureDef = json.textures[textureIndex];
+        const sourceIndex = textureDef.source;
+        const sourceDef = json.images[sourceIndex];
+        let loader = this.textureLoader;
+        if (sourceDef.uri) {
+            const handler = options.manager.getHandler(sourceDef.uri);
+            if (handler !== null) loader = handler;
+        }
+        return this.loadTextureImage(textureIndex, sourceIndex, loader);
+    }
+    loadTextureImage(textureIndex, sourceIndex, loader) {
+        const parser = this;
+        const json = this.json;
+        const textureDef = json.textures[textureIndex];
+        const sourceDef = json.images[sourceIndex];
+        const cacheKey = (sourceDef.uri || sourceDef.bufferView) + ":" + textureDef.sampler;
+        if (this.textureCache[cacheKey]) // See https://github.com/mrdoob/three.js/issues/21559.
+        return this.textureCache[cacheKey];
+        const promise = this.loadImageSource(sourceIndex, loader).then(function(texture) {
+            texture.flipY = false;
+            texture.name = textureDef.name || sourceDef.name || "";
+            if (texture.name === "" && typeof sourceDef.uri === "string" && sourceDef.uri.startsWith("data:image/") === false) texture.name = sourceDef.uri;
+            const samplers = json.samplers || {};
+            const sampler = samplers[textureDef.sampler] || {};
+            texture.magFilter = WEBGL_FILTERS[sampler.magFilter] || (0, _three.LinearFilter);
+            texture.minFilter = WEBGL_FILTERS[sampler.minFilter] || (0, _three.LinearMipmapLinearFilter);
+            texture.wrapS = WEBGL_WRAPPINGS[sampler.wrapS] || (0, _three.RepeatWrapping);
+            texture.wrapT = WEBGL_WRAPPINGS[sampler.wrapT] || (0, _three.RepeatWrapping);
+            parser.associations.set(texture, {
+                textures: textureIndex
+            });
+            return texture;
+        }).catch(function() {
+            return null;
+        });
+        this.textureCache[cacheKey] = promise;
+        return promise;
+    }
+    loadImageSource(sourceIndex, loader) {
+        const parser = this;
+        const json = this.json;
+        const options = this.options;
+        if (this.sourceCache[sourceIndex] !== undefined) return this.sourceCache[sourceIndex].then((texture)=>texture.clone());
+        const sourceDef = json.images[sourceIndex];
+        const URL = self.URL || self.webkitURL;
+        let sourceURI = sourceDef.uri || "";
+        let isObjectURL = false;
+        if (sourceDef.bufferView !== undefined) // Load binary image data from bufferView, if provided.
+        sourceURI = parser.getDependency("bufferView", sourceDef.bufferView).then(function(bufferView) {
+            isObjectURL = true;
+            const blob = new Blob([
+                bufferView
+            ], {
+                type: sourceDef.mimeType
+            });
+            sourceURI = URL.createObjectURL(blob);
+            return sourceURI;
+        });
+        else if (sourceDef.uri === undefined) throw new Error("THREE.GLTFLoader: Image " + sourceIndex + " is missing URI and bufferView");
+        const promise = Promise.resolve(sourceURI).then(function(sourceURI) {
+            return new Promise(function(resolve, reject) {
+                let onLoad = resolve;
+                if (loader.isImageBitmapLoader === true) onLoad = function(imageBitmap) {
+                    const texture = new (0, _three.Texture)(imageBitmap);
+                    texture.needsUpdate = true;
+                    resolve(texture);
+                };
+                loader.load((0, _three.LoaderUtils).resolveURL(sourceURI, options.path), onLoad, undefined, reject);
+            });
+        }).then(function(texture) {
+            // Clean up resources and configure Texture.
+            if (isObjectURL === true) URL.revokeObjectURL(sourceURI);
+            assignExtrasToUserData(texture, sourceDef);
+            texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType(sourceDef.uri);
+            return texture;
+        }).catch(function(error) {
+            console.error("THREE.GLTFLoader: Couldn't load texture", sourceURI);
+            throw error;
+        });
+        this.sourceCache[sourceIndex] = promise;
+        return promise;
+    }
+    /**
+	 * Asynchronously assigns a texture to the given material parameters.
+	 * @param {Object} materialParams
+	 * @param {string} mapName
+	 * @param {Object} mapDef
+	 * @return {Promise<Texture>}
+	 */ assignTexture(materialParams, mapName, mapDef, colorSpace) {
+        const parser = this;
+        return this.getDependency("texture", mapDef.index).then(function(texture) {
+            if (!texture) return null;
+            if (mapDef.texCoord !== undefined && mapDef.texCoord > 0) {
+                texture = texture.clone();
+                texture.channel = mapDef.texCoord;
+            }
+            if (parser.extensions[EXTENSIONS.KHR_TEXTURE_TRANSFORM]) {
+                const transform = mapDef.extensions !== undefined ? mapDef.extensions[EXTENSIONS.KHR_TEXTURE_TRANSFORM] : undefined;
+                if (transform) {
+                    const gltfReference = parser.associations.get(texture);
+                    texture = parser.extensions[EXTENSIONS.KHR_TEXTURE_TRANSFORM].extendTexture(texture, transform);
+                    parser.associations.set(texture, gltfReference);
+                }
+            }
+            if (colorSpace !== undefined) texture.colorSpace = colorSpace;
+            materialParams[mapName] = texture;
+            return texture;
+        });
+    }
+    /**
+	 * Assigns final material to a Mesh, Line, or Points instance. The instance
+	 * already has a material (generated from the glTF material options alone)
+	 * but reuse of the same glTF material may require multiple threejs materials
+	 * to accommodate different primitive types, defines, etc. New materials will
+	 * be created if necessary, and reused from a cache.
+	 * @param  {Object3D} mesh Mesh, Line, or Points instance.
+	 */ assignFinalMaterial(mesh) {
+        const geometry = mesh.geometry;
+        let material = mesh.material;
+        const useDerivativeTangents = geometry.attributes.tangent === undefined;
+        const useVertexColors = geometry.attributes.color !== undefined;
+        const useFlatShading = geometry.attributes.normal === undefined;
+        if (mesh.isPoints) {
+            const cacheKey = "PointsMaterial:" + material.uuid;
+            let pointsMaterial = this.cache.get(cacheKey);
+            if (!pointsMaterial) {
+                pointsMaterial = new (0, _three.PointsMaterial)();
+                (0, _three.Material).prototype.copy.call(pointsMaterial, material);
+                pointsMaterial.color.copy(material.color);
+                pointsMaterial.map = material.map;
+                pointsMaterial.sizeAttenuation = false; // glTF spec says points should be 1px
+                this.cache.add(cacheKey, pointsMaterial);
+            }
+            material = pointsMaterial;
+        } else if (mesh.isLine) {
+            const cacheKey = "LineBasicMaterial:" + material.uuid;
+            let lineMaterial = this.cache.get(cacheKey);
+            if (!lineMaterial) {
+                lineMaterial = new (0, _three.LineBasicMaterial)();
+                (0, _three.Material).prototype.copy.call(lineMaterial, material);
+                lineMaterial.color.copy(material.color);
+                lineMaterial.map = material.map;
+                this.cache.add(cacheKey, lineMaterial);
+            }
+            material = lineMaterial;
+        }
+        // Clone the material if it will be modified
+        if (useDerivativeTangents || useVertexColors || useFlatShading) {
+            let cacheKey = "ClonedMaterial:" + material.uuid + ":";
+            if (useDerivativeTangents) cacheKey += "derivative-tangents:";
+            if (useVertexColors) cacheKey += "vertex-colors:";
+            if (useFlatShading) cacheKey += "flat-shading:";
+            let cachedMaterial = this.cache.get(cacheKey);
+            if (!cachedMaterial) {
+                cachedMaterial = material.clone();
+                if (useVertexColors) cachedMaterial.vertexColors = true;
+                if (useFlatShading) cachedMaterial.flatShading = true;
+                if (useDerivativeTangents) {
+                    // https://github.com/mrdoob/three.js/issues/11438#issuecomment-507003995
+                    if (cachedMaterial.normalScale) cachedMaterial.normalScale.y *= -1;
+                    if (cachedMaterial.clearcoatNormalScale) cachedMaterial.clearcoatNormalScale.y *= -1;
+                }
+                this.cache.add(cacheKey, cachedMaterial);
+                this.associations.set(cachedMaterial, this.associations.get(material));
+            }
+            material = cachedMaterial;
+        }
+        mesh.material = material;
+    }
+    getMaterialType() {
+        return 0, _three.MeshStandardMaterial;
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#materials
+	 * @param {number} materialIndex
+	 * @return {Promise<Material>}
+	 */ loadMaterial(materialIndex) {
+        const parser = this;
+        const json = this.json;
+        const extensions = this.extensions;
+        const materialDef = json.materials[materialIndex];
+        let materialType;
+        const materialParams = {};
+        const materialExtensions = materialDef.extensions || {};
+        const pending = [];
+        if (materialExtensions[EXTENSIONS.KHR_MATERIALS_UNLIT]) {
+            const kmuExtension = extensions[EXTENSIONS.KHR_MATERIALS_UNLIT];
+            materialType = kmuExtension.getMaterialType();
+            pending.push(kmuExtension.extendParams(materialParams, materialDef, parser));
+        } else {
+            // Specification:
+            // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#metallic-roughness-material
+            const metallicRoughness = materialDef.pbrMetallicRoughness || {};
+            materialParams.color = new (0, _three.Color)(1.0, 1.0, 1.0);
+            materialParams.opacity = 1.0;
+            if (Array.isArray(metallicRoughness.baseColorFactor)) {
+                const array = metallicRoughness.baseColorFactor;
+                materialParams.color.setRGB(array[0], array[1], array[2], (0, _three.LinearSRGBColorSpace));
+                materialParams.opacity = array[3];
+            }
+            if (metallicRoughness.baseColorTexture !== undefined) pending.push(parser.assignTexture(materialParams, "map", metallicRoughness.baseColorTexture, (0, _three.SRGBColorSpace)));
+            materialParams.metalness = metallicRoughness.metallicFactor !== undefined ? metallicRoughness.metallicFactor : 1.0;
+            materialParams.roughness = metallicRoughness.roughnessFactor !== undefined ? metallicRoughness.roughnessFactor : 1.0;
+            if (metallicRoughness.metallicRoughnessTexture !== undefined) {
+                pending.push(parser.assignTexture(materialParams, "metalnessMap", metallicRoughness.metallicRoughnessTexture));
+                pending.push(parser.assignTexture(materialParams, "roughnessMap", metallicRoughness.metallicRoughnessTexture));
+            }
+            materialType = this._invokeOne(function(ext) {
+                return ext.getMaterialType && ext.getMaterialType(materialIndex);
+            });
+            pending.push(Promise.all(this._invokeAll(function(ext) {
+                return ext.extendMaterialParams && ext.extendMaterialParams(materialIndex, materialParams);
+            })));
+        }
+        if (materialDef.doubleSided === true) materialParams.side = (0, _three.DoubleSide);
+        const alphaMode = materialDef.alphaMode || ALPHA_MODES.OPAQUE;
+        if (alphaMode === ALPHA_MODES.BLEND) {
+            materialParams.transparent = true;
+            // See: https://github.com/mrdoob/three.js/issues/17706
+            materialParams.depthWrite = false;
+        } else {
+            materialParams.transparent = false;
+            if (alphaMode === ALPHA_MODES.MASK) materialParams.alphaTest = materialDef.alphaCutoff !== undefined ? materialDef.alphaCutoff : 0.5;
+        }
+        if (materialDef.normalTexture !== undefined && materialType !== (0, _three.MeshBasicMaterial)) {
+            pending.push(parser.assignTexture(materialParams, "normalMap", materialDef.normalTexture));
+            materialParams.normalScale = new (0, _three.Vector2)(1, 1);
+            if (materialDef.normalTexture.scale !== undefined) {
+                const scale = materialDef.normalTexture.scale;
+                materialParams.normalScale.set(scale, scale);
+            }
+        }
+        if (materialDef.occlusionTexture !== undefined && materialType !== (0, _three.MeshBasicMaterial)) {
+            pending.push(parser.assignTexture(materialParams, "aoMap", materialDef.occlusionTexture));
+            if (materialDef.occlusionTexture.strength !== undefined) materialParams.aoMapIntensity = materialDef.occlusionTexture.strength;
+        }
+        if (materialDef.emissiveFactor !== undefined && materialType !== (0, _three.MeshBasicMaterial)) {
+            const emissiveFactor = materialDef.emissiveFactor;
+            materialParams.emissive = new (0, _three.Color)().setRGB(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2], (0, _three.LinearSRGBColorSpace));
+        }
+        if (materialDef.emissiveTexture !== undefined && materialType !== (0, _three.MeshBasicMaterial)) pending.push(parser.assignTexture(materialParams, "emissiveMap", materialDef.emissiveTexture, (0, _three.SRGBColorSpace)));
+        return Promise.all(pending).then(function() {
+            const material = new materialType(materialParams);
+            if (materialDef.name) material.name = materialDef.name;
+            assignExtrasToUserData(material, materialDef);
+            parser.associations.set(material, {
+                materials: materialIndex
+            });
+            if (materialDef.extensions) addUnknownExtensionsToUserData(extensions, material, materialDef);
+            return material;
+        });
+    }
+    /** When Object3D instances are targeted by animation, they need unique names. */ createUniqueName(originalName) {
+        const sanitizedName = (0, _three.PropertyBinding).sanitizeNodeName(originalName || "");
+        if (sanitizedName in this.nodeNamesUsed) return sanitizedName + "_" + ++this.nodeNamesUsed[sanitizedName];
+        else {
+            this.nodeNamesUsed[sanitizedName] = 0;
+            return sanitizedName;
+        }
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#geometry
+	 *
+	 * Creates BufferGeometries from primitives.
+	 *
+	 * @param {Array<GLTF.Primitive>} primitives
+	 * @return {Promise<Array<BufferGeometry>>}
+	 */ loadGeometries(primitives) {
+        const parser = this;
+        const extensions = this.extensions;
+        const cache = this.primitiveCache;
+        function createDracoPrimitive(primitive) {
+            return extensions[EXTENSIONS.KHR_DRACO_MESH_COMPRESSION].decodePrimitive(primitive, parser).then(function(geometry) {
+                return addPrimitiveAttributes(geometry, primitive, parser);
+            });
+        }
+        const pending = [];
+        for(let i = 0, il = primitives.length; i < il; i++){
+            const primitive = primitives[i];
+            const cacheKey = createPrimitiveKey(primitive);
+            // See if we've already created this geometry
+            const cached = cache[cacheKey];
+            if (cached) // Use the cached geometry if it exists
+            pending.push(cached.promise);
+            else {
+                let geometryPromise;
+                if (primitive.extensions && primitive.extensions[EXTENSIONS.KHR_DRACO_MESH_COMPRESSION]) // Use DRACO geometry if available
+                geometryPromise = createDracoPrimitive(primitive);
+                else // Otherwise create a new geometry
+                geometryPromise = addPrimitiveAttributes(new (0, _three.BufferGeometry)(), primitive, parser);
+                // Cache this geometry
+                cache[cacheKey] = {
+                    primitive: primitive,
+                    promise: geometryPromise
+                };
+                pending.push(geometryPromise);
+            }
+        }
+        return Promise.all(pending);
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshes
+	 * @param {number} meshIndex
+	 * @return {Promise<Group|Mesh|SkinnedMesh>}
+	 */ loadMesh(meshIndex) {
+        const parser = this;
+        const json = this.json;
+        const extensions = this.extensions;
+        const meshDef = json.meshes[meshIndex];
+        const primitives = meshDef.primitives;
+        const pending = [];
+        for(let i = 0, il = primitives.length; i < il; i++){
+            const material = primitives[i].material === undefined ? createDefaultMaterial(this.cache) : this.getDependency("material", primitives[i].material);
+            pending.push(material);
+        }
+        pending.push(parser.loadGeometries(primitives));
+        return Promise.all(pending).then(function(results) {
+            const materials = results.slice(0, results.length - 1);
+            const geometries = results[results.length - 1];
+            const meshes = [];
+            for(let i = 0, il = geometries.length; i < il; i++){
+                const geometry = geometries[i];
+                const primitive = primitives[i];
+                // 1. create Mesh
+                let mesh;
+                const material = materials[i];
+                if (primitive.mode === WEBGL_CONSTANTS.TRIANGLES || primitive.mode === WEBGL_CONSTANTS.TRIANGLE_STRIP || primitive.mode === WEBGL_CONSTANTS.TRIANGLE_FAN || primitive.mode === undefined) {
+                    // .isSkinnedMesh isn't in glTF spec. See ._markDefs()
+                    mesh = meshDef.isSkinnedMesh === true ? new (0, _three.SkinnedMesh)(geometry, material) : new (0, _three.Mesh)(geometry, material);
+                    if (mesh.isSkinnedMesh === true) // normalize skin weights to fix malformed assets (see #15319)
+                    mesh.normalizeSkinWeights();
+                    if (primitive.mode === WEBGL_CONSTANTS.TRIANGLE_STRIP) mesh.geometry = (0, _bufferGeometryUtilsJs.toTrianglesDrawMode)(mesh.geometry, (0, _three.TriangleStripDrawMode));
+                    else if (primitive.mode === WEBGL_CONSTANTS.TRIANGLE_FAN) mesh.geometry = (0, _bufferGeometryUtilsJs.toTrianglesDrawMode)(mesh.geometry, (0, _three.TriangleFanDrawMode));
+                } else if (primitive.mode === WEBGL_CONSTANTS.LINES) mesh = new (0, _three.LineSegments)(geometry, material);
+                else if (primitive.mode === WEBGL_CONSTANTS.LINE_STRIP) mesh = new (0, _three.Line)(geometry, material);
+                else if (primitive.mode === WEBGL_CONSTANTS.LINE_LOOP) mesh = new (0, _three.LineLoop)(geometry, material);
+                else if (primitive.mode === WEBGL_CONSTANTS.POINTS) mesh = new (0, _three.Points)(geometry, material);
+                else throw new Error("THREE.GLTFLoader: Primitive mode unsupported: " + primitive.mode);
+                if (Object.keys(mesh.geometry.morphAttributes).length > 0) updateMorphTargets(mesh, meshDef);
+                mesh.name = parser.createUniqueName(meshDef.name || "mesh_" + meshIndex);
+                assignExtrasToUserData(mesh, meshDef);
+                if (primitive.extensions) addUnknownExtensionsToUserData(extensions, mesh, primitive);
+                parser.assignFinalMaterial(mesh);
+                meshes.push(mesh);
+            }
+            for(let i = 0, il = meshes.length; i < il; i++)parser.associations.set(meshes[i], {
+                meshes: meshIndex,
+                primitives: i
+            });
+            if (meshes.length === 1) {
+                if (meshDef.extensions) addUnknownExtensionsToUserData(extensions, meshes[0], meshDef);
+                return meshes[0];
+            }
+            const group = new (0, _three.Group)();
+            if (meshDef.extensions) addUnknownExtensionsToUserData(extensions, group, meshDef);
+            parser.associations.set(group, {
+                meshes: meshIndex
+            });
+            for(let i = 0, il = meshes.length; i < il; i++)group.add(meshes[i]);
+            return group;
+        });
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#cameras
+	 * @param {number} cameraIndex
+	 * @return {Promise<THREE.Camera>}
+	 */ loadCamera(cameraIndex) {
+        let camera;
+        const cameraDef = this.json.cameras[cameraIndex];
+        const params = cameraDef[cameraDef.type];
+        if (!params) {
+            console.warn("THREE.GLTFLoader: Missing camera parameters.");
+            return;
+        }
+        if (cameraDef.type === "perspective") camera = new (0, _three.PerspectiveCamera)((0, _three.MathUtils).radToDeg(params.yfov), params.aspectRatio || 1, params.znear || 1, params.zfar || 2e6);
+        else if (cameraDef.type === "orthographic") camera = new (0, _three.OrthographicCamera)(-params.xmag, params.xmag, params.ymag, -params.ymag, params.znear, params.zfar);
+        if (cameraDef.name) camera.name = this.createUniqueName(cameraDef.name);
+        assignExtrasToUserData(camera, cameraDef);
+        return Promise.resolve(camera);
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#skins
+	 * @param {number} skinIndex
+	 * @return {Promise<Skeleton>}
+	 */ loadSkin(skinIndex) {
+        const skinDef = this.json.skins[skinIndex];
+        const pending = [];
+        for(let i = 0, il = skinDef.joints.length; i < il; i++)pending.push(this._loadNodeShallow(skinDef.joints[i]));
+        if (skinDef.inverseBindMatrices !== undefined) pending.push(this.getDependency("accessor", skinDef.inverseBindMatrices));
+        else pending.push(null);
+        return Promise.all(pending).then(function(results) {
+            const inverseBindMatrices = results.pop();
+            const jointNodes = results;
+            // Note that bones (joint nodes) may or may not be in the
+            // scene graph at this time.
+            const bones = [];
+            const boneInverses = [];
+            for(let i = 0, il = jointNodes.length; i < il; i++){
+                const jointNode = jointNodes[i];
+                if (jointNode) {
+                    bones.push(jointNode);
+                    const mat = new (0, _three.Matrix4)();
+                    if (inverseBindMatrices !== null) mat.fromArray(inverseBindMatrices.array, i * 16);
+                    boneInverses.push(mat);
+                } else console.warn('THREE.GLTFLoader: Joint "%s" could not be found.', skinDef.joints[i]);
+            }
+            return new (0, _three.Skeleton)(bones, boneInverses);
+        });
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animations
+	 * @param {number} animationIndex
+	 * @return {Promise<AnimationClip>}
+	 */ loadAnimation(animationIndex) {
+        const json = this.json;
+        const parser = this;
+        const animationDef = json.animations[animationIndex];
+        const animationName = animationDef.name ? animationDef.name : "animation_" + animationIndex;
+        const pendingNodes = [];
+        const pendingInputAccessors = [];
+        const pendingOutputAccessors = [];
+        const pendingSamplers = [];
+        const pendingTargets = [];
+        for(let i = 0, il = animationDef.channels.length; i < il; i++){
+            const channel = animationDef.channels[i];
+            const sampler = animationDef.samplers[channel.sampler];
+            const target = channel.target;
+            const name = target.node;
+            const input = animationDef.parameters !== undefined ? animationDef.parameters[sampler.input] : sampler.input;
+            const output = animationDef.parameters !== undefined ? animationDef.parameters[sampler.output] : sampler.output;
+            if (target.node === undefined) continue;
+            pendingNodes.push(this.getDependency("node", name));
+            pendingInputAccessors.push(this.getDependency("accessor", input));
+            pendingOutputAccessors.push(this.getDependency("accessor", output));
+            pendingSamplers.push(sampler);
+            pendingTargets.push(target);
+        }
+        return Promise.all([
+            Promise.all(pendingNodes),
+            Promise.all(pendingInputAccessors),
+            Promise.all(pendingOutputAccessors),
+            Promise.all(pendingSamplers),
+            Promise.all(pendingTargets)
+        ]).then(function(dependencies) {
+            const nodes = dependencies[0];
+            const inputAccessors = dependencies[1];
+            const outputAccessors = dependencies[2];
+            const samplers = dependencies[3];
+            const targets = dependencies[4];
+            const tracks = [];
+            for(let i = 0, il = nodes.length; i < il; i++){
+                const node = nodes[i];
+                const inputAccessor = inputAccessors[i];
+                const outputAccessor = outputAccessors[i];
+                const sampler = samplers[i];
+                const target = targets[i];
+                if (node === undefined) continue;
+                if (node.updateMatrix) node.updateMatrix();
+                const createdTracks = parser._createAnimationTracks(node, inputAccessor, outputAccessor, sampler, target);
+                if (createdTracks) for(let k = 0; k < createdTracks.length; k++)tracks.push(createdTracks[k]);
+            }
+            return new (0, _three.AnimationClip)(animationName, undefined, tracks);
+        });
+    }
+    createNodeMesh(nodeIndex) {
+        const json = this.json;
+        const parser = this;
+        const nodeDef = json.nodes[nodeIndex];
+        if (nodeDef.mesh === undefined) return null;
+        return parser.getDependency("mesh", nodeDef.mesh).then(function(mesh) {
+            const node = parser._getNodeRef(parser.meshCache, nodeDef.mesh, mesh);
+            // if weights are provided on the node, override weights on the mesh.
+            if (nodeDef.weights !== undefined) node.traverse(function(o) {
+                if (!o.isMesh) return;
+                for(let i = 0, il = nodeDef.weights.length; i < il; i++)o.morphTargetInfluences[i] = nodeDef.weights[i];
+            });
+            return node;
+        });
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#nodes-and-hierarchy
+	 * @param {number} nodeIndex
+	 * @return {Promise<Object3D>}
+	 */ loadNode(nodeIndex) {
+        const json = this.json;
+        const parser = this;
+        const nodeDef = json.nodes[nodeIndex];
+        const nodePending = parser._loadNodeShallow(nodeIndex);
+        const childPending = [];
+        const childrenDef = nodeDef.children || [];
+        for(let i = 0, il = childrenDef.length; i < il; i++)childPending.push(parser.getDependency("node", childrenDef[i]));
+        const skeletonPending = nodeDef.skin === undefined ? Promise.resolve(null) : parser.getDependency("skin", nodeDef.skin);
+        return Promise.all([
+            nodePending,
+            Promise.all(childPending),
+            skeletonPending
+        ]).then(function(results) {
+            const node = results[0];
+            const children = results[1];
+            const skeleton = results[2];
+            if (skeleton !== null) // This full traverse should be fine because
+            // child glTF nodes have not been added to this node yet.
+            node.traverse(function(mesh) {
+                if (!mesh.isSkinnedMesh) return;
+                mesh.bind(skeleton, _identityMatrix);
+            });
+            for(let i = 0, il = children.length; i < il; i++)node.add(children[i]);
+            return node;
+        });
+    }
+    // ._loadNodeShallow() parses a single node.
+    // skin and child nodes are created and added in .loadNode() (no '_' prefix).
+    _loadNodeShallow(nodeIndex) {
+        const json = this.json;
+        const extensions = this.extensions;
+        const parser = this;
+        // This method is called from .loadNode() and .loadSkin().
+        // Cache a node to avoid duplication.
+        if (this.nodeCache[nodeIndex] !== undefined) return this.nodeCache[nodeIndex];
+        const nodeDef = json.nodes[nodeIndex];
+        // reserve node's name before its dependencies, so the root has the intended name.
+        const nodeName = nodeDef.name ? parser.createUniqueName(nodeDef.name) : "";
+        const pending = [];
+        const meshPromise = parser._invokeOne(function(ext) {
+            return ext.createNodeMesh && ext.createNodeMesh(nodeIndex);
+        });
+        if (meshPromise) pending.push(meshPromise);
+        if (nodeDef.camera !== undefined) pending.push(parser.getDependency("camera", nodeDef.camera).then(function(camera) {
+            return parser._getNodeRef(parser.cameraCache, nodeDef.camera, camera);
+        }));
+        parser._invokeAll(function(ext) {
+            return ext.createNodeAttachment && ext.createNodeAttachment(nodeIndex);
+        }).forEach(function(promise) {
+            pending.push(promise);
+        });
+        this.nodeCache[nodeIndex] = Promise.all(pending).then(function(objects) {
+            let node;
+            // .isBone isn't in glTF spec. See ._markDefs
+            if (nodeDef.isBone === true) node = new (0, _three.Bone)();
+            else if (objects.length > 1) node = new (0, _three.Group)();
+            else if (objects.length === 1) node = objects[0];
+            else node = new (0, _three.Object3D)();
+            if (node !== objects[0]) for(let i = 0, il = objects.length; i < il; i++)node.add(objects[i]);
+            if (nodeDef.name) {
+                node.userData.name = nodeDef.name;
+                node.name = nodeName;
+            }
+            assignExtrasToUserData(node, nodeDef);
+            if (nodeDef.extensions) addUnknownExtensionsToUserData(extensions, node, nodeDef);
+            if (nodeDef.matrix !== undefined) {
+                const matrix = new (0, _three.Matrix4)();
+                matrix.fromArray(nodeDef.matrix);
+                node.applyMatrix4(matrix);
+            } else {
+                if (nodeDef.translation !== undefined) node.position.fromArray(nodeDef.translation);
+                if (nodeDef.rotation !== undefined) node.quaternion.fromArray(nodeDef.rotation);
+                if (nodeDef.scale !== undefined) node.scale.fromArray(nodeDef.scale);
+            }
+            if (!parser.associations.has(node)) parser.associations.set(node, {});
+            parser.associations.get(node).nodes = nodeIndex;
+            return node;
+        });
+        return this.nodeCache[nodeIndex];
+    }
+    /**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#scenes
+	 * @param {number} sceneIndex
+	 * @return {Promise<Group>}
+	 */ loadScene(sceneIndex) {
+        const extensions = this.extensions;
+        const sceneDef = this.json.scenes[sceneIndex];
+        const parser = this;
+        // Loader returns Group, not Scene.
+        // See: https://github.com/mrdoob/three.js/issues/18342#issuecomment-578981172
+        const scene = new (0, _three.Group)();
+        if (sceneDef.name) scene.name = parser.createUniqueName(sceneDef.name);
+        assignExtrasToUserData(scene, sceneDef);
+        if (sceneDef.extensions) addUnknownExtensionsToUserData(extensions, scene, sceneDef);
+        const nodeIds = sceneDef.nodes || [];
+        const pending = [];
+        for(let i = 0, il = nodeIds.length; i < il; i++)pending.push(parser.getDependency("node", nodeIds[i]));
+        return Promise.all(pending).then(function(nodes) {
+            for(let i = 0, il = nodes.length; i < il; i++)scene.add(nodes[i]);
+            // Removes dangling associations, associations that reference a node that
+            // didn't make it into the scene.
+            const reduceAssociations = (node)=>{
+                const reducedAssociations = new Map();
+                for (const [key, value] of parser.associations)if (key instanceof (0, _three.Material) || key instanceof (0, _three.Texture)) reducedAssociations.set(key, value);
+                node.traverse((node)=>{
+                    const mappings = parser.associations.get(node);
+                    if (mappings != null) reducedAssociations.set(node, mappings);
+                });
+                return reducedAssociations;
+            };
+            parser.associations = reduceAssociations(scene);
+            return scene;
+        });
+    }
+    _createAnimationTracks(node, inputAccessor, outputAccessor, sampler, target) {
+        const tracks = [];
+        const targetName = node.name ? node.name : node.uuid;
+        const targetNames = [];
+        if (PATH_PROPERTIES[target.path] === PATH_PROPERTIES.weights) node.traverse(function(object) {
+            if (object.morphTargetInfluences) targetNames.push(object.name ? object.name : object.uuid);
+        });
+        else targetNames.push(targetName);
+        let TypedKeyframeTrack;
+        switch(PATH_PROPERTIES[target.path]){
+            case PATH_PROPERTIES.weights:
+                TypedKeyframeTrack = (0, _three.NumberKeyframeTrack);
+                break;
+            case PATH_PROPERTIES.rotation:
+                TypedKeyframeTrack = (0, _three.QuaternionKeyframeTrack);
+                break;
+            case PATH_PROPERTIES.position:
+            case PATH_PROPERTIES.scale:
+                TypedKeyframeTrack = (0, _three.VectorKeyframeTrack);
+                break;
+            default:
+                switch(outputAccessor.itemSize){
+                    case 1:
+                        TypedKeyframeTrack = (0, _three.NumberKeyframeTrack);
+                        break;
+                    case 2:
+                    case 3:
+                    default:
+                        TypedKeyframeTrack = (0, _three.VectorKeyframeTrack);
+                        break;
+                }
+                break;
+        }
+        const interpolation = sampler.interpolation !== undefined ? INTERPOLATION[sampler.interpolation] : (0, _three.InterpolateLinear);
+        const outputArray = this._getArrayFromAccessor(outputAccessor);
+        for(let j = 0, jl = targetNames.length; j < jl; j++){
+            const track = new TypedKeyframeTrack(targetNames[j] + "." + PATH_PROPERTIES[target.path], inputAccessor.array, outputArray, interpolation);
+            // Override interpolation with custom factory method.
+            if (sampler.interpolation === "CUBICSPLINE") this._createCubicSplineTrackInterpolant(track);
+            tracks.push(track);
+        }
+        return tracks;
+    }
+    _getArrayFromAccessor(accessor) {
+        let outputArray = accessor.array;
+        if (accessor.normalized) {
+            const scale = getNormalizedComponentScale(outputArray.constructor);
+            const scaled = new Float32Array(outputArray.length);
+            for(let j = 0, jl = outputArray.length; j < jl; j++)scaled[j] = outputArray[j] * scale;
+            outputArray = scaled;
+        }
+        return outputArray;
+    }
+    _createCubicSplineTrackInterpolant(track) {
+        track.createInterpolant = function InterpolantFactoryMethodGLTFCubicSpline(result) {
+            // A CUBICSPLINE keyframe in glTF has three output values for each input value,
+            // representing inTangent, splineVertex, and outTangent. As a result, track.getValueSize()
+            // must be divided by three to get the interpolant's sampleSize argument.
+            const interpolantType = this instanceof (0, _three.QuaternionKeyframeTrack) ? GLTFCubicSplineQuaternionInterpolant : GLTFCubicSplineInterpolant;
+            return new interpolantType(this.times, this.values, this.getValueSize() / 3, result);
+        };
+        // Mark as CUBICSPLINE. `track.getInterpolation()` doesn't support custom interpolants.
+        track.createInterpolant.isInterpolantFactoryMethodGLTFCubicSpline = true;
+    }
+}
+/**
+ * @param {BufferGeometry} geometry
+ * @param {GLTF.Primitive} primitiveDef
+ * @param {GLTFParser} parser
+ */ function computeBounds(geometry, primitiveDef, parser) {
+    const attributes = primitiveDef.attributes;
+    const box = new (0, _three.Box3)();
+    if (attributes.POSITION !== undefined) {
+        const accessor = parser.json.accessors[attributes.POSITION];
+        const min = accessor.min;
+        const max = accessor.max;
+        // glTF requires 'min' and 'max', but VRM (which extends glTF) currently ignores that requirement.
+        if (min !== undefined && max !== undefined) {
+            box.set(new (0, _three.Vector3)(min[0], min[1], min[2]), new (0, _three.Vector3)(max[0], max[1], max[2]));
+            if (accessor.normalized) {
+                const boxScale = getNormalizedComponentScale(WEBGL_COMPONENT_TYPES[accessor.componentType]);
+                box.min.multiplyScalar(boxScale);
+                box.max.multiplyScalar(boxScale);
+            }
+        } else {
+            console.warn("THREE.GLTFLoader: Missing min/max properties for accessor POSITION.");
+            return;
+        }
+    } else return;
+    const targets = primitiveDef.targets;
+    if (targets !== undefined) {
+        const maxDisplacement = new (0, _three.Vector3)();
+        const vector = new (0, _three.Vector3)();
+        for(let i = 0, il = targets.length; i < il; i++){
+            const target = targets[i];
+            if (target.POSITION !== undefined) {
+                const accessor = parser.json.accessors[target.POSITION];
+                const min = accessor.min;
+                const max = accessor.max;
+                // glTF requires 'min' and 'max', but VRM (which extends glTF) currently ignores that requirement.
+                if (min !== undefined && max !== undefined) {
+                    // we need to get max of absolute components because target weight is [-1,1]
+                    vector.setX(Math.max(Math.abs(min[0]), Math.abs(max[0])));
+                    vector.setY(Math.max(Math.abs(min[1]), Math.abs(max[1])));
+                    vector.setZ(Math.max(Math.abs(min[2]), Math.abs(max[2])));
+                    if (accessor.normalized) {
+                        const boxScale = getNormalizedComponentScale(WEBGL_COMPONENT_TYPES[accessor.componentType]);
+                        vector.multiplyScalar(boxScale);
+                    }
+                    // Note: this assumes that the sum of all weights is at most 1. This isn't quite correct - it's more conservative
+                    // to assume that each target can have a max weight of 1. However, for some use cases - notably, when morph targets
+                    // are used to implement key-frame animations and as such only two are active at a time - this results in very large
+                    // boxes. So for now we make a box that's sometimes a touch too small but is hopefully mostly of reasonable size.
+                    maxDisplacement.max(vector);
+                } else console.warn("THREE.GLTFLoader: Missing min/max properties for accessor POSITION.");
+            }
+        }
+        // As per comment above this box isn't conservative, but has a reasonable size for a very large number of morph targets.
+        box.expandByVector(maxDisplacement);
+    }
+    geometry.boundingBox = box;
+    const sphere = new (0, _three.Sphere)();
+    box.getCenter(sphere.center);
+    sphere.radius = box.min.distanceTo(box.max) / 2;
+    geometry.boundingSphere = sphere;
+}
+/**
+ * @param {BufferGeometry} geometry
+ * @param {GLTF.Primitive} primitiveDef
+ * @param {GLTFParser} parser
+ * @return {Promise<BufferGeometry>}
+ */ function addPrimitiveAttributes(geometry, primitiveDef, parser) {
+    const attributes = primitiveDef.attributes;
+    const pending = [];
+    function assignAttributeAccessor(accessorIndex, attributeName) {
+        return parser.getDependency("accessor", accessorIndex).then(function(accessor) {
+            geometry.setAttribute(attributeName, accessor);
+        });
+    }
+    for(const gltfAttributeName in attributes){
+        const threeAttributeName = ATTRIBUTES[gltfAttributeName] || gltfAttributeName.toLowerCase();
+        // Skip attributes already provided by e.g. Draco extension.
+        if (threeAttributeName in geometry.attributes) continue;
+        pending.push(assignAttributeAccessor(attributes[gltfAttributeName], threeAttributeName));
+    }
+    if (primitiveDef.indices !== undefined && !geometry.index) {
+        const accessor = parser.getDependency("accessor", primitiveDef.indices).then(function(accessor) {
+            geometry.setIndex(accessor);
+        });
+        pending.push(accessor);
+    }
+    if ((0, _three.ColorManagement).workingColorSpace !== (0, _three.LinearSRGBColorSpace) && "COLOR_0" in attributes) console.warn(`THREE.GLTFLoader: Converting vertex colors from "srgb-linear" to "${(0, _three.ColorManagement).workingColorSpace}" not supported.`);
+    assignExtrasToUserData(geometry, primitiveDef);
+    computeBounds(geometry, primitiveDef, parser);
+    return Promise.all(pending).then(function() {
+        return primitiveDef.targets !== undefined ? addMorphTargets(geometry, primitiveDef.targets, parser) : geometry;
+    });
+}
+
+},{"three":"ktPTu","../utils/BufferGeometryUtils.js":"5o7x9","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5o7x9":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+/**
+ * @param {BufferAttribute}
+ * @return {BufferAttribute}
+ */ parcelHelpers.export(exports, "deepCloneAttribute", ()=>deepCloneAttribute);
+// returns a new, non-interleaved version of the provided attribute
+parcelHelpers.export(exports, "deinterleaveAttribute", ()=>deinterleaveAttribute);
+// deinterleaves all attributes on the geometry
+parcelHelpers.export(exports, "deinterleaveGeometry", ()=>deinterleaveGeometry);
+parcelHelpers.export(exports, "computeMikkTSpaceTangents", ()=>computeMikkTSpaceTangents);
+parcelHelpers.export(exports, "mergeGeometries", ()=>mergeGeometries);
+parcelHelpers.export(exports, "mergeAttributes", ()=>mergeAttributes);
+parcelHelpers.export(exports, "interleaveAttributes", ()=>interleaveAttributes);
+parcelHelpers.export(exports, "estimateBytesUsed", ()=>estimateBytesUsed);
+parcelHelpers.export(exports, "mergeVertices", ()=>mergeVertices);
+parcelHelpers.export(exports, "toTrianglesDrawMode", ()=>toTrianglesDrawMode);
+parcelHelpers.export(exports, "computeMorphedAttributes", ()=>computeMorphedAttributes);
+parcelHelpers.export(exports, "mergeGroups", ()=>mergeGroups);
+parcelHelpers.export(exports, "toCreasedNormals", ()=>toCreasedNormals);
+var _three = require("three");
+function computeMikkTSpaceTangents(geometry, MikkTSpace, negateSign = true) {
+    if (!MikkTSpace || !MikkTSpace.isReady) throw new Error("BufferGeometryUtils: Initialized MikkTSpace library required.");
+    if (!geometry.hasAttribute("position") || !geometry.hasAttribute("normal") || !geometry.hasAttribute("uv")) throw new Error('BufferGeometryUtils: Tangents require "position", "normal", and "uv" attributes.');
+    function getAttributeArray(attribute) {
+        if (attribute.normalized || attribute.isInterleavedBufferAttribute) {
+            const dstArray = new Float32Array(attribute.count * attribute.itemSize);
+            for(let i = 0, j = 0; i < attribute.count; i++){
+                dstArray[j++] = attribute.getX(i);
+                dstArray[j++] = attribute.getY(i);
+                if (attribute.itemSize > 2) dstArray[j++] = attribute.getZ(i);
+            }
+            return dstArray;
+        }
+        if (attribute.array instanceof Float32Array) return attribute.array;
+        return new Float32Array(attribute.array);
+    }
+    // MikkTSpace algorithm requires non-indexed input.
+    const _geometry = geometry.index ? geometry.toNonIndexed() : geometry;
+    // Compute vertex tangents.
+    const tangents = MikkTSpace.generateTangents(getAttributeArray(_geometry.attributes.position), getAttributeArray(_geometry.attributes.normal), getAttributeArray(_geometry.attributes.uv));
+    // Texture coordinate convention of glTF differs from the apparent
+    // default of the MikkTSpace library; .w component must be flipped.
+    if (negateSign) for(let i = 3; i < tangents.length; i += 4)tangents[i] *= -1;
+    //
+    _geometry.setAttribute("tangent", new (0, _three.BufferAttribute)(tangents, 4));
+    if (geometry !== _geometry) geometry.copy(_geometry);
+    return geometry;
+}
+/**
+ * @param  {Array<BufferGeometry>} geometries
+ * @param  {Boolean} useGroups
+ * @return {BufferGeometry}
+ */ function mergeGeometries(geometries, useGroups = false) {
+    const isIndexed = geometries[0].index !== null;
+    const attributesUsed = new Set(Object.keys(geometries[0].attributes));
+    const morphAttributesUsed = new Set(Object.keys(geometries[0].morphAttributes));
+    const attributes = {};
+    const morphAttributes = {};
+    const morphTargetsRelative = geometries[0].morphTargetsRelative;
+    const mergedGeometry = new (0, _three.BufferGeometry)();
+    let offset = 0;
+    for(let i = 0; i < geometries.length; ++i){
+        const geometry = geometries[i];
+        let attributesCount = 0;
+        // ensure that all geometries are indexed, or none
+        if (isIndexed !== (geometry.index !== null)) {
+            console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.");
+            return null;
+        }
+        // gather attributes, exit early if they're different
+        for(const name in geometry.attributes){
+            if (!attributesUsed.has(name)) {
+                console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.');
+                return null;
+            }
+            if (attributes[name] === undefined) attributes[name] = [];
+            attributes[name].push(geometry.attributes[name]);
+            attributesCount++;
+        }
+        // ensure geometries have the same number of attributes
+        if (attributesCount !== attributesUsed.size) {
+            console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". Make sure all geometries have the same number of attributes.");
+            return null;
+        }
+        // gather morph attributes, exit early if they're different
+        if (morphTargetsRelative !== geometry.morphTargetsRelative) {
+            console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". .morphTargetsRelative must be consistent throughout all geometries.");
+            return null;
+        }
+        for(const name in geometry.morphAttributes){
+            if (!morphAttributesUsed.has(name)) {
+                console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ".  .morphAttributes must be consistent throughout all geometries.");
+                return null;
+            }
+            if (morphAttributes[name] === undefined) morphAttributes[name] = [];
+            morphAttributes[name].push(geometry.morphAttributes[name]);
+        }
+        if (useGroups) {
+            let count;
+            if (isIndexed) count = geometry.index.count;
+            else if (geometry.attributes.position !== undefined) count = geometry.attributes.position.count;
+            else {
+                console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". The geometry must have either an index or a position attribute");
+                return null;
+            }
+            mergedGeometry.addGroup(offset, count, i);
+            offset += count;
+        }
+    }
+    // merge indices
+    if (isIndexed) {
+        let indexOffset = 0;
+        const mergedIndex = [];
+        for(let i = 0; i < geometries.length; ++i){
+            const index = geometries[i].index;
+            for(let j = 0; j < index.count; ++j)mergedIndex.push(index.getX(j) + indexOffset);
+            indexOffset += geometries[i].attributes.position.count;
+        }
+        mergedGeometry.setIndex(mergedIndex);
+    }
+    // merge attributes
+    for(const name in attributes){
+        const mergedAttribute = mergeAttributes(attributes[name]);
+        if (!mergedAttribute) {
+            console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " + name + " attribute.");
+            return null;
+        }
+        mergedGeometry.setAttribute(name, mergedAttribute);
+    }
+    // merge morph attributes
+    for(const name in morphAttributes){
+        const numMorphTargets = morphAttributes[name][0].length;
+        if (numMorphTargets === 0) break;
+        mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {};
+        mergedGeometry.morphAttributes[name] = [];
+        for(let i = 0; i < numMorphTargets; ++i){
+            const morphAttributesToMerge = [];
+            for(let j = 0; j < morphAttributes[name].length; ++j)morphAttributesToMerge.push(morphAttributes[name][j][i]);
+            const mergedMorphAttribute = mergeAttributes(morphAttributesToMerge);
+            if (!mergedMorphAttribute) {
+                console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " + name + " morphAttribute.");
+                return null;
+            }
+            mergedGeometry.morphAttributes[name].push(mergedMorphAttribute);
+        }
+    }
+    return mergedGeometry;
+}
+/**
+ * @param {Array<BufferAttribute>} attributes
+ * @return {BufferAttribute}
+ */ function mergeAttributes(attributes) {
+    let TypedArray;
+    let itemSize;
+    let normalized;
+    let gpuType = -1;
+    let arrayLength = 0;
+    for(let i = 0; i < attributes.length; ++i){
+        const attribute = attributes[i];
+        if (TypedArray === undefined) TypedArray = attribute.array.constructor;
+        if (TypedArray !== attribute.array.constructor) {
+            console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.");
+            return null;
+        }
+        if (itemSize === undefined) itemSize = attribute.itemSize;
+        if (itemSize !== attribute.itemSize) {
+            console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.");
+            return null;
+        }
+        if (normalized === undefined) normalized = attribute.normalized;
+        if (normalized !== attribute.normalized) {
+            console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.");
+            return null;
+        }
+        if (gpuType === -1) gpuType = attribute.gpuType;
+        if (gpuType !== attribute.gpuType) {
+            console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.gpuType must be consistent across matching attributes.");
+            return null;
+        }
+        arrayLength += attribute.count * itemSize;
+    }
+    const array = new TypedArray(arrayLength);
+    const result = new (0, _three.BufferAttribute)(array, itemSize, normalized);
+    let offset = 0;
+    for(let i = 0; i < attributes.length; ++i){
+        const attribute = attributes[i];
+        if (attribute.isInterleavedBufferAttribute) {
+            const tupleOffset = offset / itemSize;
+            for(let j = 0, l = attribute.count; j < l; j++)for(let c = 0; c < itemSize; c++){
+                const value = attribute.getComponent(j, c);
+                result.setComponent(j + tupleOffset, c, value);
+            }
+        } else array.set(attribute.array, offset);
+        offset += attribute.count * itemSize;
+    }
+    if (gpuType !== undefined) result.gpuType = gpuType;
+    return result;
+}
+function deepCloneAttribute(attribute) {
+    if (attribute.isInstancedInterleavedBufferAttribute || attribute.isInterleavedBufferAttribute) return deinterleaveAttribute(attribute);
+    if (attribute.isInstancedBufferAttribute) return new (0, _three.InstancedBufferAttribute)().copy(attribute);
+    return new (0, _three.BufferAttribute)().copy(attribute);
+}
+/**
+ * @param {Array<BufferAttribute>} attributes
+ * @return {Array<InterleavedBufferAttribute>}
+ */ function interleaveAttributes(attributes) {
+    // Interleaves the provided attributes into an InterleavedBuffer and returns
+    // a set of InterleavedBufferAttributes for each attribute
+    let TypedArray;
+    let arrayLength = 0;
+    let stride = 0;
+    // calculate the length and type of the interleavedBuffer
+    for(let i = 0, l = attributes.length; i < l; ++i){
+        const attribute = attributes[i];
+        if (TypedArray === undefined) TypedArray = attribute.array.constructor;
+        if (TypedArray !== attribute.array.constructor) {
+            console.error("AttributeBuffers of different types cannot be interleaved");
+            return null;
+        }
+        arrayLength += attribute.array.length;
+        stride += attribute.itemSize;
+    }
+    // Create the set of buffer attributes
+    const interleavedBuffer = new (0, _three.InterleavedBuffer)(new TypedArray(arrayLength), stride);
+    let offset = 0;
+    const res = [];
+    const getters = [
+        "getX",
+        "getY",
+        "getZ",
+        "getW"
+    ];
+    const setters = [
+        "setX",
+        "setY",
+        "setZ",
+        "setW"
+    ];
+    for(let j = 0, l = attributes.length; j < l; j++){
+        const attribute = attributes[j];
+        const itemSize = attribute.itemSize;
+        const count = attribute.count;
+        const iba = new (0, _three.InterleavedBufferAttribute)(interleavedBuffer, itemSize, offset, attribute.normalized);
+        res.push(iba);
+        offset += itemSize;
+        // Move the data for each attribute into the new interleavedBuffer
+        // at the appropriate offset
+        for(let c = 0; c < count; c++)for(let k = 0; k < itemSize; k++)iba[setters[k]](c, attribute[getters[k]](c));
+    }
+    return res;
+}
+function deinterleaveAttribute(attribute) {
+    const cons = attribute.data.array.constructor;
+    const count = attribute.count;
+    const itemSize = attribute.itemSize;
+    const normalized = attribute.normalized;
+    const array = new cons(count * itemSize);
+    let newAttribute;
+    if (attribute.isInstancedInterleavedBufferAttribute) newAttribute = new (0, _three.InstancedBufferAttribute)(array, itemSize, normalized, attribute.meshPerAttribute);
+    else newAttribute = new (0, _three.BufferAttribute)(array, itemSize, normalized);
+    for(let i = 0; i < count; i++){
+        newAttribute.setX(i, attribute.getX(i));
+        if (itemSize >= 2) newAttribute.setY(i, attribute.getY(i));
+        if (itemSize >= 3) newAttribute.setZ(i, attribute.getZ(i));
+        if (itemSize >= 4) newAttribute.setW(i, attribute.getW(i));
+    }
+    return newAttribute;
+}
+function deinterleaveGeometry(geometry) {
+    const attributes = geometry.attributes;
+    const morphTargets = geometry.morphTargets;
+    const attrMap = new Map();
+    for(const key in attributes){
+        const attr = attributes[key];
+        if (attr.isInterleavedBufferAttribute) {
+            if (!attrMap.has(attr)) attrMap.set(attr, deinterleaveAttribute(attr));
+            attributes[key] = attrMap.get(attr);
+        }
+    }
+    for(const key in morphTargets){
+        const attr = morphTargets[key];
+        if (attr.isInterleavedBufferAttribute) {
+            if (!attrMap.has(attr)) attrMap.set(attr, deinterleaveAttribute(attr));
+            morphTargets[key] = attrMap.get(attr);
+        }
+    }
+}
+/**
+ * @param {BufferGeometry} geometry
+ * @return {number}
+ */ function estimateBytesUsed(geometry) {
+    // Return the estimated memory used by this geometry in bytes
+    // Calculate using itemSize, count, and BYTES_PER_ELEMENT to account
+    // for InterleavedBufferAttributes.
+    let mem = 0;
+    for(const name in geometry.attributes){
+        const attr = geometry.getAttribute(name);
+        mem += attr.count * attr.itemSize * attr.array.BYTES_PER_ELEMENT;
+    }
+    const indices = geometry.getIndex();
+    mem += indices ? indices.count * indices.itemSize * indices.array.BYTES_PER_ELEMENT : 0;
+    return mem;
+}
+/**
+ * @param {BufferGeometry} geometry
+ * @param {number} tolerance
+ * @return {BufferGeometry}
+ */ function mergeVertices(geometry, tolerance = 1e-4) {
+    tolerance = Math.max(tolerance, Number.EPSILON);
+    // Generate an index buffer if the geometry doesn't have one, or optimize it
+    // if it's already available.
+    const hashToIndex = {};
+    const indices = geometry.getIndex();
+    const positions = geometry.getAttribute("position");
+    const vertexCount = indices ? indices.count : positions.count;
+    // next value for triangle indices
+    let nextIndex = 0;
+    // attributes and new attribute arrays
+    const attributeNames = Object.keys(geometry.attributes);
+    const tmpAttributes = {};
+    const tmpMorphAttributes = {};
+    const newIndices = [];
+    const getters = [
+        "getX",
+        "getY",
+        "getZ",
+        "getW"
+    ];
+    const setters = [
+        "setX",
+        "setY",
+        "setZ",
+        "setW"
+    ];
+    // Initialize the arrays, allocating space conservatively. Extra
+    // space will be trimmed in the last step.
+    for(let i = 0, l = attributeNames.length; i < l; i++){
+        const name = attributeNames[i];
+        const attr = geometry.attributes[name];
+        tmpAttributes[name] = new attr.constructor(new attr.array.constructor(attr.count * attr.itemSize), attr.itemSize, attr.normalized);
+        const morphAttributes = geometry.morphAttributes[name];
+        if (morphAttributes) {
+            if (!tmpMorphAttributes[name]) tmpMorphAttributes[name] = [];
+            morphAttributes.forEach((morphAttr, i)=>{
+                const array = new morphAttr.array.constructor(morphAttr.count * morphAttr.itemSize);
+                tmpMorphAttributes[name][i] = new morphAttr.constructor(array, morphAttr.itemSize, morphAttr.normalized);
+            });
+        }
+    }
+    // convert the error tolerance to an amount of decimal places to truncate to
+    const halfTolerance = tolerance * 0.5;
+    const exponent = Math.log10(1 / tolerance);
+    const hashMultiplier = Math.pow(10, exponent);
+    const hashAdditive = halfTolerance * hashMultiplier;
+    for(let i = 0; i < vertexCount; i++){
+        const index = indices ? indices.getX(i) : i;
+        // Generate a hash for the vertex attributes at the current index 'i'
+        let hash = "";
+        for(let j = 0, l = attributeNames.length; j < l; j++){
+            const name = attributeNames[j];
+            const attribute = geometry.getAttribute(name);
+            const itemSize = attribute.itemSize;
+            for(let k = 0; k < itemSize; k++)// double tilde truncates the decimal value
+            hash += `${~~(attribute[getters[k]](index) * hashMultiplier + hashAdditive)},`;
+        }
+        // Add another reference to the vertex if it's already
+        // used by another index
+        if (hash in hashToIndex) newIndices.push(hashToIndex[hash]);
+        else {
+            // copy data to the new index in the temporary attributes
+            for(let j = 0, l = attributeNames.length; j < l; j++){
+                const name = attributeNames[j];
+                const attribute = geometry.getAttribute(name);
+                const morphAttributes = geometry.morphAttributes[name];
+                const itemSize = attribute.itemSize;
+                const newArray = tmpAttributes[name];
+                const newMorphArrays = tmpMorphAttributes[name];
+                for(let k = 0; k < itemSize; k++){
+                    const getterFunc = getters[k];
+                    const setterFunc = setters[k];
+                    newArray[setterFunc](nextIndex, attribute[getterFunc](index));
+                    if (morphAttributes) for(let m = 0, ml = morphAttributes.length; m < ml; m++)newMorphArrays[m][setterFunc](nextIndex, morphAttributes[m][getterFunc](index));
+                }
+            }
+            hashToIndex[hash] = nextIndex;
+            newIndices.push(nextIndex);
+            nextIndex++;
+        }
+    }
+    // generate result BufferGeometry
+    const result = geometry.clone();
+    for(const name in geometry.attributes){
+        const tmpAttribute = tmpAttributes[name];
+        result.setAttribute(name, new tmpAttribute.constructor(tmpAttribute.array.slice(0, nextIndex * tmpAttribute.itemSize), tmpAttribute.itemSize, tmpAttribute.normalized));
+        if (!(name in tmpMorphAttributes)) continue;
+        for(let j = 0; j < tmpMorphAttributes[name].length; j++){
+            const tmpMorphAttribute = tmpMorphAttributes[name][j];
+            result.morphAttributes[name][j] = new tmpMorphAttribute.constructor(tmpMorphAttribute.array.slice(0, nextIndex * tmpMorphAttribute.itemSize), tmpMorphAttribute.itemSize, tmpMorphAttribute.normalized);
+        }
+    }
+    // indices
+    result.setIndex(newIndices);
+    return result;
+}
+/**
+ * @param {BufferGeometry} geometry
+ * @param {number} drawMode
+ * @return {BufferGeometry}
+ */ function toTrianglesDrawMode(geometry, drawMode) {
+    if (drawMode === (0, _three.TrianglesDrawMode)) {
+        console.warn("THREE.BufferGeometryUtils.toTrianglesDrawMode(): Geometry already defined as triangles.");
+        return geometry;
+    }
+    if (drawMode === (0, _three.TriangleFanDrawMode) || drawMode === (0, _three.TriangleStripDrawMode)) {
+        let index = geometry.getIndex();
+        // generate index if not present
+        if (index === null) {
+            const indices = [];
+            const position = geometry.getAttribute("position");
+            if (position !== undefined) {
+                for(let i = 0; i < position.count; i++)indices.push(i);
+                geometry.setIndex(indices);
+                index = geometry.getIndex();
+            } else {
+                console.error("THREE.BufferGeometryUtils.toTrianglesDrawMode(): Undefined position attribute. Processing not possible.");
+                return geometry;
+            }
+        }
+        //
+        const numberOfTriangles = index.count - 2;
+        const newIndices = [];
+        if (drawMode === (0, _three.TriangleFanDrawMode)) // gl.TRIANGLE_FAN
+        for(let i = 1; i <= numberOfTriangles; i++){
+            newIndices.push(index.getX(0));
+            newIndices.push(index.getX(i));
+            newIndices.push(index.getX(i + 1));
+        }
+        else {
+            // gl.TRIANGLE_STRIP
+            for(let i = 0; i < numberOfTriangles; i++)if (i % 2 === 0) {
+                newIndices.push(index.getX(i));
+                newIndices.push(index.getX(i + 1));
+                newIndices.push(index.getX(i + 2));
+            } else {
+                newIndices.push(index.getX(i + 2));
+                newIndices.push(index.getX(i + 1));
+                newIndices.push(index.getX(i));
+            }
+        }
+        if (newIndices.length / 3 !== numberOfTriangles) console.error("THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unable to generate correct amount of triangles.");
+        // build final geometry
+        const newGeometry = geometry.clone();
+        newGeometry.setIndex(newIndices);
+        newGeometry.clearGroups();
+        return newGeometry;
+    } else {
+        console.error("THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unknown draw mode:", drawMode);
+        return geometry;
+    }
+}
+/**
+ * Calculates the morphed attributes of a morphed/skinned BufferGeometry.
+ * Helpful for Raytracing or Decals.
+ * @param {Mesh | Line | Points} object An instance of Mesh, Line or Points.
+ * @return {Object} An Object with original position/normal attributes and morphed ones.
+ */ function computeMorphedAttributes(object) {
+    const _vA = new (0, _three.Vector3)();
+    const _vB = new (0, _three.Vector3)();
+    const _vC = new (0, _three.Vector3)();
+    const _tempA = new (0, _three.Vector3)();
+    const _tempB = new (0, _three.Vector3)();
+    const _tempC = new (0, _three.Vector3)();
+    const _morphA = new (0, _three.Vector3)();
+    const _morphB = new (0, _three.Vector3)();
+    const _morphC = new (0, _three.Vector3)();
+    function _calculateMorphedAttributeData(object, attribute, morphAttribute, morphTargetsRelative, a, b, c, modifiedAttributeArray) {
+        _vA.fromBufferAttribute(attribute, a);
+        _vB.fromBufferAttribute(attribute, b);
+        _vC.fromBufferAttribute(attribute, c);
+        const morphInfluences = object.morphTargetInfluences;
+        if (morphAttribute && morphInfluences) {
+            _morphA.set(0, 0, 0);
+            _morphB.set(0, 0, 0);
+            _morphC.set(0, 0, 0);
+            for(let i = 0, il = morphAttribute.length; i < il; i++){
+                const influence = morphInfluences[i];
+                const morph = morphAttribute[i];
+                if (influence === 0) continue;
+                _tempA.fromBufferAttribute(morph, a);
+                _tempB.fromBufferAttribute(morph, b);
+                _tempC.fromBufferAttribute(morph, c);
+                if (morphTargetsRelative) {
+                    _morphA.addScaledVector(_tempA, influence);
+                    _morphB.addScaledVector(_tempB, influence);
+                    _morphC.addScaledVector(_tempC, influence);
+                } else {
+                    _morphA.addScaledVector(_tempA.sub(_vA), influence);
+                    _morphB.addScaledVector(_tempB.sub(_vB), influence);
+                    _morphC.addScaledVector(_tempC.sub(_vC), influence);
+                }
+            }
+            _vA.add(_morphA);
+            _vB.add(_morphB);
+            _vC.add(_morphC);
+        }
+        if (object.isSkinnedMesh) {
+            object.applyBoneTransform(a, _vA);
+            object.applyBoneTransform(b, _vB);
+            object.applyBoneTransform(c, _vC);
+        }
+        modifiedAttributeArray[a * 3 + 0] = _vA.x;
+        modifiedAttributeArray[a * 3 + 1] = _vA.y;
+        modifiedAttributeArray[a * 3 + 2] = _vA.z;
+        modifiedAttributeArray[b * 3 + 0] = _vB.x;
+        modifiedAttributeArray[b * 3 + 1] = _vB.y;
+        modifiedAttributeArray[b * 3 + 2] = _vB.z;
+        modifiedAttributeArray[c * 3 + 0] = _vC.x;
+        modifiedAttributeArray[c * 3 + 1] = _vC.y;
+        modifiedAttributeArray[c * 3 + 2] = _vC.z;
+    }
+    const geometry = object.geometry;
+    const material = object.material;
+    let a, b, c;
+    const index = geometry.index;
+    const positionAttribute = geometry.attributes.position;
+    const morphPosition = geometry.morphAttributes.position;
+    const morphTargetsRelative = geometry.morphTargetsRelative;
+    const normalAttribute = geometry.attributes.normal;
+    const morphNormal = geometry.morphAttributes.position;
+    const groups = geometry.groups;
+    const drawRange = geometry.drawRange;
+    let i, j, il, jl;
+    let group;
+    let start, end;
+    const modifiedPosition = new Float32Array(positionAttribute.count * positionAttribute.itemSize);
+    const modifiedNormal = new Float32Array(normalAttribute.count * normalAttribute.itemSize);
+    if (index !== null) {
+        // indexed buffer geometry
+        if (Array.isArray(material)) for(i = 0, il = groups.length; i < il; i++){
+            group = groups[i];
+            start = Math.max(group.start, drawRange.start);
+            end = Math.min(group.start + group.count, drawRange.start + drawRange.count);
+            for(j = start, jl = end; j < jl; j += 3){
+                a = index.getX(j);
+                b = index.getX(j + 1);
+                c = index.getX(j + 2);
+                _calculateMorphedAttributeData(object, positionAttribute, morphPosition, morphTargetsRelative, a, b, c, modifiedPosition);
+                _calculateMorphedAttributeData(object, normalAttribute, morphNormal, morphTargetsRelative, a, b, c, modifiedNormal);
+            }
+        }
+        else {
+            start = Math.max(0, drawRange.start);
+            end = Math.min(index.count, drawRange.start + drawRange.count);
+            for(i = start, il = end; i < il; i += 3){
+                a = index.getX(i);
+                b = index.getX(i + 1);
+                c = index.getX(i + 2);
+                _calculateMorphedAttributeData(object, positionAttribute, morphPosition, morphTargetsRelative, a, b, c, modifiedPosition);
+                _calculateMorphedAttributeData(object, normalAttribute, morphNormal, morphTargetsRelative, a, b, c, modifiedNormal);
+            }
+        }
+    } else {
+        // non-indexed buffer geometry
+        if (Array.isArray(material)) for(i = 0, il = groups.length; i < il; i++){
+            group = groups[i];
+            start = Math.max(group.start, drawRange.start);
+            end = Math.min(group.start + group.count, drawRange.start + drawRange.count);
+            for(j = start, jl = end; j < jl; j += 3){
+                a = j;
+                b = j + 1;
+                c = j + 2;
+                _calculateMorphedAttributeData(object, positionAttribute, morphPosition, morphTargetsRelative, a, b, c, modifiedPosition);
+                _calculateMorphedAttributeData(object, normalAttribute, morphNormal, morphTargetsRelative, a, b, c, modifiedNormal);
+            }
+        }
+        else {
+            start = Math.max(0, drawRange.start);
+            end = Math.min(positionAttribute.count, drawRange.start + drawRange.count);
+            for(i = start, il = end; i < il; i += 3){
+                a = i;
+                b = i + 1;
+                c = i + 2;
+                _calculateMorphedAttributeData(object, positionAttribute, morphPosition, morphTargetsRelative, a, b, c, modifiedPosition);
+                _calculateMorphedAttributeData(object, normalAttribute, morphNormal, morphTargetsRelative, a, b, c, modifiedNormal);
+            }
+        }
+    }
+    const morphedPositionAttribute = new (0, _three.Float32BufferAttribute)(modifiedPosition, 3);
+    const morphedNormalAttribute = new (0, _three.Float32BufferAttribute)(modifiedNormal, 3);
+    return {
+        positionAttribute: positionAttribute,
+        normalAttribute: normalAttribute,
+        morphedPositionAttribute: morphedPositionAttribute,
+        morphedNormalAttribute: morphedNormalAttribute
+    };
+}
+function mergeGroups(geometry) {
+    if (geometry.groups.length === 0) {
+        console.warn("THREE.BufferGeometryUtils.mergeGroups(): No groups are defined. Nothing to merge.");
+        return geometry;
+    }
+    let groups = geometry.groups;
+    // sort groups by material index
+    groups = groups.sort((a, b)=>{
+        if (a.materialIndex !== b.materialIndex) return a.materialIndex - b.materialIndex;
+        return a.start - b.start;
+    });
+    // create index for non-indexed geometries
+    if (geometry.getIndex() === null) {
+        const positionAttribute = geometry.getAttribute("position");
+        const indices = [];
+        for(let i = 0; i < positionAttribute.count; i += 3)indices.push(i, i + 1, i + 2);
+        geometry.setIndex(indices);
+    }
+    // sort index
+    const index = geometry.getIndex();
+    const newIndices = [];
+    for(let i = 0; i < groups.length; i++){
+        const group = groups[i];
+        const groupStart = group.start;
+        const groupLength = groupStart + group.count;
+        for(let j = groupStart; j < groupLength; j++)newIndices.push(index.getX(j));
+    }
+    geometry.dispose(); // Required to force buffer recreation
+    geometry.setIndex(newIndices);
+    // update groups indices
+    let start = 0;
+    for(let i = 0; i < groups.length; i++){
+        const group = groups[i];
+        group.start = start;
+        start += group.count;
+    }
+    // merge groups
+    let currentGroup = groups[0];
+    geometry.groups = [
+        currentGroup
+    ];
+    for(let i = 1; i < groups.length; i++){
+        const group = groups[i];
+        if (currentGroup.materialIndex === group.materialIndex) currentGroup.count += group.count;
+        else {
+            currentGroup = group;
+            geometry.groups.push(currentGroup);
+        }
+    }
+    return geometry;
+}
+/**
+ * Modifies the supplied geometry if it is non-indexed, otherwise creates a new,
+ * non-indexed geometry. Returns the geometry with smooth normals everywhere except
+ * faces that meet at an angle greater than the crease angle.
+ *
+ * @param {BufferGeometry} geometry
+ * @param {number} [creaseAngle]
+ * @return {BufferGeometry}
+ */ function toCreasedNormals(geometry, creaseAngle = Math.PI / 3 /* 60 degrees */ ) {
+    const creaseDot = Math.cos(creaseAngle);
+    const hashMultiplier = (1 + 1e-10) * 1e2;
+    // reusable vectors
+    const verts = [
+        new (0, _three.Vector3)(),
+        new (0, _three.Vector3)(),
+        new (0, _three.Vector3)()
+    ];
+    const tempVec1 = new (0, _three.Vector3)();
+    const tempVec2 = new (0, _three.Vector3)();
+    const tempNorm = new (0, _three.Vector3)();
+    const tempNorm2 = new (0, _three.Vector3)();
+    // hashes a vector
+    function hashVertex(v) {
+        const x = ~~(v.x * hashMultiplier);
+        const y = ~~(v.y * hashMultiplier);
+        const z = ~~(v.z * hashMultiplier);
+        return `${x},${y},${z}`;
+    }
+    // BufferGeometry.toNonIndexed() warns if the geometry is non-indexed
+    // and returns the original geometry
+    const resultGeometry = geometry.index ? geometry.toNonIndexed() : geometry;
+    const posAttr = resultGeometry.attributes.position;
+    const vertexMap = {};
+    // find all the normals shared by commonly located vertices
+    for(let i = 0, l = posAttr.count / 3; i < l; i++){
+        const i3 = 3 * i;
+        const a = verts[0].fromBufferAttribute(posAttr, i3 + 0);
+        const b = verts[1].fromBufferAttribute(posAttr, i3 + 1);
+        const c = verts[2].fromBufferAttribute(posAttr, i3 + 2);
+        tempVec1.subVectors(c, b);
+        tempVec2.subVectors(a, b);
+        // add the normal to the map for all vertices
+        const normal = new (0, _three.Vector3)().crossVectors(tempVec1, tempVec2).normalize();
+        for(let n = 0; n < 3; n++){
+            const vert = verts[n];
+            const hash = hashVertex(vert);
+            if (!(hash in vertexMap)) vertexMap[hash] = [];
+            vertexMap[hash].push(normal);
+        }
+    }
+    // average normals from all vertices that share a common location if they are within the
+    // provided crease threshold
+    const normalArray = new Float32Array(posAttr.count * 3);
+    const normAttr = new (0, _three.BufferAttribute)(normalArray, 3, false);
+    for(let i = 0, l = posAttr.count / 3; i < l; i++){
+        // get the face normal for this vertex
+        const i3 = 3 * i;
+        const a = verts[0].fromBufferAttribute(posAttr, i3 + 0);
+        const b = verts[1].fromBufferAttribute(posAttr, i3 + 1);
+        const c = verts[2].fromBufferAttribute(posAttr, i3 + 2);
+        tempVec1.subVectors(c, b);
+        tempVec2.subVectors(a, b);
+        tempNorm.crossVectors(tempVec1, tempVec2).normalize();
+        // average all normals that meet the threshold and set the normal value
+        for(let n = 0; n < 3; n++){
+            const vert = verts[n];
+            const hash = hashVertex(vert);
+            const otherNormals = vertexMap[hash];
+            tempNorm2.set(0, 0, 0);
+            for(let k = 0, lk = otherNormals.length; k < lk; k++){
+                const otherNorm = otherNormals[k];
+                if (tempNorm.dot(otherNorm) > creaseDot) tempNorm2.add(otherNorm);
+            }
+            tempNorm2.normalize();
+            normAttr.setXYZ(i3 + n, tempNorm2.x, tempNorm2.y, tempNorm2.z);
+        }
+    }
+    resultGeometry.setAttribute("normal", normAttr);
+    return resultGeometry;
+}
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"e5jie":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "EffectComposer", ()=>EffectComposer);
+var _three = require("three");
+var _copyShaderJs = require("../shaders/CopyShader.js");
+var _shaderPassJs = require("./ShaderPass.js");
+var _maskPassJs = require("./MaskPass.js");
+class EffectComposer {
+    constructor(renderer, renderTarget){
+        this.renderer = renderer;
+        this._pixelRatio = renderer.getPixelRatio();
+        if (renderTarget === undefined) {
+            const size = renderer.getSize(new (0, _three.Vector2)());
+            this._width = size.width;
+            this._height = size.height;
+            renderTarget = new (0, _three.WebGLRenderTarget)(this._width * this._pixelRatio, this._height * this._pixelRatio, {
+                type: (0, _three.HalfFloatType)
+            });
+            renderTarget.texture.name = "EffectComposer.rt1";
+        } else {
+            this._width = renderTarget.width;
+            this._height = renderTarget.height;
+        }
+        this.renderTarget1 = renderTarget;
+        this.renderTarget2 = renderTarget.clone();
+        this.renderTarget2.texture.name = "EffectComposer.rt2";
+        this.writeBuffer = this.renderTarget1;
+        this.readBuffer = this.renderTarget2;
+        this.renderToScreen = true;
+        this.passes = [];
+        this.copyPass = new (0, _shaderPassJs.ShaderPass)((0, _copyShaderJs.CopyShader));
+        this.copyPass.material.blending = (0, _three.NoBlending);
+        this.clock = new (0, _three.Clock)();
+    }
+    swapBuffers() {
+        const tmp = this.readBuffer;
+        this.readBuffer = this.writeBuffer;
+        this.writeBuffer = tmp;
+    }
+    addPass(pass) {
+        this.passes.push(pass);
+        pass.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+    }
+    insertPass(pass, index) {
+        this.passes.splice(index, 0, pass);
+        pass.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+    }
+    removePass(pass) {
+        const index = this.passes.indexOf(pass);
+        if (index !== -1) this.passes.splice(index, 1);
+    }
+    isLastEnabledPass(passIndex) {
+        for(let i = passIndex + 1; i < this.passes.length; i++){
+            if (this.passes[i].enabled) return false;
+        }
+        return true;
+    }
+    render(deltaTime) {
+        // deltaTime value is in seconds
+        if (deltaTime === undefined) deltaTime = this.clock.getDelta();
+        const currentRenderTarget = this.renderer.getRenderTarget();
+        let maskActive = false;
+        for(let i = 0, il = this.passes.length; i < il; i++){
+            const pass = this.passes[i];
+            if (pass.enabled === false) continue;
+            pass.renderToScreen = this.renderToScreen && this.isLastEnabledPass(i);
+            pass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive);
+            if (pass.needsSwap) {
+                if (maskActive) {
+                    const context = this.renderer.getContext();
+                    const stencil = this.renderer.state.buffers.stencil;
+                    //context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
+                    stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
+                    this.copyPass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime);
+                    //context.stencilFunc( context.EQUAL, 1, 0xffffffff );
+                    stencil.setFunc(context.EQUAL, 1, 0xffffffff);
+                }
+                this.swapBuffers();
+            }
+            if ((0, _maskPassJs.MaskPass) !== undefined) {
+                if (pass instanceof (0, _maskPassJs.MaskPass)) maskActive = true;
+                else if (pass instanceof (0, _maskPassJs.ClearMaskPass)) maskActive = false;
+            }
+        }
+        this.renderer.setRenderTarget(currentRenderTarget);
+    }
+    reset(renderTarget) {
+        if (renderTarget === undefined) {
+            const size = this.renderer.getSize(new (0, _three.Vector2)());
+            this._pixelRatio = this.renderer.getPixelRatio();
+            this._width = size.width;
+            this._height = size.height;
+            renderTarget = this.renderTarget1.clone();
+            renderTarget.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+        }
+        this.renderTarget1.dispose();
+        this.renderTarget2.dispose();
+        this.renderTarget1 = renderTarget;
+        this.renderTarget2 = renderTarget.clone();
+        this.writeBuffer = this.renderTarget1;
+        this.readBuffer = this.renderTarget2;
+    }
+    setSize(width, height) {
+        this._width = width;
+        this._height = height;
+        const effectiveWidth = this._width * this._pixelRatio;
+        const effectiveHeight = this._height * this._pixelRatio;
+        this.renderTarget1.setSize(effectiveWidth, effectiveHeight);
+        this.renderTarget2.setSize(effectiveWidth, effectiveHeight);
+        for(let i = 0; i < this.passes.length; i++)this.passes[i].setSize(effectiveWidth, effectiveHeight);
+    }
+    setPixelRatio(pixelRatio) {
+        this._pixelRatio = pixelRatio;
+        this.setSize(this._width, this._height);
+    }
+    dispose() {
+        this.renderTarget1.dispose();
+        this.renderTarget2.dispose();
+        this.copyPass.dispose();
+    }
+}
+
+},{"three":"ktPTu","../shaders/CopyShader.js":"d0PyX","./ShaderPass.js":"5IxTN","./MaskPass.js":"jn76N","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"d0PyX":[function(require,module,exports) {
+/**
+ * Full-screen textured quad shader
+ */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "CopyShader", ()=>CopyShader);
+const CopyShader = {
+    name: "CopyShader",
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "opacity": {
+            value: 1.0
+        }
+    },
+    vertexShader: /* glsl */ `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+
+		uniform float opacity;
+
+		uniform sampler2D tDiffuse;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vec4 texel = texture2D( tDiffuse, vUv );
+			gl_FragColor = opacity * texel;
+
+
+		}`
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5IxTN":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "ShaderPass", ()=>ShaderPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+class ShaderPass extends (0, _passJs.Pass) {
+    constructor(shader, textureID){
+        super();
+        this.textureID = textureID !== undefined ? textureID : "tDiffuse";
+        if (shader instanceof (0, _three.ShaderMaterial)) {
+            this.uniforms = shader.uniforms;
+            this.material = shader;
+        } else if (shader) {
+            this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
+            this.material = new (0, _three.ShaderMaterial)({
+                name: shader.name !== undefined ? shader.name : "unspecified",
+                defines: Object.assign({}, shader.defines),
+                uniforms: this.uniforms,
+                vertexShader: shader.vertexShader,
+                fragmentShader: shader.fragmentShader
+            });
+        }
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        if (this.uniforms[this.textureID]) this.uniforms[this.textureID].value = readBuffer.texture;
+        this.fsQuad.material = this.material;
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
+            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+            this.fsQuad.render(renderer);
+        }
+    }
+    dispose() {
+        this.material.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i2IfB":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Pass", ()=>Pass);
+parcelHelpers.export(exports, "FullScreenQuad", ()=>FullScreenQuad);
+var _three = require("three");
+class Pass {
+    constructor(){
+        this.isPass = true;
+        // if set to true, the pass is processed by the composer
+        this.enabled = true;
+        // if set to true, the pass indicates to swap read and write buffer after rendering
+        this.needsSwap = true;
+        // if set to true, the pass clears its buffer before rendering
+        this.clear = false;
+        // if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
+        this.renderToScreen = false;
+    }
+    setSize() {}
+    render() {
+        console.error("THREE.Pass: .render() must be implemented in derived pass.");
+    }
+    dispose() {}
+}
+// Helper for passes that need to fill the viewport with a single quad.
+const _camera = new (0, _three.OrthographicCamera)(-1, 1, 1, -1, 0, 1);
+// https://github.com/mrdoob/three.js/pull/21358
+class FullscreenTriangleGeometry extends (0, _three.BufferGeometry) {
+    constructor(){
+        super();
+        this.setAttribute("position", new (0, _three.Float32BufferAttribute)([
+            -1,
+            3,
+            0,
+            -1,
+            -1,
+            0,
+            3,
+            -1,
+            0
+        ], 3));
+        this.setAttribute("uv", new (0, _three.Float32BufferAttribute)([
+            0,
+            2,
+            0,
+            0,
+            2,
+            0
+        ], 2));
+    }
+}
+const _geometry = new FullscreenTriangleGeometry();
+class FullScreenQuad {
+    constructor(material){
+        this._mesh = new (0, _three.Mesh)(_geometry, material);
+    }
+    dispose() {
+        this._mesh.geometry.dispose();
+    }
+    render(renderer) {
+        renderer.render(this._mesh, _camera);
+    }
+    get material() {
+        return this._mesh.material;
+    }
+    set material(value) {
+        this._mesh.material = value;
+    }
+}
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jn76N":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "MaskPass", ()=>MaskPass);
+parcelHelpers.export(exports, "ClearMaskPass", ()=>ClearMaskPass);
+var _passJs = require("./Pass.js");
+class MaskPass extends (0, _passJs.Pass) {
+    constructor(scene, camera){
+        super();
+        this.scene = scene;
+        this.camera = camera;
+        this.clear = true;
+        this.needsSwap = false;
+        this.inverse = false;
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        const context = renderer.getContext();
+        const state = renderer.state;
+        // don't update color or depth
+        state.buffers.color.setMask(false);
+        state.buffers.depth.setMask(false);
+        // lock buffers
+        state.buffers.color.setLocked(true);
+        state.buffers.depth.setLocked(true);
+        // set up stencil
+        let writeValue, clearValue;
+        if (this.inverse) {
+            writeValue = 0;
+            clearValue = 1;
+        } else {
+            writeValue = 1;
+            clearValue = 0;
+        }
+        state.buffers.stencil.setTest(true);
+        state.buffers.stencil.setOp(context.REPLACE, context.REPLACE, context.REPLACE);
+        state.buffers.stencil.setFunc(context.ALWAYS, writeValue, 0xffffffff);
+        state.buffers.stencil.setClear(clearValue);
+        state.buffers.stencil.setLocked(true);
+        // draw into the stencil buffer
+        renderer.setRenderTarget(readBuffer);
+        if (this.clear) renderer.clear();
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(writeBuffer);
+        if (this.clear) renderer.clear();
+        renderer.render(this.scene, this.camera);
+        // unlock color and depth buffer and make them writable for subsequent rendering/clearing
+        state.buffers.color.setLocked(false);
+        state.buffers.depth.setLocked(false);
+        state.buffers.color.setMask(true);
+        state.buffers.depth.setMask(true);
+        // only render where stencil is set to 1
+        state.buffers.stencil.setLocked(false);
+        state.buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff); // draw if == 1
+        state.buffers.stencil.setOp(context.KEEP, context.KEEP, context.KEEP);
+        state.buffers.stencil.setLocked(true);
+    }
+}
+class ClearMaskPass extends (0, _passJs.Pass) {
+    constructor(){
+        super();
+        this.needsSwap = false;
+    }
+    render(renderer /*, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
+        renderer.state.buffers.stencil.setLocked(false);
+        renderer.state.buffers.stencil.setTest(false);
+    }
+}
+
+},{"./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bggV1":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputPass", ()=>OutputPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _outputShaderJs = require("../shaders/OutputShader.js");
+class OutputPass extends (0, _passJs.Pass) {
+    constructor(){
+        super();
+        //
+        const shader = (0, _outputShaderJs.OutputShader);
+        this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
+        this.material = new (0, _three.RawShaderMaterial)({
+            name: shader.name,
+            uniforms: this.uniforms,
+            vertexShader: shader.vertexShader,
+            fragmentShader: shader.fragmentShader
+        });
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+        // internal cache
+        this._outputColorSpace = null;
+        this._toneMapping = null;
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        this.uniforms["tDiffuse"].value = readBuffer.texture;
+        this.uniforms["toneMappingExposure"].value = renderer.toneMappingExposure;
+        // rebuild defines if required
+        if (this._outputColorSpace !== renderer.outputColorSpace || this._toneMapping !== renderer.toneMapping) {
+            this._outputColorSpace = renderer.outputColorSpace;
+            this._toneMapping = renderer.toneMapping;
+            this.material.defines = {};
+            if ((0, _three.ColorManagement).getTransfer(this._outputColorSpace) === (0, _three.SRGBTransfer)) this.material.defines.SRGB_TRANSFER = "";
+            if (this._toneMapping === (0, _three.LinearToneMapping)) this.material.defines.LINEAR_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ReinhardToneMapping)) this.material.defines.REINHARD_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.CineonToneMapping)) this.material.defines.CINEON_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ACESFilmicToneMapping)) this.material.defines.ACES_FILMIC_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.AgXToneMapping)) this.material.defines.AGX_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.NeutralToneMapping)) this.material.defines.NEUTRAL_TONE_MAPPING = "";
+            this.material.needsUpdate = true;
+        }
+        //
+        if (this.renderToScreen === true) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+            this.fsQuad.render(renderer);
+        }
+    }
+    dispose() {
+        this.material.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/OutputShader.js":"76ZI2","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"76ZI2":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputShader", ()=>OutputShader);
+const OutputShader = {
+    name: "OutputShader",
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "toneMappingExposure": {
+            value: 1
+        }
+    },
+    vertexShader: /* glsl */ `
+		precision highp float;
+
+		uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+
+		attribute vec3 position;
+		attribute vec2 uv;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+	
+		precision highp float;
+
+		uniform sampler2D tDiffuse;
+
+		#include <tonemapping_pars_fragment>
+		#include <colorspace_pars_fragment>
+
+		varying vec2 vUv;
+
+		void main() {
+
+			gl_FragColor = texture2D( tDiffuse, vUv );
+
+			// tone mapping
+
+			#ifdef LINEAR_TONE_MAPPING
+
+				gl_FragColor.rgb = LinearToneMapping( gl_FragColor.rgb );
+
+			#elif defined( REINHARD_TONE_MAPPING )
+
+				gl_FragColor.rgb = ReinhardToneMapping( gl_FragColor.rgb );
+
+			#elif defined( CINEON_TONE_MAPPING )
+
+				gl_FragColor.rgb = CineonToneMapping( gl_FragColor.rgb );
+
+			#elif defined( ACES_FILMIC_TONE_MAPPING )
+
+				gl_FragColor.rgb = ACESFilmicToneMapping( gl_FragColor.rgb );
+
+			#elif defined( AGX_TONE_MAPPING )
+
+				gl_FragColor.rgb = AgXToneMapping( gl_FragColor.rgb );
+
+			#elif defined( NEUTRAL_TONE_MAPPING )
+
+				gl_FragColor.rgb = NeutralToneMapping( gl_FragColor.rgb );
+
+			#endif
+
+			// color space
+
+			#ifdef SRGB_TRANSFER
+
+				gl_FragColor = sRGBTransferOETF( gl_FragColor );
+
+			#endif
+
+		}`
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"hXnUO":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "RenderPass", ()=>RenderPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+class RenderPass extends (0, _passJs.Pass) {
+    constructor(scene, camera, overrideMaterial = null, clearColor = null, clearAlpha = null){
+        super();
+        this.scene = scene;
+        this.camera = camera;
+        this.overrideMaterial = overrideMaterial;
+        this.clearColor = clearColor;
+        this.clearAlpha = clearAlpha;
+        this.clear = true;
+        this.clearDepth = false;
+        this.needsSwap = false;
+        this._oldClearColor = new (0, _three.Color)();
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        const oldAutoClear = renderer.autoClear;
+        renderer.autoClear = false;
+        let oldClearAlpha, oldOverrideMaterial;
+        if (this.overrideMaterial !== null) {
+            oldOverrideMaterial = this.scene.overrideMaterial;
+            this.scene.overrideMaterial = this.overrideMaterial;
+        }
+        if (this.clearColor !== null) {
+            renderer.getClearColor(this._oldClearColor);
+            renderer.setClearColor(this.clearColor, renderer.getClearAlpha());
+        }
+        if (this.clearAlpha !== null) {
+            oldClearAlpha = renderer.getClearAlpha();
+            renderer.setClearAlpha(this.clearAlpha);
+        }
+        if (this.clearDepth == true) renderer.clearDepth();
+        renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
+        if (this.clear === true) // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
+        renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+        renderer.render(this.scene, this.camera);
+        // restore
+        if (this.clearColor !== null) renderer.setClearColor(this._oldClearColor);
+        if (this.clearAlpha !== null) renderer.setClearAlpha(oldClearAlpha);
+        if (this.overrideMaterial !== null) this.scene.overrideMaterial = oldOverrideMaterial;
+        renderer.autoClear = oldAutoClear;
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3iDYE":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "UnrealBloomPass", ()=>UnrealBloomPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _copyShaderJs = require("../shaders/CopyShader.js");
+var _luminosityHighPassShaderJs = require("../shaders/LuminosityHighPassShader.js");
+/**
+ * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
+ * mip map chain of bloom textures and blurs them with different radii. Because
+ * of the weighted combination of mips, and because larger blurs are done on
+ * higher mips, this effect provides good quality and performance.
+ *
+ * Reference:
+ * - https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
+ */ class UnrealBloomPass extends (0, _passJs.Pass) {
+    constructor(resolution, strength, radius, threshold){
+        super();
+        this.strength = strength !== undefined ? strength : 1;
+        this.radius = radius;
+        this.threshold = threshold;
+        this.resolution = resolution !== undefined ? new (0, _three.Vector2)(resolution.x, resolution.y) : new (0, _three.Vector2)(256, 256);
+        // create color only once here, reuse it later inside the render function
+        this.clearColor = new (0, _three.Color)(0, 0, 0);
+        // render targets
+        this.renderTargetsHorizontal = [];
+        this.renderTargetsVertical = [];
+        this.nMips = 5;
+        let resx = Math.round(this.resolution.x / 2);
+        let resy = Math.round(this.resolution.y / 2);
+        this.renderTargetBright = new (0, _three.WebGLRenderTarget)(resx, resy, {
+            type: (0, _three.HalfFloatType)
+        });
+        this.renderTargetBright.texture.name = "UnrealBloomPass.bright";
+        this.renderTargetBright.texture.generateMipmaps = false;
+        for(let i = 0; i < this.nMips; i++){
+            const renderTargetHorizontal = new (0, _three.WebGLRenderTarget)(resx, resy, {
+                type: (0, _three.HalfFloatType)
+            });
+            renderTargetHorizontal.texture.name = "UnrealBloomPass.h" + i;
+            renderTargetHorizontal.texture.generateMipmaps = false;
+            this.renderTargetsHorizontal.push(renderTargetHorizontal);
+            const renderTargetVertical = new (0, _three.WebGLRenderTarget)(resx, resy, {
+                type: (0, _three.HalfFloatType)
+            });
+            renderTargetVertical.texture.name = "UnrealBloomPass.v" + i;
+            renderTargetVertical.texture.generateMipmaps = false;
+            this.renderTargetsVertical.push(renderTargetVertical);
+            resx = Math.round(resx / 2);
+            resy = Math.round(resy / 2);
+        }
+        // luminosity high pass material
+        const highPassShader = (0, _luminosityHighPassShaderJs.LuminosityHighPassShader);
+        this.highPassUniforms = (0, _three.UniformsUtils).clone(highPassShader.uniforms);
+        this.highPassUniforms["luminosityThreshold"].value = threshold;
+        this.highPassUniforms["smoothWidth"].value = 0.01;
+        this.materialHighPassFilter = new (0, _three.ShaderMaterial)({
+            uniforms: this.highPassUniforms,
+            vertexShader: highPassShader.vertexShader,
+            fragmentShader: highPassShader.fragmentShader
+        });
+        // gaussian blur materials
+        this.separableBlurMaterials = [];
+        const kernelSizeArray = [
+            3,
+            5,
+            7,
+            9,
+            11
+        ];
+        resx = Math.round(this.resolution.x / 2);
+        resy = Math.round(this.resolution.y / 2);
+        for(let i = 0; i < this.nMips; i++){
+            this.separableBlurMaterials.push(this.getSeperableBlurMaterial(kernelSizeArray[i]));
+            this.separableBlurMaterials[i].uniforms["invSize"].value = new (0, _three.Vector2)(1 / resx, 1 / resy);
+            resx = Math.round(resx / 2);
+            resy = Math.round(resy / 2);
+        }
+        // composite material
+        this.compositeMaterial = this.getCompositeMaterial(this.nMips);
+        this.compositeMaterial.uniforms["blurTexture1"].value = this.renderTargetsVertical[0].texture;
+        this.compositeMaterial.uniforms["blurTexture2"].value = this.renderTargetsVertical[1].texture;
+        this.compositeMaterial.uniforms["blurTexture3"].value = this.renderTargetsVertical[2].texture;
+        this.compositeMaterial.uniforms["blurTexture4"].value = this.renderTargetsVertical[3].texture;
+        this.compositeMaterial.uniforms["blurTexture5"].value = this.renderTargetsVertical[4].texture;
+        this.compositeMaterial.uniforms["bloomStrength"].value = strength;
+        this.compositeMaterial.uniforms["bloomRadius"].value = 0.1;
+        const bloomFactors = [
+            1.0,
+            0.8,
+            0.6,
+            0.4,
+            0.2
+        ];
+        this.compositeMaterial.uniforms["bloomFactors"].value = bloomFactors;
+        this.bloomTintColors = [
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1)
+        ];
+        this.compositeMaterial.uniforms["bloomTintColors"].value = this.bloomTintColors;
+        // blend material
+        const copyShader = (0, _copyShaderJs.CopyShader);
+        this.copyUniforms = (0, _three.UniformsUtils).clone(copyShader.uniforms);
+        this.blendMaterial = new (0, _three.ShaderMaterial)({
+            uniforms: this.copyUniforms,
+            vertexShader: copyShader.vertexShader,
+            fragmentShader: copyShader.fragmentShader,
+            blending: (0, _three.AdditiveBlending),
+            depthTest: false,
+            depthWrite: false,
+            transparent: true
+        });
+        this.enabled = true;
+        this.needsSwap = false;
+        this._oldClearColor = new (0, _three.Color)();
+        this.oldClearAlpha = 1;
+        this.basic = new (0, _three.MeshBasicMaterial)();
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(null);
+    }
+    dispose() {
+        for(let i = 0; i < this.renderTargetsHorizontal.length; i++)this.renderTargetsHorizontal[i].dispose();
+        for(let i = 0; i < this.renderTargetsVertical.length; i++)this.renderTargetsVertical[i].dispose();
+        this.renderTargetBright.dispose();
+        //
+        for(let i = 0; i < this.separableBlurMaterials.length; i++)this.separableBlurMaterials[i].dispose();
+        this.compositeMaterial.dispose();
+        this.blendMaterial.dispose();
+        this.basic.dispose();
+        //
+        this.fsQuad.dispose();
+    }
+    setSize(width, height) {
+        let resx = Math.round(width / 2);
+        let resy = Math.round(height / 2);
+        this.renderTargetBright.setSize(resx, resy);
+        for(let i = 0; i < this.nMips; i++){
+            this.renderTargetsHorizontal[i].setSize(resx, resy);
+            this.renderTargetsVertical[i].setSize(resx, resy);
+            this.separableBlurMaterials[i].uniforms["invSize"].value = new (0, _three.Vector2)(1 / resx, 1 / resy);
+            resx = Math.round(resx / 2);
+            resy = Math.round(resy / 2);
+        }
+    }
+    render(renderer, writeBuffer, readBuffer, deltaTime, maskActive) {
+        renderer.getClearColor(this._oldClearColor);
+        this.oldClearAlpha = renderer.getClearAlpha();
+        const oldAutoClear = renderer.autoClear;
+        renderer.autoClear = false;
+        renderer.setClearColor(this.clearColor, 0);
+        if (maskActive) renderer.state.buffers.stencil.setTest(false);
+        // Render input to screen
+        if (this.renderToScreen) {
+            this.fsQuad.material = this.basic;
+            this.basic.map = readBuffer.texture;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+        }
+        // 1. Extract Bright Areas
+        this.highPassUniforms["tDiffuse"].value = readBuffer.texture;
+        this.highPassUniforms["luminosityThreshold"].value = this.threshold;
+        this.fsQuad.material = this.materialHighPassFilter;
+        renderer.setRenderTarget(this.renderTargetBright);
+        renderer.clear();
+        this.fsQuad.render(renderer);
+        // 2. Blur All the mips progressively
+        let inputRenderTarget = this.renderTargetBright;
+        for(let i = 0; i < this.nMips; i++){
+            this.fsQuad.material = this.separableBlurMaterials[i];
+            this.separableBlurMaterials[i].uniforms["colorTexture"].value = inputRenderTarget.texture;
+            this.separableBlurMaterials[i].uniforms["direction"].value = UnrealBloomPass.BlurDirectionX;
+            renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+            this.separableBlurMaterials[i].uniforms["colorTexture"].value = this.renderTargetsHorizontal[i].texture;
+            this.separableBlurMaterials[i].uniforms["direction"].value = UnrealBloomPass.BlurDirectionY;
+            renderer.setRenderTarget(this.renderTargetsVertical[i]);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+            inputRenderTarget = this.renderTargetsVertical[i];
+        }
+        // Composite All the mips
+        this.fsQuad.material = this.compositeMaterial;
+        this.compositeMaterial.uniforms["bloomStrength"].value = this.strength;
+        this.compositeMaterial.uniforms["bloomRadius"].value = this.radius;
+        this.compositeMaterial.uniforms["bloomTintColors"].value = this.bloomTintColors;
+        renderer.setRenderTarget(this.renderTargetsHorizontal[0]);
+        renderer.clear();
+        this.fsQuad.render(renderer);
+        // Blend it additively over the input texture
+        this.fsQuad.material = this.blendMaterial;
+        this.copyUniforms["tDiffuse"].value = this.renderTargetsHorizontal[0].texture;
+        if (maskActive) renderer.state.buffers.stencil.setTest(true);
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(readBuffer);
+            this.fsQuad.render(renderer);
+        }
+        // Restore renderer settings
+        renderer.setClearColor(this._oldClearColor, this.oldClearAlpha);
+        renderer.autoClear = oldAutoClear;
+    }
+    getSeperableBlurMaterial(kernelRadius) {
+        const coefficients = [];
+        for(let i = 0; i < kernelRadius; i++)coefficients.push(0.39894 * Math.exp(-0.5 * i * i / (kernelRadius * kernelRadius)) / kernelRadius);
+        return new (0, _three.ShaderMaterial)({
+            defines: {
+                "KERNEL_RADIUS": kernelRadius
+            },
+            uniforms: {
+                "colorTexture": {
+                    value: null
+                },
+                "invSize": {
+                    value: new (0, _three.Vector2)(0.5, 0.5)
+                },
+                "direction": {
+                    value: new (0, _three.Vector2)(0.5, 0.5)
+                },
+                "gaussianCoefficients": {
+                    value: coefficients
+                } // precomputed Gaussian coefficients
+            },
+            vertexShader: `varying vec2 vUv;
+				void main() {
+					vUv = uv;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+				}`,
+            fragmentShader: `#include <common>
+				varying vec2 vUv;
+				uniform sampler2D colorTexture;
+				uniform vec2 invSize;
+				uniform vec2 direction;
+				uniform float gaussianCoefficients[KERNEL_RADIUS];
+
+				void main() {
+					float weightSum = gaussianCoefficients[0];
+					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * weightSum;
+					for( int i = 1; i < KERNEL_RADIUS; i ++ ) {
+						float x = float(i);
+						float w = gaussianCoefficients[i];
+						vec2 uvOffset = direction * invSize * x;
+						vec3 sample1 = texture2D( colorTexture, vUv + uvOffset ).rgb;
+						vec3 sample2 = texture2D( colorTexture, vUv - uvOffset ).rgb;
+						diffuseSum += (sample1 + sample2) * w;
+						weightSum += 2.0 * w;
+					}
+					gl_FragColor = vec4(diffuseSum/weightSum, 1.0);
+				}`
+        });
+    }
+    getCompositeMaterial(nMips) {
+        return new (0, _three.ShaderMaterial)({
+            defines: {
+                "NUM_MIPS": nMips
+            },
+            uniforms: {
+                "blurTexture1": {
+                    value: null
+                },
+                "blurTexture2": {
+                    value: null
+                },
+                "blurTexture3": {
+                    value: null
+                },
+                "blurTexture4": {
+                    value: null
+                },
+                "blurTexture5": {
+                    value: null
+                },
+                "bloomStrength": {
+                    value: 1.0
+                },
+                "bloomFactors": {
+                    value: null
+                },
+                "bloomTintColors": {
+                    value: null
+                },
+                "bloomRadius": {
+                    value: 0.0
+                }
+            },
+            vertexShader: `varying vec2 vUv;
+				void main() {
+					vUv = uv;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+				}`,
+            fragmentShader: `varying vec2 vUv;
+				uniform sampler2D blurTexture1;
+				uniform sampler2D blurTexture2;
+				uniform sampler2D blurTexture3;
+				uniform sampler2D blurTexture4;
+				uniform sampler2D blurTexture5;
+				uniform float bloomStrength;
+				uniform float bloomRadius;
+				uniform float bloomFactors[NUM_MIPS];
+				uniform vec3 bloomTintColors[NUM_MIPS];
+
+				float lerpBloomFactor(const in float factor) {
+					float mirrorFactor = 1.2 - factor;
+					return mix(factor, mirrorFactor, bloomRadius);
+				}
+
+				void main() {
+					gl_FragColor = bloomStrength * ( lerpBloomFactor(bloomFactors[0]) * vec4(bloomTintColors[0], 1.0) * texture2D(blurTexture1, vUv) +
+						lerpBloomFactor(bloomFactors[1]) * vec4(bloomTintColors[1], 1.0) * texture2D(blurTexture2, vUv) +
+						lerpBloomFactor(bloomFactors[2]) * vec4(bloomTintColors[2], 1.0) * texture2D(blurTexture3, vUv) +
+						lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) +
+						lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
+				}`
+        });
+    }
+}
+UnrealBloomPass.BlurDirectionX = new (0, _three.Vector2)(1.0, 0.0);
+UnrealBloomPass.BlurDirectionY = new (0, _three.Vector2)(0.0, 1.0);
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/CopyShader.js":"d0PyX","../shaders/LuminosityHighPassShader.js":"j8C2Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"j8C2Y":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "LuminosityHighPassShader", ()=>LuminosityHighPassShader);
+var _three = require("three");
+/**
+ * Luminosity
+ * http://en.wikipedia.org/wiki/Luminosity
+ */ const LuminosityHighPassShader = {
+    name: "LuminosityHighPassShader",
+    shaderID: "luminosityHighPass",
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "luminosityThreshold": {
+            value: 1.0
+        },
+        "smoothWidth": {
+            value: 1.0
+        },
+        "defaultColor": {
+            value: new (0, _three.Color)(0x000000)
+        },
+        "defaultOpacity": {
+            value: 0.0
+        }
+    },
+    vertexShader: /* glsl */ `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+
+		uniform sampler2D tDiffuse;
+		uniform vec3 defaultColor;
+		uniform float defaultOpacity;
+		uniform float luminosityThreshold;
+		uniform float smoothWidth;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vec4 texel = texture2D( tDiffuse, vUv );
+
+			float v = luminance( texel.xyz );
+
+			vec4 outputColor = vec4( defaultColor.rgb, defaultOpacity );
+
+			float alpha = smoothstep( luminosityThreshold, luminosityThreshold + smoothWidth, v );
+
+			gl_FragColor = mix( outputColor, texel, alpha );
+
+		}`
+};
 
 },{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fPSuC":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -40167,937 +43936,1127 @@ var CSSPlugin = {
 });
 (0, _gsapCoreJs.gsap).registerPlugin(CSSPlugin);
 
-},{"./gsap-core.js":"05eeC","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"hXnUO":[function(require,module,exports) {
+},{"./gsap-core.js":"05eeC","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"exNfn":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "RenderPass", ()=>RenderPass);
-var _three = require("three");
-var _passJs = require("./Pass.js");
-class RenderPass extends (0, _passJs.Pass) {
-    constructor(scene, camera, overrideMaterial = null, clearColor = null, clearAlpha = null){
+var _three = require("../node_modules/three");
+class Planet extends _three.Group {
+    constructor(x, y, scene, geometry, axisSpeed, sunSpeed = 0){
         super();
-        this.scene = scene;
-        this.camera = camera;
-        this.overrideMaterial = overrideMaterial;
-        this.clearColor = clearColor;
-        this.clearAlpha = clearAlpha;
-        this.clear = true;
-        this.clearDepth = false;
-        this.needsSwap = false;
-        this._oldClearColor = new (0, _three.Color)();
+        this.rotation.x = x * Math.PI / 180;
+        this.rotation.y = y * Math.PI / 180;
+        this.geometry = geometry;
+        this.axisSpeed = axisSpeed;
+        this.sunSpeed = sunSpeed;
+        scene.add(this);
+        this.shape = null;
+        this.nightShape = null;
+        this.clouds = null;
+        this.light = null;
+        this.rings = null;
+        this.fresnel = null;
     }
-    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
-        const oldAutoClear = renderer.autoClear;
-        renderer.autoClear = false;
-        let oldClearAlpha, oldOverrideMaterial;
-        if (this.overrideMaterial !== null) {
-            oldOverrideMaterial = this.scene.overrideMaterial;
-            this.scene.overrideMaterial = this.overrideMaterial;
+    addMesh(material, type = "basic", scale = false, scalar = 1.005) {
+        const Geometry = new _three.IcosahedronGeometry(this.geometry[0], this.geometry[1]);
+        var Material = "";
+        switch(type){
+            case "basic":
+                Material = new _three.MeshBasicMaterial(material);
+                break;
+            case "phong":
+                Material = new _three.MeshPhongMaterial(material);
+                break;
+            case "fresnel":
+                Material = Planet.getFresnel(material);
+                scale = true;
+                break;
+            case "standard":
+                Material = new _three.MeshStandardMaterial(material);
+                scale = true;
+                break;
+            default:
+                break;
         }
-        if (this.clearColor !== null) {
-            renderer.getClearColor(this._oldClearColor);
-            renderer.setClearColor(this.clearColor, renderer.getClearAlpha());
+        const Mesh = new _three.Mesh(Geometry, Material);
+        if (scale) Mesh.scale.setScalar(scalar);
+        this.add(Mesh);
+        return Mesh;
+    }
+    addRing(geometry, material, scale, rotation = {
+        x: null,
+        y: null
+    }) {
+        const Geometry = new _three.RingGeometry(geometry[0], geometry[1], geometry[2]);
+        const Material = new _three.MeshBasicMaterial(material);
+        const Mesh = new _three.Mesh(Geometry, Material);
+        if (rotation.x) Mesh.rotation.x = rotation.x;
+        if (rotation.y) Mesh.rotation.x = rotation.x;
+        this.add(Mesh);
+        this.scale.set(scale[0], scale[1], scale[2]);
+        this.rings = Mesh;
+        return Mesh;
+    }
+    addLight(details) {
+        const light = new _three.PointLight(details[0], details[1], details[2], details[3], details[4], details[5]);
+        this.add(light);
+        this.light = light;
+        return light;
+    }
+    createShape(material, nightMaterial, fresnel, clouds = {}, ring = {}) {
+        this.shape = this.addMesh(material, "phong");
+        this.nightShape = this.addMesh(nightMaterial);
+        this.fresnel = this.addMesh(fresnel.rimHex, "fresnel", true, fresnel.scalar);
+        if (Object.keys(clouds).length != 0) this.clouds = this.addMesh(clouds.material, "standard", true, clouds.scalar);
+        if (Object.keys(ring).length != 0) this.rings = this.addRing(ring.geometry, ring.material, ring.scale, ring.rotation);
+    }
+    rotateAroundAxis(speedFactor, direction = "+") {
+        switch(direction){
+            case "+":
+                if (this.rings) {
+                    this.shape.rotation.y += this.axisSpeed * speedFactor;
+                    this.nightShape.rotation.y += this.axisSpeed * speedFactor;
+                    this.fresnel.rotation.y += this.axisSpeed * speedFactor;
+                    if (this.clouds) this.clouds.rotation.y += this.axisSpeed * speedFactor;
+                } else this.rotation.y += this.axisSpeed * speedFactor;
+                break;
+            case "-":
+                if (this.rings) {
+                    this.shape.rotation.y -= this.axisSpeed * speedFactor;
+                    this.nightShape.rotation.y -= this.axisSpeed * speedFactor;
+                    this.fresnel.rotation.y -= this.axisSpeed * speedFactor;
+                    if (this.clouds) this.clouds.rotation.y -= this.axisSpeed * speedFactor;
+                } else this.rotation.y -= this.axisSpeed * speedFactor;
+                break;
+            default:
+                break;
         }
-        if (this.clearAlpha !== null) {
-            oldClearAlpha = renderer.getClearAlpha();
-            renderer.setClearAlpha(this.clearAlpha);
-        }
-        if (this.clearDepth == true) renderer.clearDepth();
-        renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
-        if (this.clear === true) // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
-        renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
-        renderer.render(this.scene, this.camera);
-        // restore
-        if (this.clearColor !== null) renderer.setClearColor(this._oldClearColor);
-        if (this.clearAlpha !== null) renderer.setClearAlpha(oldClearAlpha);
-        if (this.overrideMaterial !== null) this.scene.overrideMaterial = oldOverrideMaterial;
-        renderer.autoClear = oldAutoClear;
     }
-}
-
-},{"three":"ktPTu","./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i2IfB":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Pass", ()=>Pass);
-parcelHelpers.export(exports, "FullScreenQuad", ()=>FullScreenQuad);
-var _three = require("three");
-class Pass {
-    constructor(){
-        this.isPass = true;
-        // if set to true, the pass is processed by the composer
-        this.enabled = true;
-        // if set to true, the pass indicates to swap read and write buffer after rendering
-        this.needsSwap = true;
-        // if set to true, the pass clears its buffer before rendering
-        this.clear = false;
-        // if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
-        this.renderToScreen = false;
-    }
-    setSize() {}
-    render() {
-        console.error("THREE.Pass: .render() must be implemented in derived pass.");
-    }
-    dispose() {}
-}
-// Helper for passes that need to fill the viewport with a single quad.
-const _camera = new (0, _three.OrthographicCamera)(-1, 1, 1, -1, 0, 1);
-// https://github.com/mrdoob/three.js/pull/21358
-class FullscreenTriangleGeometry extends (0, _three.BufferGeometry) {
-    constructor(){
-        super();
-        this.setAttribute("position", new (0, _three.Float32BufferAttribute)([
-            -1,
-            3,
-            0,
-            -1,
-            -1,
-            0,
-            3,
-            -1,
-            0
-        ], 3));
-        this.setAttribute("uv", new (0, _three.Float32BufferAttribute)([
-            0,
-            2,
-            0,
-            0,
-            2,
-            0
-        ], 2));
-    }
-}
-const _geometry = new FullscreenTriangleGeometry();
-class FullScreenQuad {
-    constructor(material){
-        this._mesh = new (0, _three.Mesh)(_geometry, material);
-    }
-    dispose() {
-        this._mesh.geometry.dispose();
-    }
-    render(renderer) {
-        renderer.render(this._mesh, _camera);
-    }
-    get material() {
-        return this._mesh.material;
-    }
-    set material(value) {
-        this._mesh.material = value;
-    }
-}
-
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"e5jie":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "EffectComposer", ()=>EffectComposer);
-var _three = require("three");
-var _copyShaderJs = require("../shaders/CopyShader.js");
-var _shaderPassJs = require("./ShaderPass.js");
-var _maskPassJs = require("./MaskPass.js");
-class EffectComposer {
-    constructor(renderer, renderTarget){
-        this.renderer = renderer;
-        this._pixelRatio = renderer.getPixelRatio();
-        if (renderTarget === undefined) {
-            const size = renderer.getSize(new (0, _three.Vector2)());
-            this._width = size.width;
-            this._height = size.height;
-            renderTarget = new (0, _three.WebGLRenderTarget)(this._width * this._pixelRatio, this._height * this._pixelRatio, {
-                type: (0, _three.HalfFloatType)
-            });
-            renderTarget.texture.name = "EffectComposer.rt1";
-        } else {
-            this._width = renderTarget.width;
-            this._height = renderTarget.height;
-        }
-        this.renderTarget1 = renderTarget;
-        this.renderTarget2 = renderTarget.clone();
-        this.renderTarget2.texture.name = "EffectComposer.rt2";
-        this.writeBuffer = this.renderTarget1;
-        this.readBuffer = this.renderTarget2;
-        this.renderToScreen = true;
-        this.passes = [];
-        this.copyPass = new (0, _shaderPassJs.ShaderPass)((0, _copyShaderJs.CopyShader));
-        this.copyPass.material.blending = (0, _three.NoBlending);
-        this.clock = new (0, _three.Clock)();
-    }
-    swapBuffers() {
-        const tmp = this.readBuffer;
-        this.readBuffer = this.writeBuffer;
-        this.writeBuffer = tmp;
-    }
-    addPass(pass) {
-        this.passes.push(pass);
-        pass.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
-    }
-    insertPass(pass, index) {
-        this.passes.splice(index, 0, pass);
-        pass.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
-    }
-    removePass(pass) {
-        const index = this.passes.indexOf(pass);
-        if (index !== -1) this.passes.splice(index, 1);
-    }
-    isLastEnabledPass(passIndex) {
-        for(let i = passIndex + 1; i < this.passes.length; i++){
-            if (this.passes[i].enabled) return false;
-        }
-        return true;
-    }
-    render(deltaTime) {
-        // deltaTime value is in seconds
-        if (deltaTime === undefined) deltaTime = this.clock.getDelta();
-        const currentRenderTarget = this.renderer.getRenderTarget();
-        let maskActive = false;
-        for(let i = 0, il = this.passes.length; i < il; i++){
-            const pass = this.passes[i];
-            if (pass.enabled === false) continue;
-            pass.renderToScreen = this.renderToScreen && this.isLastEnabledPass(i);
-            pass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive);
-            if (pass.needsSwap) {
-                if (maskActive) {
-                    const context = this.renderer.getContext();
-                    const stencil = this.renderer.state.buffers.stencil;
-                    //context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
-                    stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
-                    this.copyPass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime);
-                    //context.stencilFunc( context.EQUAL, 1, 0xffffffff );
-                    stencil.setFunc(context.EQUAL, 1, 0xffffffff);
-                }
-                this.swapBuffers();
+    static getFresnel(rimHex) {
+        const facingHex = 0x000000;
+        const uniforms = {
+            color1: {
+                value: new _three.Color(rimHex)
+            },
+            color2: {
+                value: new _three.Color(facingHex)
+            },
+            fresnelBias: {
+                value: 0.1
+            },
+            fresnelScale: {
+                value: 1.0
+            },
+            fresnelPower: {
+                value: 4.0
             }
-            if ((0, _maskPassJs.MaskPass) !== undefined) {
-                if (pass instanceof (0, _maskPassJs.MaskPass)) maskActive = true;
-                else if (pass instanceof (0, _maskPassJs.ClearMaskPass)) maskActive = false;
-            }
+        };
+        const vs = `
+        uniform float fresnelBias;
+        uniform float fresnelScale;
+        uniform float fresnelPower;
+        
+        varying float vReflectionFactor;
+        
+        void main() {
+          vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+          vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+        
+          vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );
+        
+          vec3 I = worldPosition.xyz - cameraPosition;
+        
+          vReflectionFactor = fresnelBias + fresnelScale * pow( 1.0 + dot( normalize( I ), worldNormal ), fresnelPower );
+        
+          gl_Position = projectionMatrix * mvPosition;
         }
-        this.renderer.setRenderTarget(currentRenderTarget);
-    }
-    reset(renderTarget) {
-        if (renderTarget === undefined) {
-            const size = this.renderer.getSize(new (0, _three.Vector2)());
-            this._pixelRatio = this.renderer.getPixelRatio();
-            this._width = size.width;
-            this._height = size.height;
-            renderTarget = this.renderTarget1.clone();
-            renderTarget.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+        `;
+        const fs = `
+        uniform vec3 color1;
+        uniform vec3 color2;
+        
+        varying float vReflectionFactor;
+        
+        void main() {
+          float f = clamp( vReflectionFactor, 0.0, 1.0 );
+          gl_FragColor = vec4(mix(color2, color1, vec3(f)), f);
         }
-        this.renderTarget1.dispose();
-        this.renderTarget2.dispose();
-        this.renderTarget1 = renderTarget;
-        this.renderTarget2 = renderTarget.clone();
-        this.writeBuffer = this.renderTarget1;
-        this.readBuffer = this.renderTarget2;
-    }
-    setSize(width, height) {
-        this._width = width;
-        this._height = height;
-        const effectiveWidth = this._width * this._pixelRatio;
-        const effectiveHeight = this._height * this._pixelRatio;
-        this.renderTarget1.setSize(effectiveWidth, effectiveHeight);
-        this.renderTarget2.setSize(effectiveWidth, effectiveHeight);
-        for(let i = 0; i < this.passes.length; i++)this.passes[i].setSize(effectiveWidth, effectiveHeight);
-    }
-    setPixelRatio(pixelRatio) {
-        this._pixelRatio = pixelRatio;
-        this.setSize(this._width, this._height);
-    }
-    dispose() {
-        this.renderTarget1.dispose();
-        this.renderTarget2.dispose();
-        this.copyPass.dispose();
+        `;
+        const fresnelMat = new _three.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: vs,
+            fragmentShader: fs,
+            transparent: true,
+            blending: _three.AdditiveBlending
+        });
+        return fresnelMat;
     }
 }
+exports.default = Planet;
 
-},{"three":"ktPTu","../shaders/CopyShader.js":"d0PyX","./ShaderPass.js":"5IxTN","./MaskPass.js":"jn76N","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"d0PyX":[function(require,module,exports) {
-/**
- * Full-screen textured quad shader
- */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "CopyShader", ()=>CopyShader);
-const CopyShader = {
-    name: "CopyShader",
-    uniforms: {
-        "tDiffuse": {
-            value: null
-        },
-        "opacity": {
-            value: 1.0
-        }
-    },
-    vertexShader: /* glsl */ `
+},{"../node_modules/three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bpJO1":[function(require,module,exports) {
+module.exports = require("55d64eb025b7e872").getBundleURL("lORN7") + "circle.0c232991.png" + "?" + Date.now();
 
-		varying vec2 vUv;
-
-		void main() {
-
-			vUv = uv;
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
-		}`,
-    fragmentShader: /* glsl */ `
-
-		uniform float opacity;
-
-		uniform sampler2D tDiffuse;
-
-		varying vec2 vUv;
-
-		void main() {
-
-			vec4 texel = texture2D( tDiffuse, vUv );
-			gl_FragColor = opacity * texel;
-
-
-		}`
-};
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5IxTN":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "ShaderPass", ()=>ShaderPass);
-var _three = require("three");
-var _passJs = require("./Pass.js");
-class ShaderPass extends (0, _passJs.Pass) {
-    constructor(shader, textureID){
-        super();
-        this.textureID = textureID !== undefined ? textureID : "tDiffuse";
-        if (shader instanceof (0, _three.ShaderMaterial)) {
-            this.uniforms = shader.uniforms;
-            this.material = shader;
-        } else if (shader) {
-            this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
-            this.material = new (0, _three.ShaderMaterial)({
-                name: shader.name !== undefined ? shader.name : "unspecified",
-                defines: Object.assign({}, shader.defines),
-                uniforms: this.uniforms,
-                vertexShader: shader.vertexShader,
-                fragmentShader: shader.fragmentShader
-            });
-        }
-        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+},{"55d64eb025b7e872":"lgJ39"}],"lgJ39":[function(require,module,exports) {
+"use strict";
+var bundleURL = {};
+function getBundleURLCached(id) {
+    var value = bundleURL[id];
+    if (!value) {
+        value = getBundleURL();
+        bundleURL[id] = value;
     }
-    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
-        if (this.uniforms[this.textureID]) this.uniforms[this.textureID].value = readBuffer.texture;
-        this.fsQuad.material = this.material;
-        if (this.renderToScreen) {
-            renderer.setRenderTarget(null);
-            this.fsQuad.render(renderer);
-        } else {
-            renderer.setRenderTarget(writeBuffer);
-            // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
-            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
-            this.fsQuad.render(renderer);
-        }
-    }
-    dispose() {
-        this.material.dispose();
-        this.fsQuad.dispose();
-    }
+    return value;
 }
-
-},{"three":"ktPTu","./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jn76N":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "MaskPass", ()=>MaskPass);
-parcelHelpers.export(exports, "ClearMaskPass", ()=>ClearMaskPass);
-var _passJs = require("./Pass.js");
-class MaskPass extends (0, _passJs.Pass) {
-    constructor(scene, camera){
-        super();
-        this.scene = scene;
-        this.camera = camera;
-        this.clear = true;
-        this.needsSwap = false;
-        this.inverse = false;
+function getBundleURL() {
+    try {
+        throw new Error();
+    } catch (err) {
+        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
+        if (matches) // The first two stack frames will be this function and getBundleURLCached.
+        // Use the 3rd one, which will be a runtime in the original bundle.
+        return getBaseURL(matches[2]);
     }
-    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
-        const context = renderer.getContext();
-        const state = renderer.state;
-        // don't update color or depth
-        state.buffers.color.setMask(false);
-        state.buffers.depth.setMask(false);
-        // lock buffers
-        state.buffers.color.setLocked(true);
-        state.buffers.depth.setLocked(true);
-        // set up stencil
-        let writeValue, clearValue;
-        if (this.inverse) {
-            writeValue = 0;
-            clearValue = 1;
-        } else {
-            writeValue = 1;
-            clearValue = 0;
-        }
-        state.buffers.stencil.setTest(true);
-        state.buffers.stencil.setOp(context.REPLACE, context.REPLACE, context.REPLACE);
-        state.buffers.stencil.setFunc(context.ALWAYS, writeValue, 0xffffffff);
-        state.buffers.stencil.setClear(clearValue);
-        state.buffers.stencil.setLocked(true);
-        // draw into the stencil buffer
-        renderer.setRenderTarget(readBuffer);
-        if (this.clear) renderer.clear();
-        renderer.render(this.scene, this.camera);
-        renderer.setRenderTarget(writeBuffer);
-        if (this.clear) renderer.clear();
-        renderer.render(this.scene, this.camera);
-        // unlock color and depth buffer and make them writable for subsequent rendering/clearing
-        state.buffers.color.setLocked(false);
-        state.buffers.depth.setLocked(false);
-        state.buffers.color.setMask(true);
-        state.buffers.depth.setMask(true);
-        // only render where stencil is set to 1
-        state.buffers.stencil.setLocked(false);
-        state.buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff); // draw if == 1
-        state.buffers.stencil.setOp(context.KEEP, context.KEEP, context.KEEP);
-        state.buffers.stencil.setLocked(true);
-    }
+    return "/";
 }
-class ClearMaskPass extends (0, _passJs.Pass) {
-    constructor(){
-        super();
-        this.needsSwap = false;
-    }
-    render(renderer /*, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
-        renderer.state.buffers.stencil.setLocked(false);
-        renderer.state.buffers.stencil.setTest(false);
-    }
+function getBaseURL(url) {
+    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
 }
-
-},{"./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3iDYE":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "UnrealBloomPass", ()=>UnrealBloomPass);
-var _three = require("three");
-var _passJs = require("./Pass.js");
-var _copyShaderJs = require("../shaders/CopyShader.js");
-var _luminosityHighPassShaderJs = require("../shaders/LuminosityHighPassShader.js");
-/**
- * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
- * mip map chain of bloom textures and blurs them with different radii. Because
- * of the weighted combination of mips, and because larger blurs are done on
- * higher mips, this effect provides good quality and performance.
- *
- * Reference:
- * - https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
- */ class UnrealBloomPass extends (0, _passJs.Pass) {
-    constructor(resolution, strength, radius, threshold){
-        super();
-        this.strength = strength !== undefined ? strength : 1;
-        this.radius = radius;
-        this.threshold = threshold;
-        this.resolution = resolution !== undefined ? new (0, _three.Vector2)(resolution.x, resolution.y) : new (0, _three.Vector2)(256, 256);
-        // create color only once here, reuse it later inside the render function
-        this.clearColor = new (0, _three.Color)(0, 0, 0);
-        // render targets
-        this.renderTargetsHorizontal = [];
-        this.renderTargetsVertical = [];
-        this.nMips = 5;
-        let resx = Math.round(this.resolution.x / 2);
-        let resy = Math.round(this.resolution.y / 2);
-        this.renderTargetBright = new (0, _three.WebGLRenderTarget)(resx, resy, {
-            type: (0, _three.HalfFloatType)
-        });
-        this.renderTargetBright.texture.name = "UnrealBloomPass.bright";
-        this.renderTargetBright.texture.generateMipmaps = false;
-        for(let i = 0; i < this.nMips; i++){
-            const renderTargetHorizontal = new (0, _three.WebGLRenderTarget)(resx, resy, {
-                type: (0, _three.HalfFloatType)
-            });
-            renderTargetHorizontal.texture.name = "UnrealBloomPass.h" + i;
-            renderTargetHorizontal.texture.generateMipmaps = false;
-            this.renderTargetsHorizontal.push(renderTargetHorizontal);
-            const renderTargetVertical = new (0, _three.WebGLRenderTarget)(resx, resy, {
-                type: (0, _three.HalfFloatType)
-            });
-            renderTargetVertical.texture.name = "UnrealBloomPass.v" + i;
-            renderTargetVertical.texture.generateMipmaps = false;
-            this.renderTargetsVertical.push(renderTargetVertical);
-            resx = Math.round(resx / 2);
-            resy = Math.round(resy / 2);
-        }
-        // luminosity high pass material
-        const highPassShader = (0, _luminosityHighPassShaderJs.LuminosityHighPassShader);
-        this.highPassUniforms = (0, _three.UniformsUtils).clone(highPassShader.uniforms);
-        this.highPassUniforms["luminosityThreshold"].value = threshold;
-        this.highPassUniforms["smoothWidth"].value = 0.01;
-        this.materialHighPassFilter = new (0, _three.ShaderMaterial)({
-            uniforms: this.highPassUniforms,
-            vertexShader: highPassShader.vertexShader,
-            fragmentShader: highPassShader.fragmentShader
-        });
-        // gaussian blur materials
-        this.separableBlurMaterials = [];
-        const kernelSizeArray = [
-            3,
-            5,
-            7,
-            9,
-            11
-        ];
-        resx = Math.round(this.resolution.x / 2);
-        resy = Math.round(this.resolution.y / 2);
-        for(let i = 0; i < this.nMips; i++){
-            this.separableBlurMaterials.push(this.getSeperableBlurMaterial(kernelSizeArray[i]));
-            this.separableBlurMaterials[i].uniforms["invSize"].value = new (0, _three.Vector2)(1 / resx, 1 / resy);
-            resx = Math.round(resx / 2);
-            resy = Math.round(resy / 2);
-        }
-        // composite material
-        this.compositeMaterial = this.getCompositeMaterial(this.nMips);
-        this.compositeMaterial.uniforms["blurTexture1"].value = this.renderTargetsVertical[0].texture;
-        this.compositeMaterial.uniforms["blurTexture2"].value = this.renderTargetsVertical[1].texture;
-        this.compositeMaterial.uniforms["blurTexture3"].value = this.renderTargetsVertical[2].texture;
-        this.compositeMaterial.uniforms["blurTexture4"].value = this.renderTargetsVertical[3].texture;
-        this.compositeMaterial.uniforms["blurTexture5"].value = this.renderTargetsVertical[4].texture;
-        this.compositeMaterial.uniforms["bloomStrength"].value = strength;
-        this.compositeMaterial.uniforms["bloomRadius"].value = 0.1;
-        const bloomFactors = [
-            1.0,
-            0.8,
-            0.6,
-            0.4,
-            0.2
-        ];
-        this.compositeMaterial.uniforms["bloomFactors"].value = bloomFactors;
-        this.bloomTintColors = [
-            new (0, _three.Vector3)(1, 1, 1),
-            new (0, _three.Vector3)(1, 1, 1),
-            new (0, _three.Vector3)(1, 1, 1),
-            new (0, _three.Vector3)(1, 1, 1),
-            new (0, _three.Vector3)(1, 1, 1)
-        ];
-        this.compositeMaterial.uniforms["bloomTintColors"].value = this.bloomTintColors;
-        // blend material
-        const copyShader = (0, _copyShaderJs.CopyShader);
-        this.copyUniforms = (0, _three.UniformsUtils).clone(copyShader.uniforms);
-        this.blendMaterial = new (0, _three.ShaderMaterial)({
-            uniforms: this.copyUniforms,
-            vertexShader: copyShader.vertexShader,
-            fragmentShader: copyShader.fragmentShader,
-            blending: (0, _three.AdditiveBlending),
-            depthTest: false,
-            depthWrite: false,
-            transparent: true
-        });
-        this.enabled = true;
-        this.needsSwap = false;
-        this._oldClearColor = new (0, _three.Color)();
-        this.oldClearAlpha = 1;
-        this.basic = new (0, _three.MeshBasicMaterial)();
-        this.fsQuad = new (0, _passJs.FullScreenQuad)(null);
-    }
-    dispose() {
-        for(let i = 0; i < this.renderTargetsHorizontal.length; i++)this.renderTargetsHorizontal[i].dispose();
-        for(let i = 0; i < this.renderTargetsVertical.length; i++)this.renderTargetsVertical[i].dispose();
-        this.renderTargetBright.dispose();
-        //
-        for(let i = 0; i < this.separableBlurMaterials.length; i++)this.separableBlurMaterials[i].dispose();
-        this.compositeMaterial.dispose();
-        this.blendMaterial.dispose();
-        this.basic.dispose();
-        //
-        this.fsQuad.dispose();
-    }
-    setSize(width, height) {
-        let resx = Math.round(width / 2);
-        let resy = Math.round(height / 2);
-        this.renderTargetBright.setSize(resx, resy);
-        for(let i = 0; i < this.nMips; i++){
-            this.renderTargetsHorizontal[i].setSize(resx, resy);
-            this.renderTargetsVertical[i].setSize(resx, resy);
-            this.separableBlurMaterials[i].uniforms["invSize"].value = new (0, _three.Vector2)(1 / resx, 1 / resy);
-            resx = Math.round(resx / 2);
-            resy = Math.round(resy / 2);
-        }
-    }
-    render(renderer, writeBuffer, readBuffer, deltaTime, maskActive) {
-        renderer.getClearColor(this._oldClearColor);
-        this.oldClearAlpha = renderer.getClearAlpha();
-        const oldAutoClear = renderer.autoClear;
-        renderer.autoClear = false;
-        renderer.setClearColor(this.clearColor, 0);
-        if (maskActive) renderer.state.buffers.stencil.setTest(false);
-        // Render input to screen
-        if (this.renderToScreen) {
-            this.fsQuad.material = this.basic;
-            this.basic.map = readBuffer.texture;
-            renderer.setRenderTarget(null);
-            renderer.clear();
-            this.fsQuad.render(renderer);
-        }
-        // 1. Extract Bright Areas
-        this.highPassUniforms["tDiffuse"].value = readBuffer.texture;
-        this.highPassUniforms["luminosityThreshold"].value = this.threshold;
-        this.fsQuad.material = this.materialHighPassFilter;
-        renderer.setRenderTarget(this.renderTargetBright);
-        renderer.clear();
-        this.fsQuad.render(renderer);
-        // 2. Blur All the mips progressively
-        let inputRenderTarget = this.renderTargetBright;
-        for(let i = 0; i < this.nMips; i++){
-            this.fsQuad.material = this.separableBlurMaterials[i];
-            this.separableBlurMaterials[i].uniforms["colorTexture"].value = inputRenderTarget.texture;
-            this.separableBlurMaterials[i].uniforms["direction"].value = UnrealBloomPass.BlurDirectionX;
-            renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
-            renderer.clear();
-            this.fsQuad.render(renderer);
-            this.separableBlurMaterials[i].uniforms["colorTexture"].value = this.renderTargetsHorizontal[i].texture;
-            this.separableBlurMaterials[i].uniforms["direction"].value = UnrealBloomPass.BlurDirectionY;
-            renderer.setRenderTarget(this.renderTargetsVertical[i]);
-            renderer.clear();
-            this.fsQuad.render(renderer);
-            inputRenderTarget = this.renderTargetsVertical[i];
-        }
-        // Composite All the mips
-        this.fsQuad.material = this.compositeMaterial;
-        this.compositeMaterial.uniforms["bloomStrength"].value = this.strength;
-        this.compositeMaterial.uniforms["bloomRadius"].value = this.radius;
-        this.compositeMaterial.uniforms["bloomTintColors"].value = this.bloomTintColors;
-        renderer.setRenderTarget(this.renderTargetsHorizontal[0]);
-        renderer.clear();
-        this.fsQuad.render(renderer);
-        // Blend it additively over the input texture
-        this.fsQuad.material = this.blendMaterial;
-        this.copyUniforms["tDiffuse"].value = this.renderTargetsHorizontal[0].texture;
-        if (maskActive) renderer.state.buffers.stencil.setTest(true);
-        if (this.renderToScreen) {
-            renderer.setRenderTarget(null);
-            this.fsQuad.render(renderer);
-        } else {
-            renderer.setRenderTarget(readBuffer);
-            this.fsQuad.render(renderer);
-        }
-        // Restore renderer settings
-        renderer.setClearColor(this._oldClearColor, this.oldClearAlpha);
-        renderer.autoClear = oldAutoClear;
-    }
-    getSeperableBlurMaterial(kernelRadius) {
-        const coefficients = [];
-        for(let i = 0; i < kernelRadius; i++)coefficients.push(0.39894 * Math.exp(-0.5 * i * i / (kernelRadius * kernelRadius)) / kernelRadius);
-        return new (0, _three.ShaderMaterial)({
-            defines: {
-                "KERNEL_RADIUS": kernelRadius
-            },
-            uniforms: {
-                "colorTexture": {
-                    value: null
-                },
-                "invSize": {
-                    value: new (0, _three.Vector2)(0.5, 0.5)
-                },
-                "direction": {
-                    value: new (0, _three.Vector2)(0.5, 0.5)
-                },
-                "gaussianCoefficients": {
-                    value: coefficients
-                } // precomputed Gaussian coefficients
-            },
-            vertexShader: `varying vec2 vUv;
-				void main() {
-					vUv = uv;
-					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-				}`,
-            fragmentShader: `#include <common>
-				varying vec2 vUv;
-				uniform sampler2D colorTexture;
-				uniform vec2 invSize;
-				uniform vec2 direction;
-				uniform float gaussianCoefficients[KERNEL_RADIUS];
-
-				void main() {
-					float weightSum = gaussianCoefficients[0];
-					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * weightSum;
-					for( int i = 1; i < KERNEL_RADIUS; i ++ ) {
-						float x = float(i);
-						float w = gaussianCoefficients[i];
-						vec2 uvOffset = direction * invSize * x;
-						vec3 sample1 = texture2D( colorTexture, vUv + uvOffset ).rgb;
-						vec3 sample2 = texture2D( colorTexture, vUv - uvOffset ).rgb;
-						diffuseSum += (sample1 + sample2) * w;
-						weightSum += 2.0 * w;
-					}
-					gl_FragColor = vec4(diffuseSum/weightSum, 1.0);
-				}`
-        });
-    }
-    getCompositeMaterial(nMips) {
-        return new (0, _three.ShaderMaterial)({
-            defines: {
-                "NUM_MIPS": nMips
-            },
-            uniforms: {
-                "blurTexture1": {
-                    value: null
-                },
-                "blurTexture2": {
-                    value: null
-                },
-                "blurTexture3": {
-                    value: null
-                },
-                "blurTexture4": {
-                    value: null
-                },
-                "blurTexture5": {
-                    value: null
-                },
-                "bloomStrength": {
-                    value: 1.0
-                },
-                "bloomFactors": {
-                    value: null
-                },
-                "bloomTintColors": {
-                    value: null
-                },
-                "bloomRadius": {
-                    value: 0.0
-                }
-            },
-            vertexShader: `varying vec2 vUv;
-				void main() {
-					vUv = uv;
-					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-				}`,
-            fragmentShader: `varying vec2 vUv;
-				uniform sampler2D blurTexture1;
-				uniform sampler2D blurTexture2;
-				uniform sampler2D blurTexture3;
-				uniform sampler2D blurTexture4;
-				uniform sampler2D blurTexture5;
-				uniform float bloomStrength;
-				uniform float bloomRadius;
-				uniform float bloomFactors[NUM_MIPS];
-				uniform vec3 bloomTintColors[NUM_MIPS];
-
-				float lerpBloomFactor(const in float factor) {
-					float mirrorFactor = 1.2 - factor;
-					return mix(factor, mirrorFactor, bloomRadius);
-				}
-
-				void main() {
-					gl_FragColor = bloomStrength * ( lerpBloomFactor(bloomFactors[0]) * vec4(bloomTintColors[0], 1.0) * texture2D(blurTexture1, vUv) +
-						lerpBloomFactor(bloomFactors[1]) * vec4(bloomTintColors[1], 1.0) * texture2D(blurTexture2, vUv) +
-						lerpBloomFactor(bloomFactors[2]) * vec4(bloomTintColors[2], 1.0) * texture2D(blurTexture3, vUv) +
-						lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) +
-						lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
-				}`
-        });
-    }
+// TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
+function getOrigin(url) {
+    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
+    if (!matches) throw new Error("Origin not found");
+    return matches[0];
 }
-UnrealBloomPass.BlurDirectionX = new (0, _three.Vector2)(1.0, 0.0);
-UnrealBloomPass.BlurDirectionY = new (0, _three.Vector2)(0.0, 1.0);
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+exports.getOrigin = getOrigin;
 
-},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/CopyShader.js":"d0PyX","../shaders/LuminosityHighPassShader.js":"j8C2Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"j8C2Y":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "LuminosityHighPassShader", ()=>LuminosityHighPassShader);
-var _three = require("three");
-/**
- * Luminosity
- * http://en.wikipedia.org/wiki/Luminosity
- */ const LuminosityHighPassShader = {
-    name: "LuminosityHighPassShader",
-    shaderID: "luminosityHighPass",
-    uniforms: {
-        "tDiffuse": {
-            value: null
-        },
-        "luminosityThreshold": {
-            value: 1.0
-        },
-        "smoothWidth": {
-            value: 1.0
-        },
-        "defaultColor": {
-            value: new (0, _three.Color)(0x000000)
-        },
-        "defaultOpacity": {
-            value: 0.0
-        }
-    },
-    vertexShader: /* glsl */ `
+},{}],"sL8jQ":[function(require,module,exports) {
+module.exports = require("966b1f878c54e74a").getBundleURL("lORN7") + "earthmap1k.fd8806d4.png" + "?" + Date.now();
 
-		varying vec2 vUv;
+},{"966b1f878c54e74a":"lgJ39"}],"hwl0n":[function(require,module,exports) {
+module.exports = require("99377c4b455b3eda").getBundleURL("lORN7") + "earthlights1k.84bf4344.jpg" + "?" + Date.now();
 
-		void main() {
+},{"99377c4b455b3eda":"lgJ39"}],"cbuRO":[function(require,module,exports) {
+module.exports = require("bdb8d22975ff8816").getBundleURL("lORN7") + "earthspec1k.12b577d1.jpg" + "?" + Date.now();
 
-			vUv = uv;
+},{"bdb8d22975ff8816":"lgJ39"}],"81aoT":[function(require,module,exports) {
+module.exports = require("fe186ac262aec5cd").getBundleURL("lORN7") + "earthbump1k.4eeb91d8.jpg" + "?" + Date.now();
 
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+},{"fe186ac262aec5cd":"lgJ39"}],"6QHR0":[function(require,module,exports) {
+module.exports = require("5ea11ea2bdb14770").getBundleURL("lORN7") + "earthcloudmap.eee12fd8.jpg" + "?" + Date.now();
 
-		}`,
-    fragmentShader: /* glsl */ `
+},{"5ea11ea2bdb14770":"lgJ39"}],"77X2x":[function(require,module,exports) {
+module.exports = require("77279eba48f3d06c").getBundleURL("lORN7") + "moonmap4k.5820dfe3.jpg" + "?" + Date.now();
 
-		uniform sampler2D tDiffuse;
-		uniform vec3 defaultColor;
-		uniform float defaultOpacity;
-		uniform float luminosityThreshold;
-		uniform float smoothWidth;
+},{"77279eba48f3d06c":"lgJ39"}],"3EVqM":[function(require,module,exports) {
+module.exports = require("6ccea40a98c5f6ac").getBundleURL("lORN7") + "moonbump4k.18e4c642.jpg" + "?" + Date.now();
 
-		varying vec2 vUv;
-
-		void main() {
-
-			vec4 texel = texture2D( tDiffuse, vUv );
-
-			float v = luminance( texel.xyz );
-
-			vec4 outputColor = vec4( defaultColor.rgb, defaultOpacity );
-
-			float alpha = smoothstep( luminosityThreshold, luminosityThreshold + smoothWidth, v );
-
-			gl_FragColor = mix( outputColor, texel, alpha );
-
-		}`
-};
-
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bggV1":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "OutputPass", ()=>OutputPass);
-var _three = require("three");
-var _passJs = require("./Pass.js");
-var _outputShaderJs = require("../shaders/OutputShader.js");
-class OutputPass extends (0, _passJs.Pass) {
-    constructor(){
-        super();
-        //
-        const shader = (0, _outputShaderJs.OutputShader);
-        this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
-        this.material = new (0, _three.RawShaderMaterial)({
-            name: shader.name,
-            uniforms: this.uniforms,
-            vertexShader: shader.vertexShader,
-            fragmentShader: shader.fragmentShader
-        });
-        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
-        // internal cache
-        this._outputColorSpace = null;
-        this._toneMapping = null;
-    }
-    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
-        this.uniforms["tDiffuse"].value = readBuffer.texture;
-        this.uniforms["toneMappingExposure"].value = renderer.toneMappingExposure;
-        // rebuild defines if required
-        if (this._outputColorSpace !== renderer.outputColorSpace || this._toneMapping !== renderer.toneMapping) {
-            this._outputColorSpace = renderer.outputColorSpace;
-            this._toneMapping = renderer.toneMapping;
-            this.material.defines = {};
-            if ((0, _three.ColorManagement).getTransfer(this._outputColorSpace) === (0, _three.SRGBTransfer)) this.material.defines.SRGB_TRANSFER = "";
-            if (this._toneMapping === (0, _three.LinearToneMapping)) this.material.defines.LINEAR_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.ReinhardToneMapping)) this.material.defines.REINHARD_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.CineonToneMapping)) this.material.defines.CINEON_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.ACESFilmicToneMapping)) this.material.defines.ACES_FILMIC_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.AgXToneMapping)) this.material.defines.AGX_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.NeutralToneMapping)) this.material.defines.NEUTRAL_TONE_MAPPING = "";
-            this.material.needsUpdate = true;
-        }
-        //
-        if (this.renderToScreen === true) {
-            renderer.setRenderTarget(null);
-            this.fsQuad.render(renderer);
-        } else {
-            renderer.setRenderTarget(writeBuffer);
-            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
-            this.fsQuad.render(renderer);
-        }
-    }
-    dispose() {
-        this.material.dispose();
-        this.fsQuad.dispose();
-    }
-}
-
-},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/OutputShader.js":"76ZI2","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"76ZI2":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "OutputShader", ()=>OutputShader);
-const OutputShader = {
-    name: "OutputShader",
-    uniforms: {
-        "tDiffuse": {
-            value: null
-        },
-        "toneMappingExposure": {
-            value: 1
-        }
-    },
-    vertexShader: /* glsl */ `
-		precision highp float;
-
-		uniform mat4 modelViewMatrix;
-		uniform mat4 projectionMatrix;
-
-		attribute vec3 position;
-		attribute vec2 uv;
-
-		varying vec2 vUv;
-
-		void main() {
-
-			vUv = uv;
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
-		}`,
-    fragmentShader: /* glsl */ `
-	
-		precision highp float;
-
-		uniform sampler2D tDiffuse;
-
-		#include <tonemapping_pars_fragment>
-		#include <colorspace_pars_fragment>
-
-		varying vec2 vUv;
-
-		void main() {
-
-			gl_FragColor = texture2D( tDiffuse, vUv );
-
-			// tone mapping
-
-			#ifdef LINEAR_TONE_MAPPING
-
-				gl_FragColor.rgb = LinearToneMapping( gl_FragColor.rgb );
-
-			#elif defined( REINHARD_TONE_MAPPING )
-
-				gl_FragColor.rgb = ReinhardToneMapping( gl_FragColor.rgb );
-
-			#elif defined( CINEON_TONE_MAPPING )
-
-				gl_FragColor.rgb = CineonToneMapping( gl_FragColor.rgb );
-
-			#elif defined( ACES_FILMIC_TONE_MAPPING )
-
-				gl_FragColor.rgb = ACESFilmicToneMapping( gl_FragColor.rgb );
-
-			#elif defined( AGX_TONE_MAPPING )
-
-				gl_FragColor.rgb = AgXToneMapping( gl_FragColor.rgb );
-
-			#elif defined( NEUTRAL_TONE_MAPPING )
-
-				gl_FragColor.rgb = NeutralToneMapping( gl_FragColor.rgb );
-
-			#endif
-
-			// color space
-
-			#ifdef SRGB_TRANSFER
-
-				gl_FragColor = sRGBTransferOETF( gl_FragColor );
-
-			#endif
-
-		}`
-};
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"k4gu4":[function(require,module,exports) {
+},{"6ccea40a98c5f6ac":"lgJ39"}],"k4gu4":[function(require,module,exports) {
 module.exports = JSON.parse('{"jupiter":{"x":-3.13,"y":3.13,"geometry":[0.0093,12],"material":{"map":"../assets/textures/jupiter/jupiter.jpg"},"nightMaterial":{"map":"../assets/textures/jupiter/jupiternight.jpg","blending":"AdditiveBlending"},"fersenel":{"rimHex":"274566","scalar":1.005},"axisSpeed":0.00017453293}}');
 
-},{}],"dekG2":[function(require,module,exports) {
+},{}],"kdPTc":[function(require,module,exports) {
+module.exports = require("9f9498c40c85b611").getBundleURL("lORN7") + "jupiter.38c6cafa.jpg" + "?" + Date.now();
+
+},{"9f9498c40c85b611":"lgJ39"}],"bIDlt":[function(require,module,exports) {
+module.exports = require("fbd7c2a71344b0eb").getBundleURL("lORN7") + "jupiternight.79a1be6e.jpg" + "?" + Date.now();
+
+},{"fbd7c2a71344b0eb":"lgJ39"}],"iWRN5":[function(require,module,exports) {
+module.exports = require("845d5241b16ad255").getBundleURL("lORN7") + "mercurymap.485366de.jpg" + "?" + Date.now();
+
+},{"845d5241b16ad255":"lgJ39"}],"dYcYR":[function(require,module,exports) {
+module.exports = require("23fc6299b78dfd9e").getBundleURL("lORN7") + "mercurybump.5fd5d8dc.jpg" + "?" + Date.now();
+
+},{"23fc6299b78dfd9e":"lgJ39"}],"6q8Da":[function(require,module,exports) {
+module.exports = require("b73fc24652fcade3").getBundleURL("lORN7") + "mercurynightmap.d72f30e7.jpg" + "?" + Date.now();
+
+},{"b73fc24652fcade3":"lgJ39"}],"E6AsX":[function(require,module,exports) {
+module.exports = require("e6c074c98af65a2d").getBundleURL("lORN7") + "venusmap.f244037d.jpg" + "?" + Date.now();
+
+},{"e6c074c98af65a2d":"lgJ39"}],"4e6gf":[function(require,module,exports) {
+module.exports = require("d2cc078b4b72c78").getBundleURL("lORN7") + "venusmapnight.1af4f621.jpg" + "?" + Date.now();
+
+},{"d2cc078b4b72c78":"lgJ39"}],"5rqUK":[function(require,module,exports) {
+module.exports = require("6d50c5aabc92ee5e").getBundleURL("lORN7") + "venusclouds.f758907d.jpg" + "?" + Date.now();
+
+},{"6d50c5aabc92ee5e":"lgJ39"}],"l6QSa":[function(require,module,exports) {
+module.exports = require("18e747fe4eb26e8f").getBundleURL("lORN7") + "marsmap.33200c41.png" + "?" + Date.now();
+
+},{"18e747fe4eb26e8f":"lgJ39"}],"c4kMA":[function(require,module,exports) {
+module.exports = require("2d41b99c46b2406").getBundleURL("lORN7") + "marsbump.f66ec3e1.jpg" + "?" + Date.now();
+
+},{"2d41b99c46b2406":"lgJ39"}],"2v5Zj":[function(require,module,exports) {
+module.exports = require("931742e1de9d4d33").getBundleURL("lORN7") + "marsclouds.f3349186.png" + "?" + Date.now();
+
+},{"931742e1de9d4d33":"lgJ39"}],"gmgyo":[function(require,module,exports) {
+module.exports = require("a6af5df8bf8fb33c").getBundleURL("lORN7") + "marsnight.408f4aa5.jpg" + "?" + Date.now();
+
+},{"a6af5df8bf8fb33c":"lgJ39"}],"1PmpW":[function(require,module,exports) {
+module.exports = require("b4ed7c73b4c8c4be").getBundleURL("lORN7") + "th_saturn.a9c24882.png" + "?" + Date.now();
+
+},{"b4ed7c73b4c8c4be":"lgJ39"}],"3N3Sf":[function(require,module,exports) {
+module.exports = require("3257079fab685c64").getBundleURL("lORN7") + "th_saturnbump.05f2c582.png" + "?" + Date.now();
+
+},{"3257079fab685c64":"lgJ39"}],"dBdUM":[function(require,module,exports) {
+module.exports = require("f9aec6a7a8970509").getBundleURL("lORN7") + "th_saturnclouds.fc4f2c08.png" + "?" + Date.now();
+
+},{"f9aec6a7a8970509":"lgJ39"}],"eeNJU":[function(require,module,exports) {
+module.exports = require("45d76fe65d479229").getBundleURL("lORN7") + "th_saturnnight.42e53af6.png" + "?" + Date.now();
+
+},{"45d76fe65d479229":"lgJ39"}],"aUgNw":[function(require,module,exports) {
+module.exports = require("723e5395232f1e5").getBundleURL("lORN7") + "t00fri_gh_saturnrings.3e922465.png" + "?" + Date.now();
+
+},{"723e5395232f1e5":"lgJ39"}],"cmcTM":[function(require,module,exports) {
+module.exports = require("5eb73bcb5b387a22").getBundleURL("lORN7") + "uranusmap.0ec47f7c.png" + "?" + Date.now();
+
+},{"5eb73bcb5b387a22":"lgJ39"}],"fmPKW":[function(require,module,exports) {
+module.exports = require("ab1b6d8f46608d1e").getBundleURL("lORN7") + "uranuslights.95d320b6.png" + "?" + Date.now();
+
+},{"ab1b6d8f46608d1e":"lgJ39"}],"fldyh":[function(require,module,exports) {
+module.exports = require("b1e4170930a9225").getBundleURL("lORN7") + "uranusrings.231cffc1.png" + "?" + Date.now();
+
+},{"b1e4170930a9225":"lgJ39"}],"6Qb4i":[function(require,module,exports) {
+module.exports = require("9336fe796137151d").getBundleURL("lORN7") + "neptunemap.1011a919.jpg" + "?" + Date.now();
+
+},{"9336fe796137151d":"lgJ39"}],"ixuWJ":[function(require,module,exports) {
+module.exports = require("63356040d2ad5884").getBundleURL("lORN7") + "neptunebump.18b1f61b.png" + "?" + Date.now();
+
+},{"63356040d2ad5884":"lgJ39"}],"leeDc":[function(require,module,exports) {
+module.exports = require("a74b2c8f9e9c8f0").getBundleURL("lORN7") + "neptuneclouds.c4a4f44a.png" + "?" + Date.now();
+
+},{"a74b2c8f9e9c8f0":"lgJ39"}],"1pAHL":[function(require,module,exports) {
+module.exports = require("424096f1f5fe0684").getBundleURL("lORN7") + "neptunelights.83a48508.jpg" + "?" + Date.now();
+
+},{"424096f1f5fe0684":"lgJ39"}],"cLZgz":[function(require,module,exports) {
+module.exports = require("50554957d8315faa").getBundleURL("lORN7") + "neptunerings.522248b7.png" + "?" + Date.now();
+
+},{"50554957d8315faa":"lgJ39"}],"daOLx":[function(require,module,exports) {
+module.exports = require("84dd440b3518d687").getBundleURL("lORN7") + "sunmap.1200be6c.jpg" + "?" + Date.now();
+
+},{"84dd440b3518d687":"lgJ39"}],"2NNMB":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "audioData", ()=>audioData);
+const audioData = [
+    // SUN
+    {
+        audioClips: [
+            {
+                file: new URL(require("77eb250518da21b8")).href,
+                subtitles: [
+                    {
+                        text: "Igniting the world anew with such brilliance, the sun rose with casual elegance.",
+                        start: 0,
+                        end: 5
+                    },
+                    {
+                        text: "Whether it is a star or a floating fireball, it remains the heart and soul of the solar system.",
+                        start: 5,
+                        end: 11
+                    }
+                ]
+            },
+            {
+                file: new URL(require("7f2bdb0681aaa782")).href,
+                subtitles: [
+                    {
+                        text: "The Sun is so big that about 1.3 million Earths could fit inside it and it weighs about 500 times more than all the planets and asteroids combined.",
+                        start: 0,
+                        end: 9
+                    }
+                ]
+            },
+            {
+                file: new URL(require("52b38fcc44f0a2bb")).href,
+                subtitles: [
+                    {
+                        text: "Did you know the sun is roughly 4.57 billion years old in Earth years? ",
+                        start: 0,
+                        end: 6
+                    },
+                    {
+                        text: "yet it's only about 20.5 years old in galactic years, reflecting its orbit around the galaxy.",
+                        start: 6,
+                        end: 12
+                    }
+                ]
+            },
+            {
+                file: new URL(require("4ef85548002ef93")).href,
+                subtitles: [
+                    {
+                        text: "It's funny to think we measure the sun's age in Earth years when the Earth didn't even exist when the sun was born.",
+                        start: 0,
+                        end: 6
+                    }
+                ]
+            },
+            {
+                file: new URL(require("affe269034525dbd")).href,
+                subtitles: [
+                    {
+                        text: "Welcome to the solar system.",
+                        start: 0,
+                        end: 2
+                    }
+                ]
+            }
+        ]
+    },
+    // MERCURY
+    {
+        audioClips: [
+            {
+                file: new URL(require("401acc1f688096f8")).href,
+                subtitles: [
+                    {
+                        text: "The wild child of the solar system. It's fast, fiery, and fearless, racing around the Sun like it's on turbo mode.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "With extreme temps and cratered chaos, Mercury's the bold little planet that never hits the brakes.",
+                        start: 7,
+                        end: 14
+                    }
+                ]
+            },
+            {
+                file: new URL(require("60e5817dfe468056")).href,
+                subtitles: [
+                    {
+                        text: "Thirteen times a century Mercury can be observed from the Earth passing across the face of the Sun in an event called a transit.",
+                        start: 0,
+                        end: 8
+                    }
+                ]
+            },
+            {
+                file: new URL(require("43c1e5ad178939bc")).href,
+                subtitles: [
+                    {
+                        text: "Perceived as the hottest planet because it's closest to the Sun, Mercury is actually not the hottest.",
+                        start: 0,
+                        end: 6
+                    },
+                    {
+                        text: "That title goes to Venus, which is hotter due to its thick atmosphere.",
+                        start: 6,
+                        end: 11
+                    }
+                ]
+            },
+            {
+                file: new URL(require("74785612c06ad6e2")).href,
+                subtitles: [
+                    {
+                        text: "Mercury has wrinkles! As its iron core cooled, it formed lobate scarps.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "Looks like even planets can't escape the effects of time.",
+                        start: 7,
+                        end: 10
+                    }
+                ]
+            }
+        ]
+    },
+    // VENUS
+    {
+        audioClips: [
+            {
+                file: new URL(require("ceac81fde1fc515b")).href,
+                subtitles: [
+                    {
+                        text: "The drama queen of the solar system! With crushing pressure, scorching heat, and toxic clouds, it spins backward because why not?",
+                        start: 0,
+                        end: 8
+                    },
+                    {
+                        text: "Fierce, fiery, and totally unpredictable, Venus loves to keep things intense.",
+                        start: 8,
+                        end: 13
+                    }
+                ]
+            },
+            {
+                file: new URL(require("2911bf5d4dc02d0d")).href,
+                subtitles: [
+                    {
+                        text: "Venus has been observed for thousands of years as it is the second brightest object in the night sky.",
+                        start: 0,
+                        end: 6
+                    }
+                ]
+            },
+            {
+                file: new URL(require("8c1f92ce3654c9e7")).href,
+                subtitles: [
+                    {
+                        text: "The clouds of Venus contain sulfuric acid, but the high temperatures mean the rain evaporates before it reaches the surface.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            },
+            {
+                file: new URL(require("60f37827cd139595")).href,
+                subtitles: [
+                    {
+                        text: "Venus has a 'day' that is longer than its 'year,' making it a unique case in the solar system.",
+                        start: 0,
+                        end: 5
+                    }
+                ]
+            },
+            {
+                file: new URL(require("8515030780639e86")).href,
+                subtitles: [
+                    {
+                        text: "Venus rotates on its axis in the opposite direction to most planets, meaning the Sun rises in the west and sets in the east.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            },
+            {
+                file: new URL(require("a5278b8e2909bee9")).href,
+                subtitles: [
+                    {
+                        text: "Venus, known as the Morning Star and Evening Star, was once thought to be two different bodies by early civilizations.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "Its orbit around the Sun causes it to shift visibility from after sunset to before sunrise as it overtakes Earth.",
+                        start: 7,
+                        end: 14
+                    }
+                ]
+            },
+            {
+                file: new URL(require("d767e12f3198dd68")).href,
+                subtitles: [
+                    {
+                        text: "Venus is often called Earth's twin due to its similar size and composition, but its conditions are vastly different.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            }
+        ]
+    },
+    // EARTH
+    {
+        audioClips: [
+            {
+                file: new URL(require("48df59f1dd386e72")).href,
+                subtitles: [
+                    {
+                        text: "The lively hotspot of the solar system. With wild weather and stunning sunsets, it's the place to be\u2014just don't forget your sunscreen.",
+                        start: 0,
+                        end: 9
+                    }
+                ]
+            },
+            {
+                file: new URL(require("dbe4301d3a132249")).href,
+                subtitles: [
+                    {
+                        text: "The Earth was once believed to be the center of the universe. Due to the apparent movements of the Sun and planets in relation to their viewpoint,",
+                        start: 0,
+                        end: 8
+                    },
+                    {
+                        text: "ancient scientists insisted that the Earth remained static, whilst other celestial bodies travelled in circular orbits around it.",
+                        start: 8,
+                        end: 15
+                    }
+                ]
+            },
+            {
+                file: new URL(require("fac2ff1275071c76")).href,
+                subtitles: [
+                    {
+                        text: "Earth doesn't take 24 hours to rotate on its axis. It's actually 23 hours, 56 minutes, and 4 seconds. Astronomers call this a sidereal day.",
+                        start: 0,
+                        end: 10
+                    }
+                ]
+            },
+            {
+                file: new URL(require("650db59159590fd6")).href,
+                subtitles: [
+                    {
+                        text: "Due to the gravitational pull of the Moon, Earth's rotation is gradually slowing down,",
+                        start: 0,
+                        end: 5
+                    },
+                    {
+                        text: "making days longer by about 1.7 milliseconds per century.",
+                        start: 5,
+                        end: 9
+                    }
+                ]
+            }
+        ]
+    },
+    // MARS
+    {
+        audioClips: [
+            {
+                file: new URL(require("62712bcca9b93e47")).href,
+                subtitles: [
+                    {
+                        text: "The solar system's ultimate red rock star! With its dusty deserts and towering volcanoes,",
+                        start: 0,
+                        end: 6
+                    },
+                    {
+                        text: "it's like Earth's quirky cousin who decided to go for a 'no water' aesthetic.",
+                        start: 6,
+                        end: 10
+                    }
+                ]
+            },
+            {
+                file: new URL(require("55bac4352a44c7ca")).href,
+                subtitles: [
+                    {
+                        text: "Mars is home to the tallest mountain in the solar system.",
+                        start: 0,
+                        end: 4
+                    },
+                    {
+                        text: "Olympus Mons, a shield volcano, is 21km high and 600km in diameter. Despite having formed over billions of years,",
+                        start: 4,
+                        end: 13
+                    },
+                    {
+                        text: "evidence from volcanic lava flows is so recent many scientists believe it could still be active.",
+                        start: 13,
+                        end: 19
+                    }
+                ]
+            },
+            {
+                file: new URL(require("8feff3a44857cf1b")).href,
+                subtitles: [
+                    {
+                        text: "Mars has the largest dust storms in the solar system. They can last for months and cover the entire planet.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            },
+            {
+                file: new URL(require("59d2fd9f4eccad07")).href,
+                subtitles: [
+                    {
+                        text: "One day Mars will have a ring. In the next 20-40 million years, Mars' largest moon Phobos will be torn apart",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "by gravitational forces leading to the creation of a ring that could last up to 100 million years.",
+                        start: 7,
+                        end: 14
+                    }
+                ]
+            },
+            {
+                file: new URL(require("c9d3f9938d2dd5de")).href,
+                subtitles: [
+                    {
+                        text: "Pieces of Mars have fallen to Earth. Scientists have discovered tiny traces of Martian atmosphere in meteorites",
+                        start: 0,
+                        end: 6
+                    },
+                    {
+                        text: "that were violently ejected from Mars and spent millions of years traveling through space before landing on our planet.",
+                        start: 6,
+                        end: 12
+                    }
+                ]
+            }
+        ]
+    },
+    // JUPITER
+    {
+        audioClips: [
+            {
+                file: new URL(require("8c84584fbcb3e9eb")).href,
+                subtitles: [
+                    {
+                        text: "The solar system's giant gas king! With a storm bigger than Earth and more moons than you can count,",
+                        start: 0,
+                        end: 6
+                    },
+                    {
+                        text: "it's the ultimate cosmic heavyweight. Bigger, wilder, and full of surprises!",
+                        start: 6,
+                        end: 12
+                    }
+                ]
+            },
+            {
+                file: new URL(require("62af1ed0662ef2dc")).href,
+                subtitles: [
+                    {
+                        text: "Jupiter has the shortest day of all the planets. It turns on its axis once every 9 hours and 55 minutes.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "The rapid rotation flattens the planet slightly, giving it an oblate shape.",
+                        start: 7,
+                        end: 12
+                    }
+                ]
+            },
+            {
+                file: new URL(require("b8e29a7b0eeaf25")).href,
+                subtitles: [
+                    {
+                        text: "It is two and a half times more massive than all the other planets in the solar system combined.",
+                        start: 0,
+                        end: 5
+                    }
+                ]
+            },
+            {
+                file: new URL(require("3bd6694fffd8eb71")).href,
+                subtitles: [
+                    {
+                        text: "It is made primarily of gases and is therefore known as a 'gas giant'.",
+                        start: 0,
+                        end: 5
+                    }
+                ]
+            },
+            {
+                file: new URL(require("f3e5c0ba28d4e310")).href,
+                subtitles: [
+                    {
+                        text: "Jupiter is the fourth brightest object in the solar system. Only the Sun, Moon, and Venus are brighter.",
+                        start: 0,
+                        end: 6
+                    },
+                    {
+                        text: "It is one of five planets visible to the naked eye from Earth.",
+                        start: 6,
+                        end: 10
+                    }
+                ]
+            }
+        ]
+    },
+    // SATURN
+    {
+        audioClips: [
+            {
+                file: new URL(require("341a05d7ad47a7")).href,
+                subtitles: [
+                    {
+                        text: "The ringed royalty of the solar system. It's big, bold, and knows how to rock some serious space bling.",
+                        start: 0,
+                        end: 6
+                    }
+                ]
+            },
+            {
+                file: new URL(require("2ce39f46de59de42")).href,
+                subtitles: [
+                    {
+                        text: "Saturn is the flattest planet. Its polar diameter is 90% of its equatorial diameter, this is due to its low density and fast rotation.",
+                        start: 0,
+                        end: 10
+                    }
+                ]
+            },
+            {
+                file: new URL(require("7ab4a9fa92593032")).href,
+                subtitles: [
+                    {
+                        text: "Saturn turns on its axis once every 10 hours and 34 minutes giving it the second-shortest day of any of the solar system's planets.",
+                        start: 0,
+                        end: 8
+                    }
+                ]
+            },
+            {
+                file: new URL(require("fcda9d574d4cc54e")).href,
+                subtitles: [
+                    {
+                        text: "Saturn has more moons than any other planet. All are frozen worlds. The largest moons are Titan and Rhea.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "20 new moons were discovered in 2019 bringing the total to 82.",
+                        start: 7,
+                        end: 12
+                    }
+                ]
+            }
+        ]
+    },
+    // URANUS
+    {
+        audioClips: [
+            {
+                file: new URL(require("5e002a4321ae4609")).href,
+                subtitles: [
+                    {
+                        text: "The chillest planet around. Spinning on its side and sporting a cool blue vibe, it's the oddball that keeps things weird in the best way.",
+                        start: 0,
+                        end: 8
+                    }
+                ]
+            },
+            {
+                file: new URL(require("98d3614afcb60cf7")).href,
+                subtitles: [
+                    {
+                        text: "Uranus hits the coldest temperatures of any planet. With a minimum atmospheric temperature of -224\xb0C,",
+                        start: 0,
+                        end: 8
+                    },
+                    {
+                        text: "Uranus is nearly the coldest planet in the solar system.",
+                        start: 8,
+                        end: 12
+                    }
+                ]
+            },
+            {
+                file: new URL(require("47f72da5bf450a75")).href,
+                subtitles: [
+                    {
+                        text: "Uranus has two sets of very thin dark-colored rings. The ring particles are small, ranging from dust-sized particles to small boulders.",
+                        start: 0,
+                        end: 8
+                    },
+                    {
+                        text: "There are eleven inner rings and two outer rings. They probably formed when one or more of Uranus's moons were broken up in an impact.",
+                        start: 8,
+                        end: 14
+                    }
+                ]
+            },
+            {
+                file: new URL(require("9cf3c2d6b2929075")).href,
+                subtitles: [
+                    {
+                        text: "Uranus is tipped over on its side with an axial tilt of 98 degrees. It is often described as 'rolling around the Sun on its side.'",
+                        start: 0,
+                        end: 8
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        audioClips: [
+            {
+                file: new URL(require("c5ca05b427515129")).href,
+                subtitles: [
+                    {
+                        text: "The deep-blue giant of the solar system. With wild storms and supersonic winds, it's the cosmic ocean that never stops surprising.",
+                        start: 0,
+                        end: 9
+                    }
+                ]
+            },
+            {
+                file: new URL(require("51b2b8e283cce0d0")).href,
+                subtitles: [
+                    {
+                        text: "Neptune spins on its axis very rapidly. Its equatorial clouds take 16 hours to make one rotation.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "This is because Neptune is not a solid body.",
+                        start: 7,
+                        end: 9
+                    }
+                ]
+            },
+            {
+                file: new URL(require("509555fec0530b56")).href,
+                subtitles: [
+                    {
+                        text: "Neptune is the smallest of the ice giants. Despite being smaller than Uranus, Neptune has a greater mass.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            },
+            {
+                file: new URL(require("f3d058540254a39")).href,
+                subtitles: [
+                    {
+                        text: "Neptune has a very active climate. Large storms whirl through its upper atmosphere,",
+                        start: 0,
+                        end: 5
+                    },
+                    {
+                        text: "and high-speed winds track around the planet at up to 600 meters per second.",
+                        start: 5,
+                        end: 10
+                    }
+                ]
+            },
+            {
+                file: new URL(require("5600d83957bfa430")).href,
+                subtitles: [
+                    {
+                        text: "Neptune has a very thin collection of rings.",
+                        start: 0,
+                        end: 3
+                    },
+                    {
+                        text: "They are likely made up of ice particles mixed with dust grains and possibly coated with a carbon-based substance.",
+                        start: 3,
+                        end: 10
+                    }
+                ]
+            },
+            {
+                file: new URL(require("d65f1141e744edf2")).href,
+                subtitles: [
+                    {
+                        text: "Neptune has 14 moons. The most interesting moon is Triton,",
+                        start: 0,
+                        end: 4
+                    },
+                    {
+                        text: "a frozen world that is spewing nitrogen ice and dust particles out from below its surface. ",
+                        start: 4,
+                        end: 9
+                    },
+                    {
+                        text: "It was likely captured by the gravitational pull of Neptune. It is probably the coldest world in the solar system.",
+                        start: 9,
+                        end: 15
+                    }
+                ]
+            }
+        ]
+    },
+    // MOON
+    {
+        audioClips: [
+            {
+                file: new URL(require("9580d01ad1278252")).href,
+                subtitles: [
+                    {
+                        text: "Earth's trusty sidekick. With its glowing nights and quirky craters, it's the ultimate celestial hangout that's always ready for a lunar adventure.",
+                        start: 0,
+                        end: 8
+                    }
+                ]
+            },
+            {
+                file: new URL(require("2c9b7c048a30a9be")).href,
+                subtitles: [
+                    {
+                        text: "The Moon is the largest satellite of any planet in our solar system. In real terms, however, it is only the fifth largest natural satellite.",
+                        start: 0,
+                        end: 8
+                    }
+                ]
+            },
+            {
+                file: new URL(require("758666c5dc68656")).href,
+                subtitles: [
+                    {
+                        text: "Just like Earth has earthquakes, the Moon has moonquakes! These can be caused by tidal forces from Earth or meteor impacts.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            },
+            {
+                file: new URL(require("69a5c34df2f53061")).href,
+                subtitles: [
+                    {
+                        text: "The dark patches on the Moon, called 'maria', are ancient volcanic plains, giving the Moon its iconic appearance.",
+                        start: 0,
+                        end: 7
+                    },
+                    {
+                        text: "'maria' means 'seas' in Latin, even though they're not water.",
+                        start: 7,
+                        end: 11
+                    }
+                ]
+            },
+            {
+                file: new URL(require("7ee449acde091d97")).href,
+                subtitles: [
+                    {
+                        text: "The footprints left by astronauts on the Moon could last for millions of years because there's no wind or water to erode them.",
+                        start: 0,
+                        end: 7
+                    }
+                ]
+            }
+        ]
+    }
+];
+
+},{"77eb250518da21b8":"jT7EJ","7f2bdb0681aaa782":"7mFIW","52b38fcc44f0a2bb":"gjGJR","4ef85548002ef93":"feNso","affe269034525dbd":"9VyGF","401acc1f688096f8":"7EIrl","60e5817dfe468056":"b565S","43c1e5ad178939bc":"dYtRi","74785612c06ad6e2":"kG5Te","ceac81fde1fc515b":"lssF3","2911bf5d4dc02d0d":"9ZD59","8c1f92ce3654c9e7":"abXm9","60f37827cd139595":"hp5Z1","8515030780639e86":"6YW3l","a5278b8e2909bee9":"fdusr","d767e12f3198dd68":"1RyWC","48df59f1dd386e72":"3ViGa","dbe4301d3a132249":"ekk7i","fac2ff1275071c76":"b10zL","650db59159590fd6":"2GLr7","62712bcca9b93e47":"rrGi1","55bac4352a44c7ca":"iONPc","8feff3a44857cf1b":"7xveE","59d2fd9f4eccad07":"5JUdF","c9d3f9938d2dd5de":"gtJDQ","8c84584fbcb3e9eb":"1bmiW","62af1ed0662ef2dc":"646i7","b8e29a7b0eeaf25":"dkDfY","3bd6694fffd8eb71":"1T0YY","f3e5c0ba28d4e310":"isHtL","341a05d7ad47a7":"2cABQ","2ce39f46de59de42":"5QsgY","7ab4a9fa92593032":"jHIhA","fcda9d574d4cc54e":"4SYJf","5e002a4321ae4609":"3dDci","98d3614afcb60cf7":"hp4op","47f72da5bf450a75":"lB0Qf","9cf3c2d6b2929075":"45oD4","c5ca05b427515129":"cGtFD","51b2b8e283cce0d0":"gS1h4","509555fec0530b56":"28nNq","f3d058540254a39":"2Futo","5600d83957bfa430":"99Wxw","d65f1141e744edf2":"2iXXc","9580d01ad1278252":"ldjWS","2c9b7c048a30a9be":"inkOI","758666c5dc68656":"7JBVk","69a5c34df2f53061":"epCfj","7ee449acde091d97":"a2MYR","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jT7EJ":[function(require,module,exports) {
+module.exports = require("f3ea013328f68682").getBundleURL("lORN7") + "sunintro.33eb93dd.wav" + "?" + Date.now();
+
+},{"f3ea013328f68682":"lgJ39"}],"7mFIW":[function(require,module,exports) {
+module.exports = require("f8beccb8b41f429b").getBundleURL("lORN7") + "sunfact1.ae3273a5.wav" + "?" + Date.now();
+
+},{"f8beccb8b41f429b":"lgJ39"}],"gjGJR":[function(require,module,exports) {
+module.exports = require("f87c8838f1b01b99").getBundleURL("lORN7") + "sunfact2.3c36cf20.wav" + "?" + Date.now();
+
+},{"f87c8838f1b01b99":"lgJ39"}],"feNso":[function(require,module,exports) {
+module.exports = require("de624a623a6d1a9b").getBundleURL("lORN7") + "sunfact3.ad979939.wav" + "?" + Date.now();
+
+},{"de624a623a6d1a9b":"lgJ39"}],"9VyGF":[function(require,module,exports) {
+module.exports = require("258de9bf1b9359a1").getBundleURL("lORN7") + "welcome.89f01d99.wav" + "?" + Date.now();
+
+},{"258de9bf1b9359a1":"lgJ39"}],"7EIrl":[function(require,module,exports) {
+module.exports = require("3db9f2d208578da0").getBundleURL("lORN7") + "mercuryintro.69d17220.wav" + "?" + Date.now();
+
+},{"3db9f2d208578da0":"lgJ39"}],"b565S":[function(require,module,exports) {
+module.exports = require("487d672bd2567e4b").getBundleURL("lORN7") + "mercuryfact1.b5da775c.wav" + "?" + Date.now();
+
+},{"487d672bd2567e4b":"lgJ39"}],"dYtRi":[function(require,module,exports) {
+module.exports = require("f6b135c46e953a35").getBundleURL("lORN7") + "mercuryfact2.02580109.wav" + "?" + Date.now();
+
+},{"f6b135c46e953a35":"lgJ39"}],"kG5Te":[function(require,module,exports) {
+module.exports = require("bb212d9247f8b260").getBundleURL("lORN7") + "mercuryfact3.09d88c29.wav" + "?" + Date.now();
+
+},{"bb212d9247f8b260":"lgJ39"}],"lssF3":[function(require,module,exports) {
+module.exports = require("2b57be6ca0dc7e0b").getBundleURL("lORN7") + "venusintro.f55d2a7f.wav" + "?" + Date.now();
+
+},{"2b57be6ca0dc7e0b":"lgJ39"}],"9ZD59":[function(require,module,exports) {
+module.exports = require("7a9cf7868a63fd2e").getBundleURL("lORN7") + "venusfact1.ff2ddc4c.wav" + "?" + Date.now();
+
+},{"7a9cf7868a63fd2e":"lgJ39"}],"abXm9":[function(require,module,exports) {
+module.exports = require("b86bbf6a011c6b82").getBundleURL("lORN7") + "venusfact2.333835ab.wav" + "?" + Date.now();
+
+},{"b86bbf6a011c6b82":"lgJ39"}],"hp5Z1":[function(require,module,exports) {
+module.exports = require("e14259a1547a289b").getBundleURL("lORN7") + "venusfact3.a191c07c.wav" + "?" + Date.now();
+
+},{"e14259a1547a289b":"lgJ39"}],"6YW3l":[function(require,module,exports) {
+module.exports = require("66dc50fad8ce7d2b").getBundleURL("lORN7") + "venusfact4.0a919259.wav" + "?" + Date.now();
+
+},{"66dc50fad8ce7d2b":"lgJ39"}],"fdusr":[function(require,module,exports) {
+module.exports = require("a3cec2f467be5839").getBundleURL("lORN7") + "venusfact5.04fec526.wav" + "?" + Date.now();
+
+},{"a3cec2f467be5839":"lgJ39"}],"1RyWC":[function(require,module,exports) {
+module.exports = require("37c67efed0d462c2").getBundleURL("lORN7") + "venusfact6.c812893d.wav" + "?" + Date.now();
+
+},{"37c67efed0d462c2":"lgJ39"}],"3ViGa":[function(require,module,exports) {
+module.exports = require("45fdae92ad855b3a").getBundleURL("lORN7") + "earthintro.841ea11c.wav" + "?" + Date.now();
+
+},{"45fdae92ad855b3a":"lgJ39"}],"ekk7i":[function(require,module,exports) {
+module.exports = require("252afb108968914b").getBundleURL("lORN7") + "earthfact1.fdc2cbe1.wav" + "?" + Date.now();
+
+},{"252afb108968914b":"lgJ39"}],"b10zL":[function(require,module,exports) {
+module.exports = require("d4417a620e96fec4").getBundleURL("lORN7") + "earthfact2.31a743bc.wav" + "?" + Date.now();
+
+},{"d4417a620e96fec4":"lgJ39"}],"2GLr7":[function(require,module,exports) {
+module.exports = require("881fc184ce83175b").getBundleURL("lORN7") + "earthfact3.0c620469.wav" + "?" + Date.now();
+
+},{"881fc184ce83175b":"lgJ39"}],"rrGi1":[function(require,module,exports) {
+module.exports = require("e4dda16f76cc5804").getBundleURL("lORN7") + "marsintro.37ea4865.wav" + "?" + Date.now();
+
+},{"e4dda16f76cc5804":"lgJ39"}],"iONPc":[function(require,module,exports) {
+module.exports = require("89f472425317a220").getBundleURL("lORN7") + "marsfact1.a5a58fc4.wav" + "?" + Date.now();
+
+},{"89f472425317a220":"lgJ39"}],"7xveE":[function(require,module,exports) {
+module.exports = require("e904bbaf359b2b5e").getBundleURL("lORN7") + "marsfact2.6b9ff973.wav" + "?" + Date.now();
+
+},{"e904bbaf359b2b5e":"lgJ39"}],"5JUdF":[function(require,module,exports) {
+module.exports = require("1c34e71a550c719c").getBundleURL("lORN7") + "marsfact3.fa007168.wav" + "?" + Date.now();
+
+},{"1c34e71a550c719c":"lgJ39"}],"gtJDQ":[function(require,module,exports) {
+module.exports = require("2847228b2237803b").getBundleURL("lORN7") + "marsfact4.354f19f3.wav" + "?" + Date.now();
+
+},{"2847228b2237803b":"lgJ39"}],"1bmiW":[function(require,module,exports) {
+module.exports = require("d2777bc4208c29f9").getBundleURL("lORN7") + "jupiterintro.43247194.wav" + "?" + Date.now();
+
+},{"d2777bc4208c29f9":"lgJ39"}],"646i7":[function(require,module,exports) {
+module.exports = require("fb32c08c689bed8").getBundleURL("lORN7") + "jupiterfact1.ab51f2e5.wav" + "?" + Date.now();
+
+},{"fb32c08c689bed8":"lgJ39"}],"dkDfY":[function(require,module,exports) {
+module.exports = require("f81a3e625d5cb5de").getBundleURL("lORN7") + "jupiterfact2.53a1c882.wav" + "?" + Date.now();
+
+},{"f81a3e625d5cb5de":"lgJ39"}],"1T0YY":[function(require,module,exports) {
+module.exports = require("ca822d39c88e5e70").getBundleURL("lORN7") + "jupiterfact3.f63ccc87.wav" + "?" + Date.now();
+
+},{"ca822d39c88e5e70":"lgJ39"}],"isHtL":[function(require,module,exports) {
+module.exports = require("e757ced7272aca6a").getBundleURL("lORN7") + "jupiterfact4.75ec5d45.wav" + "?" + Date.now();
+
+},{"e757ced7272aca6a":"lgJ39"}],"2cABQ":[function(require,module,exports) {
+module.exports = require("38b74c2a0744141").getBundleURL("lORN7") + "saturnintro.5f3ee863.wav" + "?" + Date.now();
+
+},{"38b74c2a0744141":"lgJ39"}],"5QsgY":[function(require,module,exports) {
+module.exports = require("953317adc1ca0090").getBundleURL("lORN7") + "saturnfact1.e226499f.wav" + "?" + Date.now();
+
+},{"953317adc1ca0090":"lgJ39"}],"jHIhA":[function(require,module,exports) {
+module.exports = require("4c4e584515f7bf0e").getBundleURL("lORN7") + "saturnfact2.7c6af678.wav" + "?" + Date.now();
+
+},{"4c4e584515f7bf0e":"lgJ39"}],"4SYJf":[function(require,module,exports) {
+module.exports = require("ffa4a8b2fe3ef6ea").getBundleURL("lORN7") + "saturnfact3.4c24bf0e.wav" + "?" + Date.now();
+
+},{"ffa4a8b2fe3ef6ea":"lgJ39"}],"3dDci":[function(require,module,exports) {
+module.exports = require("3bdc92dc5fad9ed1").getBundleURL("lORN7") + "uranusintro.e4019ac3.wav" + "?" + Date.now();
+
+},{"3bdc92dc5fad9ed1":"lgJ39"}],"hp4op":[function(require,module,exports) {
+module.exports = require("652779a61a9e86d6").getBundleURL("lORN7") + "uranusfact1.4b770a06.wav" + "?" + Date.now();
+
+},{"652779a61a9e86d6":"lgJ39"}],"lB0Qf":[function(require,module,exports) {
+module.exports = require("6cab68e630a7e2ac").getBundleURL("lORN7") + "uranusfact3.550069b2.wav" + "?" + Date.now();
+
+},{"6cab68e630a7e2ac":"lgJ39"}],"45oD4":[function(require,module,exports) {
+module.exports = require("94446d222d161bf5").getBundleURL("lORN7") + "uranusfact4.42344c97.wav" + "?" + Date.now();
+
+},{"94446d222d161bf5":"lgJ39"}],"cGtFD":[function(require,module,exports) {
+module.exports = require("7144640464183793").getBundleURL("lORN7") + "neptuneintro.09a9ce57.wav" + "?" + Date.now();
+
+},{"7144640464183793":"lgJ39"}],"gS1h4":[function(require,module,exports) {
+module.exports = require("ab91d449e950968f").getBundleURL("lORN7") + "neptunefact1.37c61e8a.wav" + "?" + Date.now();
+
+},{"ab91d449e950968f":"lgJ39"}],"28nNq":[function(require,module,exports) {
+module.exports = require("1ae3f87ababf756").getBundleURL("lORN7") + "neptunefact2.1730bcf1.wav" + "?" + Date.now();
+
+},{"1ae3f87ababf756":"lgJ39"}],"2Futo":[function(require,module,exports) {
+module.exports = require("7c8110a0aaa62381").getBundleURL("lORN7") + "neptunefact3.a7b93639.wav" + "?" + Date.now();
+
+},{"7c8110a0aaa62381":"lgJ39"}],"99Wxw":[function(require,module,exports) {
+module.exports = require("ae9682babb9e9b69").getBundleURL("lORN7") + "neptunefact4.4a7f8d5f.wav" + "?" + Date.now();
+
+},{"ae9682babb9e9b69":"lgJ39"}],"2iXXc":[function(require,module,exports) {
+module.exports = require("a693d2b2d10f1e6").getBundleURL("lORN7") + "neptunefact5.75d96a81.wav" + "?" + Date.now();
+
+},{"a693d2b2d10f1e6":"lgJ39"}],"ldjWS":[function(require,module,exports) {
+module.exports = require("491a3e823c4ee6da").getBundleURL("lORN7") + "moonintro.8322cea0.wav" + "?" + Date.now();
+
+},{"491a3e823c4ee6da":"lgJ39"}],"inkOI":[function(require,module,exports) {
+module.exports = require("914e2571ae7d1342").getBundleURL("lORN7") + "moonfact1.e7ed3655.wav" + "?" + Date.now();
+
+},{"914e2571ae7d1342":"lgJ39"}],"7JBVk":[function(require,module,exports) {
+module.exports = require("5a72c9b35e7e1c5b").getBundleURL("lORN7") + "moonfact2.70ba5825.wav" + "?" + Date.now();
+
+},{"5a72c9b35e7e1c5b":"lgJ39"}],"epCfj":[function(require,module,exports) {
+module.exports = require("44d96b746a12c37f").getBundleURL("lORN7") + "moonfact3.2db5237c.wav" + "?" + Date.now();
+
+},{"44d96b746a12c37f":"lgJ39"}],"a2MYR":[function(require,module,exports) {
+module.exports = require("ad36d58ad61ffacc").getBundleURL("lORN7") + "moonfact4.5e54e80e.wav" + "?" + Date.now();
+
+},{"ad36d58ad61ffacc":"lgJ39"}],"dekG2":[function(require,module,exports) {
 module.exports = require("fb03523e4da74559").getBundleURL("lORN7") + "NEA.99f7a4a4.png" + "?" + Date.now();
 
 },{"fb03523e4da74559":"lgJ39"}],"c6f47":[function(require,module,exports) {
@@ -41106,6 +45065,15 @@ module.exports = require("3979de42d1db21e1").getBundleURL("lORN7") + "NEC.5eb9f1
 },{"3979de42d1db21e1":"lgJ39"}],"95S6T":[function(require,module,exports) {
 module.exports = require("b05edbfc54721588").getBundleURL("lORN7") + "PHA.29275f4d.png" + "?" + Date.now();
 
-},{"b05edbfc54721588":"lgJ39"}]},["aJPIF","8ZNvh"], "8ZNvh", "parcelRequire591d")
+},{"b05edbfc54721588":"lgJ39"}],"1XqyZ":[function(require,module,exports) {
+module.exports = require("16e0880cae9ba64d").getBundleURL("lORN7") + "eros.03b7efc0.glb" + "?" + Date.now();
+
+},{"16e0880cae9ba64d":"lgJ39"}],"hUYkQ":[function(require,module,exports) {
+module.exports = require("2be41b63a4224655").getBundleURL("lORN7") + "bennu.c02fdc7e.glb" + "?" + Date.now();
+
+},{"2be41b63a4224655":"lgJ39"}],"9hdMf":[function(require,module,exports) {
+module.exports = require("a2dce8cd6a0a4193").getBundleURL("lORN7") + "itokawa.a0feb2b9.glb" + "?" + Date.now();
+
+},{"a2dce8cd6a0a4193":"lgJ39"}]},["aJPIF","8ZNvh"], "8ZNvh", "parcelRequire591d")
 
 //# sourceMappingURL=index.f5c48570.js.map
