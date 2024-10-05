@@ -46,6 +46,11 @@ a:active {
 
 /* ----------------------------- */
 
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
 .overlay {
   position: fixed;
   top: 0;
@@ -141,7 +146,7 @@ a:active {
   flex-flow: column nowrap;
   align-items: left;
 
-  padding: 2%;
+  padding: 1.5%;
 
   margin-left: 8%;
   margin-top: -5%;
@@ -161,7 +166,7 @@ a:active {
   flex-flow: column nowrap;
   align-items: left;
 
-  padding: 2%;
+  padding: 1.5%;
 
   margin-left: 8%;
   margin-top: -5%;
@@ -256,7 +261,7 @@ a:active {
 .value {
   color: #ccc;
   font-family: bbtorsos;
-  font-size: 22px;
+  font-size: 18px;
   letter-spacing: 1px;
   /*text-align: justify;*/
 }
@@ -726,3 +731,4 @@ display: none;
 .small:hover {
   background-color: rgba(255, 255, 255, 0.234);
 }
+
