@@ -687,6 +687,10 @@ var _necPng = require("../assets/asteroids/NEC.png");
 var _necPngDefault = parcelHelpers.interopDefault(_necPng);
 var _phaPng = require("../assets/asteroids/PHA.png");
 var _phaPngDefault = parcelHelpers.interopDefault(_phaPng);
+var _asteroidMapJpg = require("../assets/asteroids/asteroidMap.jpg");
+var _asteroidMapJpgDefault = parcelHelpers.interopDefault(_asteroidMapJpg);
+var _asteroidBumpMapPng = require("../assets/asteroids/asteroidBumpMap.png");
+var _asteroidBumpMapPngDefault = parcelHelpers.interopDefault(_asteroidBumpMapPng);
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
 const planetGroupArr = [];
 const asteroidGroupArr = [];
@@ -748,7 +752,6 @@ function addFilters() {
     div.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none;"><filter id="protanopia-filter"><feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0 0.558, 0.442, 0, 0, 0 0, 0.242, 0.758, 0, 0 0, 0, 0, 1, 0" /></filter><filter id="deuteranopia-filter"><feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0 0.7, 0.3, 0, 0, 0 0, 0.3, 0.7, 0, 0 0, 0, 0, 1, 0" /></filter><filter id="tritanopia-filter"><feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0 0, 0.433, 0.567, 0, 0 0, 0.475, 0.525, 0, 0 0, 0, 0, 1, 0" /></filter></svg>';
     body.appendChild(div);
 }
-addFilters();
 //
 loadingManager.onLoad = function() {
     (0, _gsap.gsap).to("#loadingcontainer", {
@@ -906,6 +909,7 @@ earthButton.addEventListener("click", function() {
         opacity: 0,
         duration: 1,
         onComplete: function() {
+            asteroidFocus = false;
             planetui.style.display = "none";
             earthButton.style.display = "none";
             planetui.style.cursor = "pointer";
@@ -1091,9 +1095,16 @@ function createSmalls() {
     });
 }
 createSmalls();
+let asteroidFocus = false;
+let astSound1 = false;
+let astSound2 = false;
+const OFFSETVARIABLE = 1 / 82738 * 15;
+// OFFSETVARIABLE FOR DEFAULT ASTEROID = 0.05 * 2.5
+// OFFSETVARIABLE FOR EROS = 1/82738 * 15
 const smalls = document.querySelectorAll(".small");
 smalls.forEach((small, index)=>{
     small.addEventListener("click", ()=>{
+        asteroidFocus = true;
         document.getElementById("astUItype").innerText = types[asteroidData[index].type].description;
         document.getElementById("astUIsemimajor").innerText = asteroidData[index].a + " AU";
         document.getElementById("astUIincline").innerText = asteroidData[index].i + " degrees";
@@ -1102,8 +1113,8 @@ smalls.forEach((small, index)=>{
         document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
         document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
         let ASTtargetPosition = ErosGroup.position.clone().add(new _three.Vector3(0, 0, 0));
-        const OFFSETVARIABLE = asteroidData[index].a * 2.5;
-        console.log(ASTtargetPosition.x + OFFSETVARIABLE);
+        // const OFFSETVARIABLE = asteroidData[index].a * 2.5
+        camera.lookAt(ASTtargetPosition.x, ASTtargetPosition.y, ASTtargetPosition.z);
         if (!firstSmallClicked) {
             firstSmallClicked = true;
             document.getElementById("secondlm").style.display = "";
@@ -1112,6 +1123,10 @@ smalls.forEach((small, index)=>{
                 opacity: 1,
                 duration: 1
             });
+            if (astSound1 == false) {
+                playAudio(10, 0);
+                astSound1 = true;
+            }
             // camera transition to first asteroid
             (0, _gsap.gsap).to(camera.position, {
                 x: ASTtargetPosition.x + OFFSETVARIABLE,
@@ -1122,7 +1137,6 @@ smalls.forEach((small, index)=>{
                     controls.update();
                     controls2.update();
                     controls2.noZoom = true;
-                    controls.enableRotate = false;
                 }
             });
             (0, _gsap.gsap).to(controls.target, {
@@ -1135,8 +1149,15 @@ smalls.forEach((small, index)=>{
                     controls2.update();
                 }
             });
-        } else // camera transition from asteroid to asteroi
-        camera.position.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
+        } else {
+            // camera transition from asteroid to asteroid
+            if (astSound2 == false) {
+                playAudio(10, 1);
+                astSound2 = true;
+            }
+            camera.position.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
+            controls.target.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
+        }
     });
 });
 function filterAndSearchItems() {
@@ -1167,8 +1188,8 @@ const h = window.innerHeight;
 const scene = new _three.Scene();
 const camera = new _three.PerspectiveCamera(75, w / h, 0.0001, 2000 // far
 );
-camera.position.x = 15;
-camera.position.y = 5;
+camera.position.x = 5;
+camera.position.y = 1;
 const renderer = new _three.WebGLRenderer({
     antialias: true
 });
@@ -1188,7 +1209,7 @@ controls2.noRotate = true;
 controls2.noPan = true;
 controls2.noZoom = false;
 controls2.zoomSpeed = 2.5;
-controls2.minDistance = 5;
+controls2.minDistance = 0.5;
 controls2.maxDistance = 500;
 const detail = 12;
 const loader = new _three.TextureLoader(loadingManager);
@@ -1307,7 +1328,6 @@ const venusFersenel = {
 const venusAxisSpeed = 0.00000029927;
 const venusGroup = new (0, _planetJsDefault.default)(-177.4, 177.4, scene, venusGeometry, venusAxisSpeed);
 venusGroup.createShape(venusMaterial, venusNightlightsMat, venusFersenel, venusCloudsMat);
-venusGroup.position.set(-6, 0, 0);
 ////////////////////////// MARS //////////////////////////
 const marsGeometry = [
     0.00045,
@@ -1539,9 +1559,11 @@ const maxSemiMajorAxis = 5.0;
 const beltInclinationRange = 15;
 const eccentricityRange = 0.05;
 // Asteroid geometry and material
-const asteroidGeometry = new _three.IcosahedronGeometry(0.1, 1);
-const asteroidMaterial = new _three.MeshPhongMaterial({
-    color: 0x888888
+const asteroidGeometry = new _three.IcosahedronGeometry(0.05, 1);
+const asteroidMaterial = new _three.MeshStandardMaterial({
+    map: loader.load((0, _asteroidMapJpgDefault.default)),
+    bumpMap: loader.load((0, _asteroidBumpMapPngDefault.default)),
+    bumpScale: 100
 });
 const asteroids = [];
 // Generate random orbital parameters for asteroids
@@ -1839,7 +1861,7 @@ sunGroup.mass = "1,988,400";
 sunGroup.radius = "695,700 km";
 sunGroup.orbitalPeriod = "230 million years";
 sunGroup.factLink = "https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html";
-sunSprite.position.y += 0.5;
+sunSprite.position.y += 0.15;
 var mercurySprite = createPlanetLabel("MERCURY", 72, labelColor);
 mercurySprite.name = "MERCURY";
 scene.add(mercurySprite);
@@ -2292,8 +2314,13 @@ function animate() {
     });
     updateAsteroidBelt(timeIncrement);
     if (isZooming) {
-        targetPosition = targetPlanet.position.clone();
-        controls.maxDistance = clickedLabel.associatedNumber;
+        if (asteroidFocus == false) {
+            targetPosition = targetPlanet.position.clone();
+            controls.maxDistance = clickedLabel.associatedNumber;
+        } else {
+            targetPosition = ErosGroup.position.clone();
+            controls.maxDistance = OFFSETVARIABLE;
+        }
         controls.target.copy(targetPosition);
         controls2.target.copy(targetPosition);
         controls.update();
@@ -2377,7 +2404,7 @@ function animate() {
     scene.traverse(restoreMaterial);
     // render the entire scene, then render bloom scene on top
     finalComposer.render();
-// renderer.render(scene, camera);
+//renderer.render(scene, camera);
 }
 createAsteroidBelt();
 function darkenNonBloomed(obj) {
@@ -2402,7 +2429,7 @@ function handleWindowResize() {
 }
 window.addEventListener("resize", handleWindowResize, false);
 
-},{"../node_modules/three":"ktPTu","../node_modules/three/examples/jsm/controls/OrbitControls.js":"7mqRv","../node_modules/three/examples/jsm/controls/TrackballControls.js":"1AMKo","../node_modules/three/examples/jsm/Addons.js":"iBAni","../node_modules/gsap":"fPSuC","../node_modules/three/examples/jsm/postprocessing/RenderPass.js":"hXnUO","../node_modules/three/examples/jsm/postprocessing/EffectComposer.js":"e5jie","../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js":"3iDYE","../node_modules/three/examples/jsm/postprocessing/OutputPass.js":"bggV1","../node_modules/three/examples/jsm/postprocessing/ShaderPass.js":"5IxTN","./planet.js":"exNfn","../assets/stars/circle.png":"bpJO1","../assets/textures/earth/earthmap1k.png":"sL8jQ","../assets/textures/earth/earthlights1k.jpg":"hwl0n","../assets/textures/earth/earthspec1k.jpg":"cbuRO","../assets/textures/earth/earthbump1k.jpg":"81aoT","../assets/textures/earth/earthcloudmap.jpg":"6QHR0","../assets/textures/moon/moonmap4k.jpg":"77X2x","../assets/textures/moon/moonbump4k.jpg":"3EVqM","./planets.json":"k4gu4","../assets/textures/jupiter/jupiter.jpg":"kdPTc","../assets/textures/jupiter/jupiternight.jpg":"bIDlt","../assets/textures/mercury/mercurymap.jpg":"iWRN5","../assets/textures/mercury/mercurybump.jpg":"dYcYR","../assets/textures/mercury/mercurynightmap.jpg":"6q8Da","../assets/textures/venus/venusmap.jpg":"E6AsX","../assets/textures/venus/venusmapnight.jpg":"4e6gf","../assets/textures/venus/venusclouds.jpg":"5rqUK","../assets/textures/mars/marsmap.png":"l6QSa","../assets/textures/mars/marsbump.jpg":"c4kMA","../assets/textures/mars/marsclouds.png":"2v5Zj","../assets/textures/mars/marsnight.jpg":"gmgyo","../assets/textures/saturn/th_saturn.png":"1PmpW","../assets/textures/saturn/th_saturnbump.png":"3N3Sf","../assets/textures/saturn/th_saturnclouds.png":"dBdUM","../assets/textures/saturn/th_saturnnight.png":"eeNJU","../assets/textures/saturn/t00fri_gh_saturnrings.png":"aUgNw","../assets/textures/uranus/uranusmap.png":"cmcTM","../assets/textures/uranus/uranuslights.png":"fmPKW","../assets/textures/uranus/uranusrings.png":"fldyh","../assets/textures/neptune/neptunemap.jpg":"6Qb4i","../assets/textures/neptune/neptunebump.png":"ixuWJ","../assets/textures/neptune/neptuneclouds.png":"leeDc","../assets/textures/neptune/neptunelights.jpg":"1pAHL","../assets/textures/neptune/neptunerings.png":"cLZgz","../assets/textures/sun/sunmap.jpg":"daOLx","./subtitles.js":"2NNMB","../assets/asteroids/NEA.png":"dekG2","../assets/asteroids/NEC.png":"c6f47","../assets/asteroids/PHA.png":"95S6T","b52406d8383adb96":"1XqyZ","194fb1d7cdd86a67":"hUYkQ","5ae9dee44506e1a5":"9hdMf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"../node_modules/three":"ktPTu","../node_modules/three/examples/jsm/controls/OrbitControls.js":"7mqRv","../node_modules/three/examples/jsm/controls/TrackballControls.js":"1AMKo","../node_modules/three/examples/jsm/Addons.js":"iBAni","../node_modules/gsap":"fPSuC","../node_modules/three/examples/jsm/postprocessing/RenderPass.js":"hXnUO","../node_modules/three/examples/jsm/postprocessing/EffectComposer.js":"e5jie","../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js":"3iDYE","../node_modules/three/examples/jsm/postprocessing/OutputPass.js":"bggV1","../node_modules/three/examples/jsm/postprocessing/ShaderPass.js":"5IxTN","./planet.js":"exNfn","../assets/stars/circle.png":"bpJO1","../assets/textures/earth/earthmap1k.png":"sL8jQ","../assets/textures/earth/earthlights1k.jpg":"hwl0n","../assets/textures/earth/earthspec1k.jpg":"cbuRO","../assets/textures/earth/earthbump1k.jpg":"81aoT","../assets/textures/earth/earthcloudmap.jpg":"6QHR0","../assets/textures/moon/moonmap4k.jpg":"77X2x","../assets/textures/moon/moonbump4k.jpg":"3EVqM","./planets.json":"k4gu4","../assets/textures/jupiter/jupiter.jpg":"kdPTc","../assets/textures/jupiter/jupiternight.jpg":"bIDlt","../assets/textures/mercury/mercurymap.jpg":"iWRN5","../assets/textures/mercury/mercurybump.jpg":"dYcYR","../assets/textures/mercury/mercurynightmap.jpg":"6q8Da","../assets/textures/venus/venusmap.jpg":"E6AsX","../assets/textures/venus/venusmapnight.jpg":"4e6gf","../assets/textures/venus/venusclouds.jpg":"5rqUK","../assets/textures/mars/marsmap.png":"l6QSa","../assets/textures/mars/marsbump.jpg":"c4kMA","../assets/textures/mars/marsclouds.png":"2v5Zj","../assets/textures/mars/marsnight.jpg":"gmgyo","../assets/textures/saturn/th_saturn.png":"1PmpW","../assets/textures/saturn/th_saturnbump.png":"3N3Sf","../assets/textures/saturn/th_saturnclouds.png":"dBdUM","../assets/textures/saturn/th_saturnnight.png":"eeNJU","../assets/textures/saturn/t00fri_gh_saturnrings.png":"aUgNw","../assets/textures/uranus/uranusmap.png":"cmcTM","../assets/textures/uranus/uranuslights.png":"fmPKW","../assets/textures/uranus/uranusrings.png":"fldyh","../assets/textures/neptune/neptunemap.jpg":"6Qb4i","../assets/textures/neptune/neptunebump.png":"ixuWJ","../assets/textures/neptune/neptuneclouds.png":"leeDc","../assets/textures/neptune/neptunelights.jpg":"1pAHL","../assets/textures/neptune/neptunerings.png":"cLZgz","../assets/textures/sun/sunmap.jpg":"daOLx","./subtitles.js":"2NNMB","../assets/asteroids/NEA.png":"dekG2","../assets/asteroids/NEC.png":"c6f47","../assets/asteroids/PHA.png":"95S6T","b52406d8383adb96":"1XqyZ","194fb1d7cdd86a67":"hUYkQ","5ae9dee44506e1a5":"9hdMf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../assets/asteroids/asteroidMap.jpg":"7syhI","../assets/asteroids/asteroidBumpMap.png":"dOzxD"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2024 Three.js Authors
@@ -44940,10 +44967,44 @@ const audioData = [
                 ]
             }
         ]
+    },
+    {
+        audioClips: [
+            {
+                file: new URL(require("6d502f9ed8fe4ce3")).href,
+                subtitles: [
+                    {
+                        text: "Asteroids, comets, and other celestial objects trace their orbits around Earth",
+                        start: 0,
+                        end: 5
+                    },
+                    {
+                        text: " moving in silent loops through the vast expanse of space.",
+                        start: 5,
+                        end: 9
+                    }
+                ]
+            },
+            {
+                file: new URL(require("b0a23d7b7e2db49")).href,
+                subtitles: [
+                    {
+                        text: "Planets this, planets that. What about those rocks travelling through space around us? ",
+                        start: 0,
+                        end: 5
+                    },
+                    {
+                        text: " As underrated as they are, these little rascals sure are fascinating.",
+                        start: 5,
+                        end: 10
+                    }
+                ]
+            }
+        ]
     }
 ];
 
-},{"77eb250518da21b8":"jT7EJ","7f2bdb0681aaa782":"7mFIW","52b38fcc44f0a2bb":"gjGJR","4ef85548002ef93":"feNso","affe269034525dbd":"9VyGF","401acc1f688096f8":"7EIrl","60e5817dfe468056":"b565S","43c1e5ad178939bc":"dYtRi","74785612c06ad6e2":"kG5Te","ceac81fde1fc515b":"lssF3","2911bf5d4dc02d0d":"9ZD59","8c1f92ce3654c9e7":"abXm9","60f37827cd139595":"hp5Z1","8515030780639e86":"6YW3l","a5278b8e2909bee9":"fdusr","d767e12f3198dd68":"1RyWC","48df59f1dd386e72":"3ViGa","dbe4301d3a132249":"ekk7i","fac2ff1275071c76":"b10zL","650db59159590fd6":"2GLr7","62712bcca9b93e47":"rrGi1","55bac4352a44c7ca":"iONPc","8feff3a44857cf1b":"7xveE","59d2fd9f4eccad07":"5JUdF","c9d3f9938d2dd5de":"gtJDQ","8c84584fbcb3e9eb":"1bmiW","62af1ed0662ef2dc":"646i7","b8e29a7b0eeaf25":"dkDfY","3bd6694fffd8eb71":"1T0YY","f3e5c0ba28d4e310":"isHtL","341a05d7ad47a7":"2cABQ","2ce39f46de59de42":"5QsgY","7ab4a9fa92593032":"jHIhA","fcda9d574d4cc54e":"4SYJf","5e002a4321ae4609":"3dDci","98d3614afcb60cf7":"hp4op","47f72da5bf450a75":"lB0Qf","9cf3c2d6b2929075":"45oD4","c5ca05b427515129":"cGtFD","51b2b8e283cce0d0":"gS1h4","509555fec0530b56":"28nNq","f3d058540254a39":"2Futo","5600d83957bfa430":"99Wxw","d65f1141e744edf2":"2iXXc","9580d01ad1278252":"ldjWS","2c9b7c048a30a9be":"inkOI","758666c5dc68656":"7JBVk","69a5c34df2f53061":"epCfj","7ee449acde091d97":"a2MYR","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jT7EJ":[function(require,module,exports) {
+},{"77eb250518da21b8":"jT7EJ","7f2bdb0681aaa782":"7mFIW","52b38fcc44f0a2bb":"gjGJR","4ef85548002ef93":"feNso","affe269034525dbd":"9VyGF","401acc1f688096f8":"7EIrl","60e5817dfe468056":"b565S","43c1e5ad178939bc":"dYtRi","74785612c06ad6e2":"kG5Te","ceac81fde1fc515b":"lssF3","2911bf5d4dc02d0d":"9ZD59","8c1f92ce3654c9e7":"abXm9","60f37827cd139595":"hp5Z1","8515030780639e86":"6YW3l","a5278b8e2909bee9":"fdusr","d767e12f3198dd68":"1RyWC","48df59f1dd386e72":"3ViGa","dbe4301d3a132249":"ekk7i","fac2ff1275071c76":"b10zL","650db59159590fd6":"2GLr7","62712bcca9b93e47":"rrGi1","55bac4352a44c7ca":"iONPc","8feff3a44857cf1b":"7xveE","59d2fd9f4eccad07":"5JUdF","c9d3f9938d2dd5de":"gtJDQ","8c84584fbcb3e9eb":"1bmiW","62af1ed0662ef2dc":"646i7","b8e29a7b0eeaf25":"dkDfY","3bd6694fffd8eb71":"1T0YY","f3e5c0ba28d4e310":"isHtL","341a05d7ad47a7":"2cABQ","2ce39f46de59de42":"5QsgY","7ab4a9fa92593032":"jHIhA","fcda9d574d4cc54e":"4SYJf","5e002a4321ae4609":"3dDci","98d3614afcb60cf7":"hp4op","47f72da5bf450a75":"lB0Qf","9cf3c2d6b2929075":"45oD4","c5ca05b427515129":"cGtFD","51b2b8e283cce0d0":"gS1h4","509555fec0530b56":"28nNq","f3d058540254a39":"2Futo","5600d83957bfa430":"99Wxw","d65f1141e744edf2":"2iXXc","9580d01ad1278252":"ldjWS","2c9b7c048a30a9be":"inkOI","758666c5dc68656":"7JBVk","69a5c34df2f53061":"epCfj","7ee449acde091d97":"a2MYR","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","6d502f9ed8fe4ce3":"depOG","b0a23d7b7e2db49":"g00Mt"}],"jT7EJ":[function(require,module,exports) {
 module.exports = require("f3ea013328f68682").getBundleURL("lORN7") + "sunintro.33eb93dd.wav" + "?" + Date.now();
 
 },{"f3ea013328f68682":"lgJ39"}],"7mFIW":[function(require,module,exports) {
@@ -45090,7 +45151,13 @@ module.exports = require("44d96b746a12c37f").getBundleURL("lORN7") + "moonfact3.
 },{"44d96b746a12c37f":"lgJ39"}],"a2MYR":[function(require,module,exports) {
 module.exports = require("ad36d58ad61ffacc").getBundleURL("lORN7") + "moonfact4.5e54e80e.wav" + "?" + Date.now();
 
-},{"ad36d58ad61ffacc":"lgJ39"}],"dekG2":[function(require,module,exports) {
+},{"ad36d58ad61ffacc":"lgJ39"}],"depOG":[function(require,module,exports) {
+module.exports = require("ddc7764b72c219c9").getBundleURL("lORN7") + "asteroid1.a42d2153.wav" + "?" + Date.now();
+
+},{"ddc7764b72c219c9":"lgJ39"}],"g00Mt":[function(require,module,exports) {
+module.exports = require("69ac0501753d4c6a").getBundleURL("lORN7") + "asteroid2.e7755cb8.wav" + "?" + Date.now();
+
+},{"69ac0501753d4c6a":"lgJ39"}],"dekG2":[function(require,module,exports) {
 module.exports = require("fb03523e4da74559").getBundleURL("lORN7") + "NEA.99f7a4a4.png" + "?" + Date.now();
 
 },{"fb03523e4da74559":"lgJ39"}],"c6f47":[function(require,module,exports) {
@@ -45108,6 +45175,12 @@ module.exports = require("2be41b63a4224655").getBundleURL("lORN7") + "bennu.c02f
 },{"2be41b63a4224655":"lgJ39"}],"9hdMf":[function(require,module,exports) {
 module.exports = require("a2dce8cd6a0a4193").getBundleURL("lORN7") + "itokawa.a0feb2b9.glb" + "?" + Date.now();
 
-},{"a2dce8cd6a0a4193":"lgJ39"}]},["aJPIF","8ZNvh"], "8ZNvh", "parcelRequire591d")
+},{"a2dce8cd6a0a4193":"lgJ39"}],"7syhI":[function(require,module,exports) {
+module.exports = require("b2d75c52e7742aa0").getBundleURL("lORN7") + "asteroidMap.04505322.jpg" + "?" + Date.now();
+
+},{"b2d75c52e7742aa0":"lgJ39"}],"dOzxD":[function(require,module,exports) {
+module.exports = require("223816402e8ebe63").getBundleURL("lORN7") + "asteroidBumpMap.fdf8cd1e.png" + "?" + Date.now();
+
+},{"223816402e8ebe63":"lgJ39"}]},["aJPIF","8ZNvh"], "8ZNvh", "parcelRequire591d")
 
 //# sourceMappingURL=index.f5c48570.js.map

@@ -74,6 +74,9 @@ import { audioData } from "./subtitles.js";
 import NEA from "../assets/asteroids/NEA.png";
 import NEC from "../assets/asteroids/NEC.png";
 import PHA from "../assets/asteroids/PHA.png";
+import asteroidMap from "../assets/asteroids/asteroidMap.jpg"
+import asteroidBumpMap from "../assets/asteroids/asteroidBumpMap.png"
+
 
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
 const planetGroupArr = [];
@@ -136,7 +139,7 @@ const song1 = document.getElementById('song1')
 const musicslider = document.getElementById('musicslider');
 const narrslider = document.getElementById('narrslider');
 const speedslider = document.getElementById('speedslider');
-const body = document.getElementsByTagName("body")[0]
+const body = document.getElementsByTagName("body")[0];
 song1.volume = musicslider.value;
 
 function addFilters() {
@@ -146,7 +149,6 @@ function addFilters() {
   body.appendChild(div);
 }
 
-addFilters()
 //
 loadingManager.onLoad = function () {
 
@@ -327,6 +329,7 @@ earthButton.addEventListener("click", function () {
   gsap.to(earthButton, {
     opacity: 0, duration: 1,
     onComplete: function () {
+      asteroidFocus = false;
       planetui.style.display = 'none';
       earthButton.style.display = 'none';
       planetui.style.cursor = 'pointer';
@@ -445,9 +448,17 @@ function createSmalls() {
 }
 
 createSmalls();
+let asteroidFocus = false;
+let astSound1 = false;
+let astSound2 = false;
+const OFFSETVARIABLE = (1 / 82738) * 15;
+// OFFSETVARIABLE FOR DEFAULT ASTEROID = 0.05 * 2.5
+// OFFSETVARIABLE FOR EROS = 1/82738 * 15
+
 const smalls = document.querySelectorAll('.small');
 smalls.forEach((small, index) => {
   small.addEventListener('click', () => {
+    asteroidFocus = true;
 
     document.getElementById("astUItype").innerText = types[asteroidData[index].type].description;
     document.getElementById("astUIsemimajor").innerText = asteroidData[index].a + " AU";
@@ -458,14 +469,19 @@ smalls.forEach((small, index) => {
     document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
 
     let ASTtargetPosition = ErosGroup.position.clone().add(new THREE.Vector3(0, 0, 0));
-    const OFFSETVARIABLE = asteroidData[index].a * 2.5
-    console.log(ASTtargetPosition.x + OFFSETVARIABLE);
+    // const OFFSETVARIABLE = asteroidData[index].a * 2.5
+
+    camera.lookAt(ASTtargetPosition.x, ASTtargetPosition.y, ASTtargetPosition.z);
 
     if (!firstSmallClicked) {
       firstSmallClicked = true;
       document.getElementById('secondlm').style.display = '';
       document.getElementById('secondlm').style.opacity = 0;
       gsap.to(document.getElementById('secondlm'), { opacity: 1, duration: 1 });
+      if(astSound1 == false){
+      playAudio(10,0);
+      astSound1 = true;
+      }
       // camera transition to first asteroid
       gsap.to(camera.position, {
         x: ASTtargetPosition.x + OFFSETVARIABLE,
@@ -476,7 +492,6 @@ smalls.forEach((small, index) => {
           controls.update();
           controls2.update();
           controls2.noZoom = true;
-          controls.enableRotate = false;
         }
       });
 
@@ -492,8 +507,13 @@ smalls.forEach((small, index) => {
       });
     }
     else {
-      // camera transition from asteroid to asteroi
+      // camera transition from asteroid to asteroid
+      if(astSound2 == false){
+        playAudio(10,1);
+        astSound2 = true;
+        }
       camera.position.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
+      controls.target.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z)
     }
   });
 });
@@ -543,8 +563,8 @@ const camera = new THREE.PerspectiveCamera(
   0.0001, // near
   2000 // far
 );
-camera.position.x = 15;
-camera.position.y = 5;
+camera.position.x = 5;
+camera.position.y = 1;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, });
 renderer.setSize(w, h);
@@ -565,7 +585,7 @@ controls2.noRotate = true;
 controls2.noPan = true;
 controls2.noZoom = false;
 controls2.zoomSpeed = 2.5;
-controls2.minDistance = 5;
+controls2.minDistance = 0.5;
 controls2.maxDistance = 500;
 
 
@@ -638,7 +658,6 @@ const venusFersenel = { rimHex: 0x573110, scalar: 1.005 };
 const venusAxisSpeed = 0.00000029927
 const venusGroup = new Planet(-177.4, 177.4, scene, venusGeometry, venusAxisSpeed);
 venusGroup.createShape(venusMaterial, venusNightlightsMat, venusFersenel, venusCloudsMat)
-venusGroup.position.set(-6, 0, 0);
 
 ////////////////////////// MARS //////////////////////////
 const marsGeometry = [0.00045, detail];
@@ -772,8 +791,9 @@ const beltInclinationRange = 15;
 const eccentricityRange = 0.05;
 
 // Asteroid geometry and material
-const asteroidGeometry = new THREE.IcosahedronGeometry(0.1, 1);
-const asteroidMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+const asteroidGeometry = new THREE.IcosahedronGeometry(0.05, 1);
+const asteroidMaterial = new THREE.MeshStandardMaterial({map: loader.load(asteroidMap), bumpMap: loader.load(asteroidBumpMap), bumpScale: 100});
+
 const asteroids = [];
 
 // Generate random orbital parameters for asteroids
@@ -793,7 +813,9 @@ function generateRandomTrajectory() {
 function createAsteroidBelt() {
   for (let i = 0; i < numAsteroids; i++) {
     const trajectory = generateRandomTrajectory();
+    
     const asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+    
     asteroidMesh.userData.trajectory = trajectory;
     scene.add(asteroidMesh);
     asteroids.push(asteroidMesh);
@@ -835,7 +857,6 @@ asteroidGroupArr.push(ItokawaGroup);   // Asteroid(itokawa)
 
 
 /////////////////////////////////////// BLOOM ////////////////////////////////////// 
-
 
 const BLOOM_SCENE = 1;
 
@@ -1090,7 +1111,7 @@ sunGroup.mass = "1,988,400";
 sunGroup.radius = "695,700 km";
 sunGroup.orbitalPeriod = "230 million years";
 sunGroup.factLink = "https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html";
-sunSprite.position.y += 0.5;
+sunSprite.position.y += 0.15;
 
 var mercurySprite = createPlanetLabel("MERCURY", 72, labelColor);
 mercurySprite.name = "MERCURY";
@@ -1644,10 +1665,15 @@ function animate() {
 
   if (isZooming) {
 
+    if(asteroidFocus == false){
     targetPosition = targetPlanet.position.clone();
-
     controls.maxDistance = clickedLabel.associatedNumber;
-
+    }
+    else{
+      targetPosition = ErosGroup.position.clone();
+      controls.maxDistance = OFFSETVARIABLE;
+    }
+    
     controls.target.copy(targetPosition)
     controls2.target.copy(targetPosition)
     controls.update();
@@ -1752,7 +1778,7 @@ function animate() {
   sunGroup.rotateAroundAxis(speedFactor);
   moonGroup.rotation.y += 0.0000026617 * speedFactor;
 
-
+  
   scene.traverse(darkenNonBloomed);
   bloomComposer.render();
   scene.traverse(restoreMaterial);
@@ -1760,7 +1786,7 @@ function animate() {
   finalComposer.render();
 
 
-  // renderer.render(scene, camera);
+  //renderer.render(scene, camera);
 }
 
 createAsteroidBelt();

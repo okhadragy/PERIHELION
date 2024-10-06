@@ -146,7 +146,7 @@ export const audioData = [
                 subtitles: [
                     { text: "Due to the gravitational pull of the Moon, Earth's rotation is gradually slowing down,", start: 0, end: 5 },
                     { text: "making days longer by about 1.7 milliseconds per century.", start: 5, end: 9 }
-                ] 
+                ]
             }
         ]
     },
@@ -271,7 +271,7 @@ export const audioData = [
                 file: new URL("../assets/audio/narrator/uranus/uranusfact1.wav", import.meta.url).href,
                 subtitles: [
                     { text: "Uranus hits the coldest temperatures of any planet. With a minimum atmospheric temperature of -224°C,", start: 0, end: 8 },
-                    { text: "Uranus is nearly the coldest planet in the solar system.", start: 8 , end: 12 }
+                    { text: "Uranus is nearly the coldest planet in the solar system.", start: 8, end: 12 }
                 ]
             },
             {
@@ -368,6 +368,26 @@ export const audioData = [
                     { text: "The footprints left by astronauts on the Moon could last for millions of years because there's no wind or water to erode them.", start: 0, end: 7 }
                 ]
             }
+        ]
+    },
+    {// ASTEROID
+        audioClips: [
+            {
+                file: new URL("../assets/audio/narrator/asteroids/asteroid1.wav", import.meta.url).href,
+                subtitles: [
+                    { text: "Asteroids, comets, and other celestial objects trace their orbits around Earth", start: 0, end: 5 },
+                    { text: " moving in silent loops through the vast expanse of space.", start: 5, end: 9 }
+
+                ]
+            },
+            {
+                file: new URL("../assets/audio/narrator/asteroids/asteroid2.wav", import.meta.url).href,
+                subtitles: [
+                    { text: "Planets this, planets that. What about those rocks travelling through space around us? ", start: 0, end: 5 },
+                    { text: " As underrated as they are, these little rascals sure are fascinating.", start: 5, end: 10 }
+
+                ]
+            },
         ]
     }
 ];

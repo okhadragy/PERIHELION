@@ -3,6 +3,11 @@
   src: url(assets/fonts/bbtorsosprothin.ttf);
 }
 
+html, body{
+  margin: 0;
+  overflow: hidden;
+}
+
 a:link {
   color: white; /* Default unpressed link */
 }
@@ -45,11 +50,6 @@ a:active {
 }
 
 /* ----------------------------- */
-
-html, body {
-  overflow: hidden;
-  height: 100%;
-}
 
 .overlay {
   position: fixed;
@@ -146,7 +146,7 @@ html, body {
   flex-flow: column nowrap;
   align-items: left;
 
-  padding: 1.5%;
+  padding: 2%;
 
   margin-left: 8%;
   margin-top: -5%;
@@ -166,7 +166,7 @@ html, body {
   flex-flow: column nowrap;
   align-items: left;
 
-  padding: 1.5%;
+  padding: 2%;
 
   margin-left: 8%;
   margin-top: -5%;
@@ -731,4 +731,3 @@ display: none;
 .small:hover {
   background-color: rgba(255, 255, 255, 0.234);
 }
-
