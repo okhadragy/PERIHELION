@@ -10,6 +10,8 @@ import { OutputPass } from '../node_modules/three/examples/jsm/postprocessing/Ou
 import { ShaderPass } from '../node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
 import Planet from './planet.js';
 import Trajectory from "./trajectory.js";
+import { Noise } from '../node_modules/noisejs';
+
 
 // STARS
 import circle from "../assets/stars/circle.png";
@@ -81,7 +83,6 @@ import asteroids from "../data/asteroids.json";
 
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
 const planetGroupArr = [];
-const asteroidGroupArr = [];
 const moonGroupArr = [];
 
 // FOR REFERENCE
@@ -556,7 +557,6 @@ neptuneGroup.createShape(neptuneMaterial, neptuneNightlightsMat, neptuneFersenel
 
 ///////////////////////////// EROS ///////////////////////////
 const ErosGroup = new THREE.Group(); // Create a group for the asteroid
-scene.add(ErosGroup); // Add the group to the scene
 
 const gltfLoaderEros = new GLTFLoader();
 gltfLoaderEros.load(new URL('../assets/asteroids/eros.glb', import.meta.url).href, (gltf) => {
@@ -570,42 +570,9 @@ gltfLoaderEros.load(new URL('../assets/asteroids/eros.glb', import.meta.url).hre
 });
 
 ErosGroup.scale.set(1 / 82738, 1 / 82738, 1 / 82738);
-/////////////////////////////////////////Bennu////////////////////
-
-const BennuGroup = new THREE.Group();
-scene.add(BennuGroup);
-
-const gltfLoaderBennu = new GLTFLoader();
-gltfLoaderBennu.load(new URL('../assets/asteroids/bennu.glb', import.meta.url).href, (gltf) => {
-  const bennu = gltf.scene;
-  bennu.rotation.x = -0.5 * Math.PI;
-  bennu.rotation.y = 1 * Math.PI;
-  bennu.rotation.z = 0.1 * Math.PI;
-  BennuGroup.add(bennu);
-}, undefined, (error) => {
-  console.error("Error loading model:", error);
-});
-
-BennuGroup.scale.set(1 / 2826000, 1 / 2826000, 1 / 2826000);
-////////////////////Itokawa///////////////////////////////////
-
-const ItokawaGroup = new THREE.Group();
-scene.add(ItokawaGroup);
-
-const gltfLoaderItokawa = new GLTFLoader();
-gltfLoaderItokawa.load(new URL('../assets/asteroids/itokawa.glb', import.meta.url).href, (gltf) => {
-  const itokawa = gltf.scene;
-  itokawa.rotation.x = -0.5 * Math.PI;
-  itokawa.rotation.y = 1 * Math.PI;
-  itokawa.rotation.z = 0.1 * Math.PI;
-  ItokawaGroup.add(itokawa);
-}, undefined, (error) => {
-  console.error("Error loading model:", error);
-});
-//
-ItokawaGroup.scale.set(1 / 0.0000013, 1 / 0.0000013, 1 / 0.0000013);
 
 ///////////////////////////Asteroid Belt/////////////////////
+
 
 const bigContainer = document.getElementById('am');
 const asteroidData = asteroids.data.map(obj => {
@@ -639,6 +606,89 @@ const types = [
   { image: PHA, barColor: '#e74c3c', description: "Potentially Hazardous Asteroid" }, // Type 4 - PHA - Red
   { image: NEC, barColor: '#3498db', description: "Near-Earth Comet" }  // Type 5 - NEC - Blue
 ];
+
+function generateAsteroidGeometry(size, noiseScale = 1, noiseStrength = 2, scrapeCount = 100, scrapeStrength = 0.5) {
+  const asteroidGeometry = new THREE.IcosahedronGeometry(size, 3);
+  const positions = asteroidGeometry.attributes.position.array;
+  
+  const noise = new Noise(Math.random());
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const x = positions[i];
+    const y = positions[i + 1];
+    const z = positions[i + 2];
+    
+    const noiseVal = noise.perlin3(x * noiseScale, y * noiseScale, z * noiseScale) * noiseStrength;
+    
+    positions[i] += noiseVal;
+    positions[i + 1] += noiseVal;
+    positions[i + 2] += noiseVal;
+  }
+
+  const scrapeIndices = [];
+  for (let i = 0; i < scrapeCount; i++) {
+    const index = Math.floor(Math.random() * positions.length / 3) * 3;
+    scrapeIndices.push(index);
+    positions[index] += (Math.random() - 0.5) * scrapeStrength;
+    positions[index + 1] += (Math.random() - 0.5) * scrapeStrength;
+    positions[index + 2] += (Math.random() - 0.5) * scrapeStrength;
+  }
+  
+  asteroidGeometry.computeVertexNormals();
+
+  return asteroidGeometry;
+}
+
+// Asteroid geometry and material
+const asteroidGeometry1 = new THREE.IcosahedronGeometry(0.05, 1);
+const asteroidGeometry2 = generateAsteroidGeometry(0.05)
+const asteroidMaterial = new THREE.MeshStandardMaterial({ map: loader.load(asteroidMap), bumpMap: loader.load(asteroidBumpMap), bumpScale: 100 });
+
+// Create the asteroid belt
+function createAsteroidBelt() {
+  var asteroidBelt = [];
+  var asteroidBeltDataList = [];
+  var colors = [0xF6C8A4,0xF8F5F3,0xFFFFFF,0x28A745,0xF1C40F,0xE67E22,0x8E44AD,0xE74C3C,0x3498DB];
+  var choice = 1;
+  var geometry = asteroidGeometry1
+
+  for (let i = 0; i < asteroidData.length; i++) {
+    const trajectory = new Trajectory(asteroidData[i].title, asteroidData[i].a, asteroidData[i].i, asteroidData[i].e, asteroidData[i].aN, asteroidData[i].peri, asteroidData[i].M, asteroidData[i].period * 365.256,false);
+    let asteroidMesh = new THREE.Mesh(geometry, asteroidMaterial);
+    if (i==0) {
+      asteroidMesh = ErosGroup;
+    }
+    if (choice === 1) {
+      geometry = asteroidGeometry2;
+      choice = 2;
+    }else{
+      geometry = asteroidGeometry1;
+      choice = 1;
+    }
+
+    asteroidMesh.userData.trajectory = trajectory;
+    scene.add(asteroidMesh);
+    asteroidBelt.push(asteroidMesh);
+    const asteroid = {name: asteroidData[i].title,elements: trajectory,color: colors[i%3]};
+    asteroidBeltDataList.push(asteroid);
+  }
+  return [asteroidBelt,asteroidBeltDataList]
+}
+
+// Update asteroid belt positions
+function updateAsteroidBelt(timeIncrement, asteroidBelt) {
+  asteroidBelt.forEach((asteroid) => {
+    const trajectory = asteroid.userData.trajectory;
+    const position = updatePosition(trajectory, timeIncrement);    
+    asteroid.position.set(-position[0], position[1], position[2]);
+    
+  });
+}
+
+let asteroidBelt = createAsteroidBelt();
+let asteroidBeltDataList = asteroidBelt[1];
+asteroidBelt = asteroidBelt[0];
+
 
 function createSmalls() {
   asteroidData.forEach(small => {
@@ -682,7 +732,7 @@ smalls.forEach((small, index) => {
     document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
     document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
 
-    let ASTtargetPosition = ErosGroup.position.clone().add(new THREE.Vector3(0, 0, 0));
+    let ASTtargetPosition = asteroidBelt[index].position.clone().add(new THREE.Vector3(0, 0, 0));
     // const OFFSETVARIABLE = asteroidData[index].a * 2.5
 
     camera.lookAt(ASTtargetPosition.x, ASTtargetPosition.y, ASTtargetPosition.z);
@@ -767,40 +817,6 @@ function filterAndSearchItems() {
 document.getElementById('search').addEventListener('keyup', filterAndSearchItems);
 document.getElementById('astType').addEventListener('change', filterAndSearchItems);
 
-// Asteroid geometry and material
-const asteroidGeometry = new THREE.IcosahedronGeometry(0.05, 1);
-const asteroidMaterial = new THREE.MeshStandardMaterial({ map: loader.load(asteroidMap), bumpMap: loader.load(asteroidBumpMap), bumpScale: 100 });
-
-// Create the asteroid belt
-function createAsteroidBelt() {
-  var asteroidBelt = [];
-  var asteroidBeltDataList = [];
-  var colors = [0xF6C8A4,0xF8F5F3,0xFFFFFF,0x28A745,0xF1C40F,0xE67E22,0x8E44AD,0xE74C3C,0x3498DB];
-
-  for (let i = 0; i < asteroidData.length; i++) {
-    const trajectory = new Trajectory(asteroidData[i].title, asteroidData[i].a, asteroidData[i].i, asteroidData[i].e, asteroidData[i].aN, asteroidData[i].peri, asteroidData[i].M, asteroidData[i].period * 365.256,false);
-    const asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-    asteroidMesh.userData.trajectory = trajectory;
-    scene.add(asteroidMesh);
-    asteroidBelt.push(asteroidMesh);
-    const asteroid = {name: asteroidData[i].title,elements: trajectory,color: colors[i%3]};
-    asteroidBeltDataList.push(asteroid);
-  }
-  return [asteroidBelt,asteroidBeltDataList]
-}
-
-// Update asteroid belt positions
-function updateAsteroidBelt(timeIncrement, asteroidBelt) {
-  asteroidBelt.forEach((asteroid) => {
-    const trajectory = asteroid.userData.trajectory;
-    const position = updatePosition(trajectory, timeIncrement);
-    asteroid.position.set(-position[0], position[1], position[2]);
-  });
-}
-
-let asteroidBelt = createAsteroidBelt();
-let asteroidBeltDataList = asteroidBelt[1];
-asteroidBelt = asteroidBelt[0];
 
 ///////////////////////////// SUN ///////////////////////////
 const sunGeometry = [0.093, detail];
@@ -822,9 +838,6 @@ planetGroupArr.push(saturnGroup);   // Saturn
 planetGroupArr.push(uranusGroup);   // Uranus
 planetGroupArr.push(neptuneGroup);  // Neptune
 moonGroupArr.push(moonGroup);       // Moon
-asteroidGroupArr.push(ErosGroup);   // Asteroid(Eros)
-asteroidGroupArr.push(BennuGroup);   // Asteroid(Bennu)
-asteroidGroupArr.push(ItokawaGroup);   // Asteroid(itokawa)
 
 
 /////////////////////////////////////// BLOOM ////////////////////////////////////// 
@@ -935,27 +948,9 @@ const moonDataList = [
   }
 ]
 
-const asteroidDataList = [
-  {
-    name: 'Eros',
-    elements: new Trajectory('Eros', 1.458, 10.8, 0.223, 304.32, 304.4, 178.8, 643),
-    color: 0xffffff
-  },
-  {
-    name: 'Bennu',
-    elements: new Trajectory('Bennu', 1.126, 6.034, 0.2037, 118.30, 97.63, 178.8, 438),
-    color: 0xf8f5f3
-  }
-  , {
-    name: 'Itokawa',
-    elements: new Trajectory('Itokawa', 1.324, 1.622, 0.280, 69.08, 162.87, 178.8, 557.18),
-    color: 0xf8f5f3
-  }
-]
 
 
 traceOrbits(planetDataList,orbits);
-traceOrbits(asteroidDataList,asteroidorbits);
 traceOrbits(asteroidBeltDataList,asteroidorbits,0.05);
 
 
@@ -1573,14 +1568,7 @@ function animate() {
     const position = updatePosition(moonData.elements, timeIncrement);
     moonGroup.position.set(-position[0], position[1], position[2]);
   });
-
-  // Update position of asteroid
-  asteroidGroupArr.forEach((asteroidGroup, index) => {
-    const asteroidData = asteroidDataList[index];
-    const position = updatePosition(asteroidData.elements, timeIncrement);
-    asteroidGroup.position.set(-position[0], position[1], position[2]);
-  });
-
+  
   updateAsteroidBelt(timeIncrement, asteroidBelt);
 
   if (isZooming) {
