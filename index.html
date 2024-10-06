@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE-edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="./assets/icons/saturnFAVICON.png">
     <title>ORRERY</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -44,6 +45,7 @@
 				}
 			}
 		</script>
+
     <script type="module" src="./src/script.js"></script>
     <audio id="song1" src="./assets/audio/music/rain.mp3"></audio>
     <audio id="audioClip"></audio>
@@ -76,14 +78,16 @@
                         <div class="settingsoption"> Music<input type="range" id="musicslider" min="0" max="1"
                                 step="0.05" value="0.5">
                         </div>
-                        <!-- <div class="settingsoption">
-							FX<input type="range" id="vol" name="vol" min="0" max="100">
-						</div> -->
+
                         <div class="settingsoption"> Narrator<input type="range" id="narrslider" min="0" max="1"
                                 step="0.05" value="0.5">
-                        </div><br>
-                        <div class="settingsoption"> Show Orbits<div class="fullslider"><label class="switch"><input
+                        </div>
+                        <div class="settingsoption"> Show Plent Orbits<div class="fullslider"><label class="switch"><input
                                         type="checkbox" id="orbitcheck" checked><span
+                                        class="slider round"></span></label></div>
+                        </div>
+                        <div class="settingsoption"> Show Asteroid Orbits<div class="fullslider"><label class="switch"><input
+                                        type="checkbox" id="asteroidorbitcheck"><span
                                         class="slider round"></span></label></div>
                         </div>
                         <div class="settingsoption"> Subtitles<div class="fullslider"><label class="switch"><input

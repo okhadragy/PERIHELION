@@ -731,3 +731,13 @@ display: none;
 .small:hover {
   background-color: rgba(255, 255, 255, 0.234);
 }
+
+@media (max-width: 1000px) {
+  .rightmenu, .leftmenu, .keplerianParameters, .settings {
+    display: none;
+  }
+  .centertext{
+    font-size: 23px;
+    padding-top: 10.0%;
+  }
+}

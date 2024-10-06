@@ -602,4 +602,15 @@ input[type="range"]::-moz-focus-outer {
 .small:hover {
   background-color: #ffffff3c;
 }
+
+@media (width <= 1000px) {
+  .rightmenu, .leftmenu, .keplerianParameters, .settings {
+    display: none;
+  }
+
+  .centertext {
+    padding-top: 10%;
+    font-size: 23px;
+  }
+}
 /*# sourceMappingURL=index.3a01df49.css.map */

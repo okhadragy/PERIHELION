@@ -9,6 +9,7 @@ import { UnrealBloomPass } from "../node_modules/three/examples/jsm/postprocessi
 import { OutputPass } from '../node_modules/three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from '../node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
 import Planet from './planet.js';
+import Trajectory from "./trajectory.js";
 
 // STARS
 import circle from "../assets/stars/circle.png";
@@ -25,7 +26,6 @@ import moonmap from "../assets/textures/moon/moonmap4k.jpg";
 import moonbump from "../assets/textures/moon/moonbump4k.jpg";
 
 // JUPITER
-import planets from "./planets.json";
 import jupitermap from "../assets/textures/jupiter/jupiter.jpg";
 import jupiterNightmap from "../assets/textures/jupiter/jupiternight.jpg";
 
@@ -76,20 +76,18 @@ import NEC from "../assets/asteroids/NEC.png";
 import PHA from "../assets/asteroids/PHA.png";
 import asteroidMap from "../assets/asteroids/asteroidMap.jpg"
 import asteroidBumpMap from "../assets/asteroids/asteroidBumpMap.png"
+import asteroids from "../data/asteroids.json";
 
 
 // Speed factor for adjusting time flow. EX: speedFactor = 1600, then it runs at 1600 seconds per second.
 const planetGroupArr = [];
 const asteroidGroupArr = [];
 const moonGroupArr = [];
-const DEG2RAD = Math.PI / 180;
 
 // FOR REFERENCE
 // 1 THREE JS UNIT = 1 AU * 10 = 149597870.7 KM * 10
 // SIZES ARE CALCULATED ACCORDING TO DIAMETER OF EACH BODY IN AU
 // EX: SUN'S SIZE = DIAMETER / 1 AU IN KM = 1,391,000 / 149,597,870.7 = 0.0093
-
-
 
 function getStarfield(circle, numStars = 500) {
   function randomSpherePoint() {
@@ -385,177 +383,6 @@ earthButton.addEventListener("click", function () {
 
 });
 
-const bigContainer = document.getElementById('am');
-
-const asteroidData = [
-  { title: "Midas (1973 EA)", a: 1.776, i: 39.82, e: 0.6505, peri: 267.84, M: 258.81, period: 865, q: 0.621, Q: 2.93, NEO: "Y", PHA: "Y" },
-  { title: "Florence (1981 ET3)", a: 1.769, i: 22.14, e: 0.4231, peri: 27.90, M: 0.67, period: 859, q: 1.021, Q: 2.52, NEO: "Y", PHA: "N" },
-  { title: "Aristaeus (1977 HA)", a: 1.6, i: 23.07, e: 0.5030, peri: 290.97, M: 202.31, period: 739, q: 0.795, Q: 2.40, NEO: "Y", PHA: "N" },
-  { title: "Adonis (1936 CA)", a: 1.874, i: 1.32, e: 0.7642, peri: 43.69, M: 230.82, period: 937, q: 0.442, Q: 3.31, NEO: "Y", PHA: "Y" },
-  { title: "Hathor (1976 UA)", a: 0.8438, i: 5.86, e: 0.4500, peri: 40.10, M: 53.40, period: 283, q: 0.464, Q: 1.22, NEO: "Y", PHA: "N" },
-].map(obj => {
-  let type = 5; // default type if PHA and NEO are both 'N'
-
-  if (obj.PHA === "Y") {
-    type = 4; // PHA is 'Y'
-  } else if (obj.NEO === "Y" && obj.PHA === "N") {
-    if (obj.a > 1) {
-      if (obj.q > 1.017 && obj.q < 1.3) {
-        type = 0;
-      } else if (obj.q < 1.017) {
-        type = 1;
-      }
-    } else {
-      if (obj.q > 0.983) {
-        type = 2;
-      } else {
-        type = 3;
-      }
-    }
-  }
-
-  return { ...obj, type }; // add type to obj
-});
-
-
-const types = [
-  { image: NEA, barColor: '#28a745', description: "Near-Earth Asteroid Amor" }, // Type 0 - NEA Amor - Green
-  { image: NEA, barColor: '#f1c40f', description: "Near-Earth Asteroid Apollo" }, // Type 1 - NEA Apollo - Yellow
-  { image: NEA, barColor: '#e67e22', description: "Near-Earth Asteroid Aten" }, // Type 2 - NEA Aten - Orange
-  { image: NEA, barColor: '#8e44ad', description: "Near-Earth Asteroid Atira" }, // Type 3 - NEA Atira - Purple
-
-  { image: PHA, barColor: '#e74c3c', description: "Potentially Hazardous Asteroid" }, // Type 4 - PHA - Red
-  { image: NEC, barColor: '#3498db', description: "Near-Earth Comet" }  // Type 5 - NEC - Blue
-];
-
-function createSmalls() {
-  asteroidData.forEach(small => {
-    const smallElement = document.createElement('div');
-    smallElement.className = 'small';
-
-    const typeInfo = types[small.type];
-
-    smallElement.innerHTML = `
-          <img src="${typeInfo.image}" />
-          <div class="smallinfo">
-              <h3>${small.title}</h3>
-              <p>${typeInfo.description}</p>
-          </div>
-      `;
-
-    smallElement.style.setProperty('--bar-color', typeInfo.barColor);
-
-    bigContainer.appendChild(smallElement);
-  });
-}
-
-createSmalls();
-let asteroidFocus = false;
-let astSound1 = false;
-let astSound2 = false;
-const OFFSETVARIABLE = (1 / 82738) * 15;
-// OFFSETVARIABLE FOR DEFAULT ASTEROID = 0.05 * 2.5
-// OFFSETVARIABLE FOR EROS = 1/82738 * 15
-
-const smalls = document.querySelectorAll('.small');
-smalls.forEach((small, index) => {
-  small.addEventListener('click', () => {
-    asteroidFocus = true;
-
-    document.getElementById("astUItype").innerText = types[asteroidData[index].type].description;
-    document.getElementById("astUIsemimajor").innerText = asteroidData[index].a + " AU";
-    document.getElementById("astUIincline").innerText = asteroidData[index].i + " degrees";
-    document.getElementById("astUIecc").innerText = asteroidData[index].e;
-    document.getElementById("astUIma").innerText = asteroidData[index].M + " degrees";
-    document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
-    document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
-
-    let ASTtargetPosition = ErosGroup.position.clone().add(new THREE.Vector3(0, 0, 0));
-    // const OFFSETVARIABLE = asteroidData[index].a * 2.5
-
-    camera.lookAt(ASTtargetPosition.x, ASTtargetPosition.y, ASTtargetPosition.z);
-
-    if (!firstSmallClicked) {
-      firstSmallClicked = true;
-      document.getElementById('secondlm').style.display = '';
-      document.getElementById('secondlm').style.opacity = 0;
-      gsap.to(document.getElementById('secondlm'), { opacity: 1, duration: 1 });
-      if(astSound1 == false){
-      playAudio(10,0);
-      astSound1 = true;
-      }
-      // camera transition to first asteroid
-      gsap.to(camera.position, {
-        x: ASTtargetPosition.x + OFFSETVARIABLE,
-        y: ASTtargetPosition.y, // adjustable?
-        z: ASTtargetPosition.z,
-        duration: 2, // adjustable duration
-        onUpdate: function () {
-          controls.update();
-          controls2.update();
-          controls2.noZoom = true;
-        }
-      });
-
-      gsap.to(controls.target, {
-        x: ASTtargetPosition.x,
-        y: ASTtargetPosition.y,
-        z: ASTtargetPosition.z,
-        duration: 1.5,
-        onUpdate: function () {
-          controls.update();
-          controls2.update();
-        }
-      });
-    }
-    else {
-      // camera transition from asteroid to asteroid
-      if(astSound2 == false){
-        playAudio(10,1);
-        astSound2 = true;
-        }
-      camera.position.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
-      controls.target.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z)
-    }
-  });
-});
-
-function filterAndSearchItems() {
-  const input = document.getElementById('search').value.toLowerCase();
-  const selectedValue = document.getElementById('astType').value;
-  const items = document.getElementsByClassName('small');
-
-  for (let i = 0; i < items.length; i++) {
-    const smallDataItem = asteroidData[i];
-    const itemType = smallDataItem.type;
-
-    const h3Text = items[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
-    const pText = items[i].getElementsByTagName('p')[0].innerText.toLowerCase();
-
-    // SEARCH LOGIC
-    const matchesSearch = h3Text.includes(input) || pText.includes(input);
-
-    // DROPDOWN LOGIC
-    const matchesFilter = (
-      selectedValue === '' ||
-      (selectedValue === 'NEA' && itemType < 4) || // Types 0-3 are NEA
-      (selectedValue === 'PHA' && itemType === 4) || // Type 4 is PHA
-      (selectedValue === 'NEC' && itemType === 5)    // Type 5 is NEC
-    );
-
-    // COMBINE!
-    if (matchesSearch && matchesFilter) {
-      items[i].style.display = "";
-    } else {
-      items[i].style.display = "none";
-    }
-  }
-}
-
-document.getElementById('search').addEventListener('keyup', filterAndSearchItems);
-document.getElementById('astType').addEventListener('change', filterAndSearchItems);
-
-
 const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
@@ -603,11 +430,9 @@ const jupiterGeometry = [0.0093, detail];
 const jupiterMaterial = { map: loader.load(jupitermap) };
 const jupiterNightMat = { map: loader.load(jupiterNightmap), blending: THREE.AdditiveBlending };
 const jupiterFersenel = { rimHex: 0x274566, scalar: 1.005 };
-
 const jupiterAxisSpeed = 0.00017453293
-const jupiterGroup = new Planet(planets.jupiter.x, planets.jupiter.y, scene, planets.jupiter.geometry, planets.jupiter.axisSpeed);
-planets.jupiter.fersenel.rimHex = parseInt(planets.jupiter.fersenel.rimHex, 16)
-jupiterGroup.createShape(jupiterMaterial, jupiterNightMat, planets.jupiter.fersenel);
+const jupiterGroup = new Planet(-3.13, 3.13, scene, jupiterGeometry, jupiterAxisSpeed);
+jupiterGroup.createShape(jupiterMaterial, jupiterNightMat, jupiterFersenel);
 
 ////////////////////////// EARTH //////////////////////////
 const earthGeometry = [0.00085, detail];
@@ -625,7 +450,7 @@ earthGroup.createShape(earthMaterial, earthNightlightsMat, earthFersenel, earthC
 //////////////MOON///////////////////////
 const moonGroup = new THREE.Group();
 moonGroup.rotation.y = 1.54 * Math.PI / 180;
-moonGroup.scale.set(1/400,1/400,1/400)
+moonGroup.scale.set(1 / 400, 1 / 400, 1 / 400)
 scene.add(moonGroup);
 
 const moonGeometry = new THREE.IcosahedronGeometry(0.5, detail); // 0.0092
@@ -740,7 +565,6 @@ gltfLoaderEros.load(new URL('../assets/asteroids/eros.glb', import.meta.url).hre
   eros.rotation.y = 1 * Math.PI;
   eros.rotation.z = 0.1 * Math.PI;
   ErosGroup.add(eros);
-  console.log("Asteroid model loaded:", eros);
 }, undefined, (error) => {
   console.error("Error loading model:", error);
 });
@@ -758,7 +582,6 @@ gltfLoaderBennu.load(new URL('../assets/asteroids/bennu.glb', import.meta.url).h
   bennu.rotation.y = 1 * Math.PI;
   bennu.rotation.z = 0.1 * Math.PI;
   BennuGroup.add(bennu);
-  console.log("Asteroid model loaded:", bennu);
 }, undefined, (error) => {
   console.error("Error loading model:", error);
 });
@@ -776,7 +599,6 @@ gltfLoaderItokawa.load(new URL('../assets/asteroids/itokawa.glb', import.meta.ur
   itokawa.rotation.y = 1 * Math.PI;
   itokawa.rotation.z = 0.1 * Math.PI;
   ItokawaGroup.add(itokawa);
-  console.log("Asteroid model loaded:", itokawa);
 }, undefined, (error) => {
   console.error("Error loading model:", error);
 });
@@ -785,53 +607,200 @@ ItokawaGroup.scale.set(1 / 0.0000013, 1 / 0.0000013, 1 / 0.0000013);
 
 ///////////////////////////Asteroid Belt/////////////////////
 
-// Asteroid belt constants
-const numAsteroids = 500;
-const minSemiMajorAxis = 1.5;
-const maxSemiMajorAxis = 5.0;
-const beltInclinationRange = 15;
-const eccentricityRange = 0.05;
+const bigContainer = document.getElementById('am');
+const asteroidData = asteroids.data.map(obj => {
+  let type = 5; // default type if PHA and NEO are both 'N'
 
-// Asteroid geometry and material
-const asteroidGeometry = new THREE.IcosahedronGeometry(0.05, 1);
-const asteroidMaterial = new THREE.MeshStandardMaterial({map: loader.load(asteroidMap), bumpMap: loader.load(asteroidBumpMap), bumpScale: 100});
+  if (obj.PHA === "Y") {
+    type = 4; // PHA is 'Y'
+  } else if (obj.NEO === "Y" && obj.PHA === "N") {
+    if (obj.a > 1) {
+      if (obj.q > 1.017 && obj.q < 1.3) {
+        type = 0;
+      } else if (obj.q < 1.017) {
+        type = 1;
+      }
+    } else {
+      if (obj.q > 0.983) {
+        type = 2;
+      } else {
+        type = 3;
+      }
+    }
+  }
 
-const asteroids = [];
+  return { ...obj, type }; // add type to obj
+});
+const types = [
+  { image: NEA, barColor: '#28a745', description: "Near-Earth Asteroid Amor" }, // Type 0 - NEA Amor - Green
+  { image: NEA, barColor: '#f1c40f', description: "Near-Earth Asteroid Apollo" }, // Type 1 - NEA Apollo - Yellow
+  { image: NEA, barColor: '#e67e22', description: "Near-Earth Asteroid Aten" }, // Type 2 - NEA Aten - Orange
+  { image: NEA, barColor: '#8e44ad', description: "Near-Earth Asteroid Atira" }, // Type 3 - NEA Atira - Purple
+  { image: PHA, barColor: '#e74c3c', description: "Potentially Hazardous Asteroid" }, // Type 4 - PHA - Red
+  { image: NEC, barColor: '#3498db', description: "Near-Earth Comet" }  // Type 5 - NEC - Blue
+];
 
-// Generate random orbital parameters for asteroids
-function generateRandomTrajectory() {
-  const smA = Math.random() * (maxSemiMajorAxis - minSemiMajorAxis) + minSemiMajorAxis;
-  const oI = Math.random() * beltInclinationRange;
-  const oE = Math.random() * eccentricityRange;
-  const aN = Math.random() * 360;
-  const lP = Math.random() * 360;
-  const mAe = Math.random() * 360;
-  const Sidereal = smA ** 1.5; // Kepler's law approximation
+function createSmalls() {
+  asteroidData.forEach(small => {
+    const smallElement = document.createElement('div');
+    smallElement.className = 'small';
 
-  return new Trajectory('Asteroid', smA, oI, oE, aN, lP, mAe, Sidereal);
+    const typeInfo = types[small.type];
+
+    smallElement.innerHTML = `
+          <img src="${typeInfo.image}" />
+          <div class="smallinfo">
+              <h3>${small.title}</h3>
+              <p>${typeInfo.description}</p>
+          </div>
+      `;
+
+    smallElement.style.setProperty('--bar-color', typeInfo.barColor);
+
+    bigContainer.appendChild(smallElement);
+  });
 }
+createSmalls();
 
-// Create the asteroid belt
-function createAsteroidBelt() {
-  for (let i = 0; i < numAsteroids; i++) {
-    const trajectory = generateRandomTrajectory();
-    
-    const asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-    
-    asteroidMesh.userData.trajectory = trajectory;
-    scene.add(asteroidMesh);
-    asteroids.push(asteroidMesh);
+let asteroidFocus = false;
+let astSound1 = false;
+let astSound2 = false;
+const OFFSETVARIABLE = (1 / 82738) * 15;
+// OFFSETVARIABLE FOR DEFAULT ASTEROID = 0.05 * 2.5
+// OFFSETVARIABLE FOR EROS = 1/82738 * 15
+
+const smalls = document.querySelectorAll('.small');
+smalls.forEach((small, index) => {
+  small.addEventListener('click', () => {
+    asteroidFocus = true;
+
+    document.getElementById("astUItype").innerText = types[asteroidData[index].type].description;
+    document.getElementById("astUIsemimajor").innerText = asteroidData[index].a + " AU";
+    document.getElementById("astUIincline").innerText = asteroidData[index].i + " degrees";
+    document.getElementById("astUIecc").innerText = asteroidData[index].e;
+    document.getElementById("astUIma").innerText = asteroidData[index].M + " degrees";
+    document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
+    document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
+
+    let ASTtargetPosition = ErosGroup.position.clone().add(new THREE.Vector3(0, 0, 0));
+    // const OFFSETVARIABLE = asteroidData[index].a * 2.5
+
+    camera.lookAt(ASTtargetPosition.x, ASTtargetPosition.y, ASTtargetPosition.z);
+
+    if (!firstSmallClicked) {
+      firstSmallClicked = true;
+      document.getElementById('secondlm').style.display = '';
+      document.getElementById('secondlm').style.opacity = 0;
+      gsap.to(document.getElementById('secondlm'), { opacity: 1, duration: 1 });
+      if (astSound1 == false) {
+        playAudio(10, 0);
+        astSound1 = true;
+      }
+      // camera transition to first asteroid
+      gsap.to(camera.position, {
+        x: ASTtargetPosition.x + OFFSETVARIABLE,
+        y: ASTtargetPosition.y, // adjustable?
+        z: ASTtargetPosition.z,
+        duration: 2, // adjustable duration
+        onUpdate: function () {
+          controls.update();
+          controls2.update();
+          controls2.noZoom = true;
+        }
+      });
+
+      gsap.to(controls.target, {
+        x: ASTtargetPosition.x,
+        y: ASTtargetPosition.y,
+        z: ASTtargetPosition.z,
+        duration: 1.5,
+        onUpdate: function () {
+          controls.update();
+          controls2.update();
+        }
+      });
+    }
+    else {
+      // camera transition from asteroid to asteroid
+      if (astSound2 == false) {
+        playAudio(10, 1);
+        astSound2 = true;
+      }
+      camera.position.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z);
+      controls.target.set(ASTtargetPosition.x + OFFSETVARIABLE, ASTtargetPosition.y, ASTtargetPosition.z)
+    }
+  });
+});
+
+function filterAndSearchItems() {
+  const input = document.getElementById('search').value.toLowerCase();
+  const selectedValue = document.getElementById('astType').value;
+  const items = document.getElementsByClassName('small');
+
+  for (let i = 0; i < items.length; i++) {
+    const smallDataItem = asteroidData[i];
+    const itemType = smallDataItem.type;
+
+    const h3Text = items[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
+    const pText = items[i].getElementsByTagName('p')[0].innerText.toLowerCase();
+
+    // SEARCH LOGIC
+    const matchesSearch = h3Text.includes(input) || pText.includes(input);
+
+    // DROPDOWN LOGIC
+    const matchesFilter = (
+      selectedValue === '' ||
+      (selectedValue === 'NEA' && itemType < 4) || // Types 0-3 are NEA
+      (selectedValue === 'PHA' && itemType === 4) || // Type 4 is PHA
+      (selectedValue === 'NEC' && itemType === 5)    // Type 5 is NEC
+    );
+
+    // COMBINE!
+    if (matchesSearch && matchesFilter) {
+      items[i].style.display = "";
+    } else {
+      items[i].style.display = "none";
+    }
   }
 }
 
+document.getElementById('search').addEventListener('keyup', filterAndSearchItems);
+document.getElementById('astType').addEventListener('change', filterAndSearchItems);
+
+// Asteroid geometry and material
+const asteroidGeometry = new THREE.IcosahedronGeometry(0.05, 1);
+const asteroidMaterial = new THREE.MeshStandardMaterial({ map: loader.load(asteroidMap), bumpMap: loader.load(asteroidBumpMap), bumpScale: 100 });
+
+// Create the asteroid belt
+function createAsteroidBelt() {
+  var asteroidBelt = [];
+  var asteroidBeltDataList = [];
+  var colors = [0xF6C8A4,0xF8F5F3,0xFFFFFF,0x28A745,0xF1C40F,0xE67E22,0x8E44AD,0xE74C3C,0x3498DB];
+
+  for (let i = 0; i < asteroidData.length; i++) {
+    const trajectory = new Trajectory(asteroidData[i].title, asteroidData[i].a, asteroidData[i].i, asteroidData[i].e, asteroidData[i].aN, asteroidData[i].peri, asteroidData[i].M, asteroidData[i].period * 365.256,false);
+    const asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+    asteroidMesh.userData.trajectory = trajectory;
+    scene.add(asteroidMesh);
+    asteroidBelt.push(asteroidMesh);
+    const asteroid = {name: asteroidData[i].title,elements: trajectory,color: colors[i%3]};
+    asteroidBeltDataList.push(asteroid);
+  }
+  return [asteroidBelt,asteroidBeltDataList]
+}
+
 // Update asteroid belt positions
-function updateAsteroidBelt(timeIncrement) {
-  asteroids.forEach((asteroid) => {
+function updateAsteroidBelt(timeIncrement, asteroidBelt) {
+  asteroidBelt.forEach((asteroid) => {
     const trajectory = asteroid.userData.trajectory;
     const position = updatePosition(trajectory, timeIncrement);
-    asteroid.position.set(position[0], position[1], position[2]);
+    asteroid.position.set(-position[0], position[1], position[2]);
   });
 }
+
+let asteroidBelt = createAsteroidBelt();
+let asteroidBeltDataList = asteroidBelt[1];
+asteroidBelt = asteroidBelt[0];
 
 ///////////////////////////// SUN ///////////////////////////
 const sunGeometry = [0.093, detail];
@@ -904,6 +873,7 @@ sunGroup.shape.layers.enable(BLOOM_SCENE);
 
 
 const orbits = [];
+const asteroidorbits = [];
 
 // Julian date calculation
 let currentJulianDate = getJulianDate();
@@ -912,44 +882,6 @@ function getJulianDate() {
   return now.getTime() / 86400000.0 + 2440587.5;
 }
 
-// Class to define a planet's orbital trajectory
-class Trajectory {
-  constructor(name, smA, oI, oE, aN, lP, mAe, Sidereal) {
-    this.name = name;
-    this.smA = smA * 10;   // Semi-major axis in AU (Multiply by 10 inside the function for scale)
-    this.oI = oI * DEG2RAD;   // Orbital inclination (degrees to radians)
-    this.oE = oE;    // Orbital eccentricity
-    this.aN = aN * DEG2RAD;   // Longitude of ascending node (degrees to radians)
-    this.lP = lP * DEG2RAD; // Longitude of perihelion (degrees to radians)
-
-    this.aP = this.lP - this.aN;   // Argument of perihelion (radians)
-
-    this.period = Sidereal / 365.256;    // Sidereal period (days to years)
-    this.epochMeanAnomaly = mAe * DEG2RAD; // Mean anomaly at epoch (degrees to radians)
-    this.trueAnomaly = 0;
-    this.position = [0, 0, 0];
-    this.time = 0;
-  }
-
-  propagate(uA) {
-    const pos = [];
-    const theta = uA;
-    const smA = this.smA;
-    const oI = this.oI;
-    const aP = this.aP;
-    const oE = this.oE;
-    const aN = this.aN;
-
-    const sLR = smA * (1 - oE ** 2);
-    const r = sLR / (1 + oE * Math.cos(theta));
-
-    pos[0] = r * (Math.cos(aP + theta) * Math.cos(aN) - Math.cos(oI) * Math.sin(aP + theta) * Math.sin(aN)); // X
-    pos[1] = r * Math.sin(aP + theta) * Math.sin(oI); // Y
-    pos[2] = r * (Math.cos(aP + theta) * Math.sin(aN) + Math.cos(oI) * Math.sin(aP + theta) * Math.cos(aN)); // Z
-
-    return pos;
-  }
-}
 
 const planetDataList = [
   {
@@ -1022,7 +954,10 @@ const asteroidDataList = [
 ]
 
 
-traceOrbits();
+traceOrbits(planetDataList,orbits);
+traceOrbits(asteroidDataList,asteroidorbits);
+traceOrbits(asteroidBeltDataList,asteroidorbits,0.05);
+
 
 function updatePosition(trajectory, timeIncrement) {
   trajectory.time += timeIncrement;
@@ -1054,40 +989,21 @@ function eccentricToTrueAnomaly(e, E) {
 }
 
 // Function to trace the orbits
-function traceOrbits() {
-  for (const planet of planetDataList) {
+function traceOrbits(DataList,orbits,opacity=0.1) {
+  for (const obj of DataList) {
     const points = [];
     let anomaly = 0;
 
     // Loop to generate points for the entire orbit
     while (anomaly <= 2 * Math.PI) {
-      const orbPos = planet.elements.propagate(anomaly);
+      const orbPos = obj.elements.propagate(anomaly);
       points.push(new THREE.Vector3(-orbPos[0], orbPos[1], orbPos[2]));
       anomaly += Math.PI / 180; // Increment anomaly by 1 degree in radians
     }
 
     // Create orbit geometry from the points
     const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const orbitMaterial = new THREE.LineBasicMaterial({ color: planet.color, transparent: true, opacity: 0.1 });
-    const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
-    scene.add(orbitLine);
-    orbits.push(orbitLine);
-  }
-
-  for (const asteroid of asteroidDataList) {
-    const points = [];
-    let anomaly = 0;
-
-    // Loop to generate points for the entire orbit
-    while (anomaly <= 2 * Math.PI) {
-      const orbPos = asteroid.elements.propagate(anomaly);
-      points.push(new THREE.Vector3(-orbPos[0], orbPos[1], orbPos[2]));
-      anomaly += Math.PI / 180; // Increment anomaly by 1 degree in radians
-    }
-
-    // Create orbit geometry from the points
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const orbitMaterial = new THREE.LineBasicMaterial({ color: asteroid.color, transparent: true, opacity: 0.1 });
+    const orbitMaterial = new THREE.LineBasicMaterial({ color: obj.color, transparent: true, opacity: opacity });
     const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
     scene.add(orbitLine);
     orbits.push(orbitLine);
@@ -1332,9 +1248,10 @@ document.getElementById("closebutton").addEventListener("click", function () {
 });
 
 const orbitbutton = document.getElementById('orbitcheck');
+const asteroidorbitbutton = document.getElementById('asteroidorbitcheck');
 
-function updateOrbitVisibility() {
-  if (orbitbutton.checked) {
+function updateOrbitVisibility(button,orbits) {
+  if (button.checked) {
     orbits.forEach(element => {
       element.visible = true;
     });
@@ -1345,8 +1262,10 @@ function updateOrbitVisibility() {
   }
 }
 
-updateOrbitVisibility();
-orbitbutton.addEventListener('click', updateOrbitVisibility);
+updateOrbitVisibility(orbitbutton,orbits);
+orbitbutton.addEventListener('click', ()=>{updateOrbitVisibility(orbitbutton,orbits)});
+updateOrbitVisibility(asteroidorbitbutton,asteroidorbits);
+asteroidorbitbutton.addEventListener('click', ()=>{updateOrbitVisibility(asteroidorbitbutton,asteroidorbits)});
 
 const subbutton = document.getElementById('subcheck');
 subbutton.addEventListener('click', function () {
@@ -1662,19 +1581,19 @@ function animate() {
     asteroidGroup.position.set(-position[0], position[1], position[2]);
   });
 
-  updateAsteroidBelt(timeIncrement);
+  updateAsteroidBelt(timeIncrement, asteroidBelt);
 
   if (isZooming) {
 
-    if(asteroidFocus == false){
-    targetPosition = targetPlanet.position.clone();
-    controls.maxDistance = clickedLabel.associatedNumber;
+    if (asteroidFocus == false) {
+      targetPosition = targetPlanet.position.clone();
+      controls.maxDistance = clickedLabel.associatedNumber;
     }
-    else{
+    else {
       targetPosition = ErosGroup.position.clone();
       controls.maxDistance = OFFSETVARIABLE;
     }
-    
+
     controls.target.copy(targetPosition)
     controls2.target.copy(targetPosition)
     controls.update();
@@ -1779,7 +1698,7 @@ function animate() {
   sunGroup.rotateAroundAxis(speedFactor);
   moonGroup.rotation.y += 0.0000026617 * speedFactor;
 
-  
+
   scene.traverse(darkenNonBloomed);
   bloomComposer.render();
   scene.traverse(restoreMaterial);
@@ -1789,8 +1708,6 @@ function animate() {
 
   //renderer.render(scene, camera);
 }
-
-createAsteroidBelt();
 
 function darkenNonBloomed(obj) {
 
@@ -1813,7 +1730,6 @@ function restoreMaterial(obj) {
   }
 
 }
-
 
 animate();
 
