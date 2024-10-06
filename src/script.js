@@ -1062,7 +1062,7 @@ function traceOrbits() {
     // Loop to generate points for the entire orbit
     while (anomaly <= 2 * Math.PI) {
       const orbPos = planet.elements.propagate(anomaly);
-      points.push(new THREE.Vector3(orbPos[0], orbPos[1], orbPos[2]));
+      points.push(new THREE.Vector3(-orbPos[0], orbPos[1], orbPos[2]));
       anomaly += Math.PI / 180; // Increment anomaly by 1 degree in radians
     }
 
@@ -1652,14 +1652,14 @@ function animate() {
   moonGroupArr.forEach((moonGroup, index) => {
     const moonData = moonDataList[index];
     const position = updatePosition(moonData.elements, timeIncrement);
-    moonGroup.position.set(-position[0], position[1], position[2]);
+    moonGroup.position.set(position[0], position[1], position[2]);
   });
 
   // Update position of asteroid
   asteroidGroupArr.forEach((asteroidGroup, index) => {
     const asteroidData = asteroidDataList[index];
     const position = updatePosition(asteroidData.elements, timeIncrement);
-    asteroidGroup.position.set(-position[0], position[1], position[2]);
+    asteroidGroup.position.set(position[0], position[1], position[2]);
 
   });
 

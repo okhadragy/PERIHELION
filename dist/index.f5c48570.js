@@ -752,6 +752,7 @@ function addFilters() {
     div.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none;"><filter id="protanopia-filter"><feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0 0.558, 0.442, 0, 0, 0 0, 0.242, 0.758, 0, 0 0, 0, 0, 1, 0" /></filter><filter id="deuteranopia-filter"><feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0 0.7, 0.3, 0, 0, 0 0, 0.3, 0.7, 0, 0 0, 0, 0, 1, 0" /></filter><filter id="tritanopia-filter"><feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0 0, 0.433, 0.567, 0, 0 0, 0.475, 0.525, 0, 0 0, 0, 0, 1, 0" /></filter></svg>';
     body.appendChild(div);
 }
+addFilters();
 //
 loadingManager.onLoad = function() {
     (0, _gsap.gsap).to("#loadingcontainer", {
@@ -1806,7 +1807,7 @@ function traceOrbits() {
         // Loop to generate points for the entire orbit
         while(anomaly <= 2 * Math.PI){
             const orbPos = planet.elements.propagate(anomaly);
-            points.push(new _three.Vector3(orbPos[0], orbPos[1], orbPos[2]));
+            points.push(new _three.Vector3(-orbPos[0], orbPos[1], orbPos[2]));
             anomaly += Math.PI / 180; // Increment anomaly by 1 degree in radians
         }
         // Create orbit geometry from the points
@@ -2304,13 +2305,13 @@ function animate() {
     moonGroupArr.forEach((moonGroup, index)=>{
         const moonData = moonDataList[index];
         const position = updatePosition(moonData.elements, timeIncrement);
-        moonGroup.position.set(-position[0], position[1], position[2]);
+        moonGroup.position.set(position[0], position[1], position[2]);
     });
     // Update position of asteroid
     asteroidGroupArr.forEach((asteroidGroup, index)=>{
         const asteroidData = asteroidDataList[index];
         const position = updatePosition(asteroidData.elements, timeIncrement);
-        asteroidGroup.position.set(-position[0], position[1], position[2]);
+        asteroidGroup.position.set(position[0], position[1], position[2]);
     });
     updateAsteroidBelt(timeIncrement);
     if (isZooming) {
