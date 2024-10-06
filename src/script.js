@@ -149,6 +149,8 @@ function addFilters() {
   body.appendChild(div);
 }
 
+addFilters();
+
 //
 loadingManager.onLoad = function () {
 
