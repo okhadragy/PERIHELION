@@ -395,7 +395,6 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.x = 5;
 camera.position.y = 1;
-
 const renderer = new THREE.WebGLRenderer({ antialias: true, });
 renderer.setSize(w, h);
 document.body.appendChild(renderer.domElement);
@@ -607,11 +606,11 @@ const types = [
   { image: NEC, barColor: '#3498db', description: "Near-Earth Comet" }  // Type 5 - NEC - Blue
 ];
 
-function generateAsteroidGeometry(size, noiseScale = 1, noiseStrength = 2, scrapeCount = 100, scrapeStrength = 0.5) {
-  const asteroidGeometry = new THREE.IcosahedronGeometry(size, 3);
+function generateAsteroidGeometry(size, noiseScale = 0.5, noiseStrength = 0.5, scrapeCount = 50, scrapeStrength = 0.1) {
+  const asteroidGeometry = new THREE.IcosahedronGeometry(size, 4);
   const positions = asteroidGeometry.attributes.position.array;
   
-  const noise = new Noise(Math.random());
+  const noise = new Noise(Math.random()); 
 
   for (let i = 0; i < positions.length; i += 3) {
     const x = positions[i];
@@ -629,22 +628,26 @@ function generateAsteroidGeometry(size, noiseScale = 1, noiseStrength = 2, scrap
   for (let i = 0; i < scrapeCount; i++) {
     const index = Math.floor(Math.random() * positions.length / 3) * 3;
     scrapeIndices.push(index);
+    // Apply a smaller, subtler scrape effect
     positions[index] += (Math.random() - 0.5) * scrapeStrength;
     positions[index + 1] += (Math.random() - 0.5) * scrapeStrength;
     positions[index + 2] += (Math.random() - 0.5) * scrapeStrength;
   }
-  
+
   asteroidGeometry.computeVertexNormals();
 
   return asteroidGeometry;
 }
 
-// Asteroid geometry and material
-const asteroidGeometry1 = new THREE.IcosahedronGeometry(0.05, 1);
-const asteroidGeometry2 = generateAsteroidGeometry(0.05)
+// asteroid geometry and material
+const asteroidGeometry1 = new THREE.IcosahedronGeometry(5, 1);
+const asteroidGeometry2 = generateAsteroidGeometry(5)
 const asteroidMaterial = new THREE.MeshStandardMaterial({ map: loader.load(asteroidMap), bumpMap: loader.load(asteroidBumpMap), bumpScale: 100 });
 
-// Create the asteroid belt
+let scaleFlag = false;
+let OFFSETVARIABLE = 0.05 * 2.5;
+
+// create the asteroid belt
 function createAsteroidBelt() {
   var asteroidBelt = [];
   var asteroidBeltDataList = [];
@@ -657,31 +660,40 @@ function createAsteroidBelt() {
     let asteroidMesh = new THREE.Mesh(geometry, asteroidMaterial);
     if (i==0) {
       asteroidMesh = ErosGroup;
+      OFFSETVARIABLE = 0.05 * 2.75;
     }
     if (choice === 1) {
       geometry = asteroidGeometry2;
+      OFFSETVARIABLE = 10000000 ;
       choice = 2;
+      scaleFlag = true;
     }else{
       geometry = asteroidGeometry1;
+      OFFSETVARIABLE = 0.05 * 2.5;
       choice = 1;
     }
 
     asteroidMesh.userData.trajectory = trajectory;
+
+    if(scaleFlag == true){
+    asteroidMesh.scale.set(0.01,0.01,0.01);
+    scaleFlag == false;
+    }
+
     scene.add(asteroidMesh);
     asteroidBelt.push(asteroidMesh);
     const asteroid = {name: asteroidData[i].title,elements: trajectory,color: colors[i%3]};
     asteroidBeltDataList.push(asteroid);
   }
-  return [asteroidBelt,asteroidBeltDataList]
+  return [asteroidBelt,asteroidBeltDataList];
 }
 
-// Update asteroid belt positions
+// update asteroid belt positions
 function updateAsteroidBelt(timeIncrement, asteroidBelt) {
   asteroidBelt.forEach((asteroid) => {
     const trajectory = asteroid.userData.trajectory;
     const position = updatePosition(trajectory, timeIncrement);    
     asteroid.position.set(-position[0], position[1], position[2]);
-    
   });
 }
 
@@ -715,7 +727,7 @@ createSmalls();
 let asteroidFocus = false;
 let astSound1 = false;
 let astSound2 = false;
-const OFFSETVARIABLE = (1 / 82738) * 15;
+let ASTtargetPosition = new THREE.Vector3();
 // OFFSETVARIABLE FOR DEFAULT ASTEROID = 0.05 * 2.5
 // OFFSETVARIABLE FOR EROS = 1/82738 * 15
 
@@ -732,7 +744,7 @@ smalls.forEach((small, index) => {
     document.getElementById("astUIargu").innerText = asteroidData[index].peri + " degrees";
     document.getElementById("astUIperiod").innerText = asteroidData[index].period + " days";
 
-    let ASTtargetPosition = asteroidBelt[index].position.clone().add(new THREE.Vector3(0, 0, 0));
+    ASTtargetPosition = asteroidBelt[index].position.clone().add(new THREE.Vector3(0, 0, 0));
     // const OFFSETVARIABLE = asteroidData[index].a * 2.5
 
     camera.lookAt(ASTtargetPosition.x, ASTtargetPosition.y, ASTtargetPosition.z);
@@ -1578,7 +1590,7 @@ function animate() {
       controls.maxDistance = clickedLabel.associatedNumber;
     }
     else {
-      targetPosition = ErosGroup.position.clone();
+      targetPosition = ASTtargetPosition.clone();
       controls.maxDistance = OFFSETVARIABLE;
     }
 
