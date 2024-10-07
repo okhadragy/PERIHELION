@@ -8,4 +8,4 @@ The project aims to develop a 3D web-based solar system that balances accuracy, 
 https://inspiring-pasca-263db6.netlify.app/
 
 # Demo
-<img src="https://github.com/user-attachments/assets/c32df591-aa50-4dae-8fc2-3d8f15c0fb99" width="600" height="400">
+<img src="https://github.com/user-attachments/assets/c32df591-aa50-4dae-8fc2-3d8f15c0fb99" width="800" height="200">
