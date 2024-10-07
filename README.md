@@ -8,4 +8,5 @@ The project aims to develop a 3D web-based solar system that balances accuracy, 
 https://inspiring-pasca-263db6.netlify.app/
 
 # Demo
+<img src="https://img.youtube.com/vi/DWsNT2YAKmQ/0.jpg" width="100" height="100">
 [![Demo version of PERIHELION](https://img.youtube.com/vi/DWsNT2YAKmQ/0.jpg)](https://www.youtube.com/watch?v=DWsNT2YAKmQ)
